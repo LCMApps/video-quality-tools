@@ -1,0 +1,51 @@
+stream-checker repo
+
+```javascript
+const framesMonitor = new FramesMonitor(config, url);
+const streamsInfo = new StreamsInfo(config, url);
+const framesInfo = new FramesInfo(url);
+```
+
+```javascript
+framesMonitor.once('frame', async () => {
+    try {
+        const streams = await streamsInfo.fetch();
+        this.emit('streams', streams);
+    } catch (e) {
+        // proccess error
+    }
+});
+```
+
+```javascript
+let frames = [];
+
+framesMonitor.on('frame', frame => {
+    this._frames.push(frame);
+
+    if (amountOfFramesToProcess > frames.length) {
+        return;
+    }
+
+    try {
+        const info = framesInfo.process(frames);
+    
+        this.emit('framesInfo', info);
+    } catch(e) {
+        // process error
+    }
+
+    frames = [];
+});
+
+framesMonitor.on('error', err => {
+  // process error
+  framesMonitor.stopListen();
+});
+
+framesMonitor.on('exit', (code, signal) => {
+   // check return code or signal 
+});
+
+framesMonitor.listen();
+```
