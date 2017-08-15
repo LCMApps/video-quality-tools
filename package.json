@@ -1,0 +1,31 @@
+{
+  "name": "stream-checker",
+  "version": "1.0.0",
+  "description": "stream-checker repo",
+  "main": "index.js",
+  "directories": {
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "yarn run unit-tests && yarn run func-tests",
+    "unit-tests": "mocha './tests/StreamsInfo/**/Unit/**/*.js'",
+    "func-tests": "mocha './tests/StreamsInfo/**/Functional/**/*.js'"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/LCMApps/video-quality-tools.git"
+  },
+  "keywords": [],
+  "author": "Eduard Bondarenko <eduardbcom@gmail.com>",
+  "license": "MIT",
+  "devDependencies": {
+    "chai": "^4.1.0",
+    "mocha": "^3.5.0",
+    "sinon": "^2.4.1"
+  },
+  "dependencies": {
+    "lodash": "^4.17.4",
+    "longest-repeating-and-non-overlapping-pattern": "^1.0.4",
+    "proxyquire": "^1.8.0"
+  }
+}
