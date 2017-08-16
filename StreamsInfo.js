@@ -5,20 +5,11 @@ const fs          = require('fs');
 const {exec}      = require('child_process');
 const {promisify} = require('util');
 
-const {
-          ConfigError,
-          StreamsInfoError,
-          ExecutablePathError
-      } = require('./Errors');
+const Errors = require('./Errors');
 
 class StreamsInfo {
     constructor(config, url) {
-
-        if (!config || !url) {
-            throw new TypeError('You should provide both arguments.');
-        }
-
-        if (!_.isObject(config)) {
+        if (!_.isObject(config) || _.isFunction(config)) {
             throw new TypeError('Config param should be an object, bastard.');
         }
 
@@ -29,11 +20,11 @@ class StreamsInfo {
         const {ffprobePath, timeoutInSec} = config;
 
         if (!_.isString(ffprobePath) || _.isEmpty(ffprobePath)) {
-            throw new ConfigError('You should provide a correct path to ffprobePath, bastard.');
+            throw new Errors.ConfigError('You should provide a correct path to ffprobePath, bastard.');
         }
 
         if (!_.isInteger(timeoutInSec) || timeoutInSec <= 0) {
-            throw new ConfigError('You should provide a correct timeout, bastard.');
+            throw new Errors.ConfigError('You should provide a correct timeout, bastard.');
         }
 
         this._assertExecutable(ffprobePath);
@@ -48,11 +39,11 @@ class StreamsInfo {
         try {
             ({stdout, stderr} = await this._runShowStreamsProcess());
         } catch (e) {
-            throw new StreamsInfoError(e.message, {error: e, url: this._url});
+            throw new Errors.StreamsInfoError(e.message, {error: e, url: this._url});
         }
 
         if (stderr) {
-            throw new StreamsInfoError(`StreamsInfo::fetch stderr: ${stderr}`, {url: this._url});
+            throw new Errors.StreamsInfoError(`StreamsInfo::fetch stderr: ${stderr}`, {url: this._url});
         }
 
         let {videos, audios} = this._parseStreamsInfo(stdout);
@@ -66,7 +57,7 @@ class StreamsInfo {
         try {
             fs.accessSync(path, fs.constants.X_OK);
         } catch (e) {
-            throw new ExecutablePathError(e.message, {path});
+            throw new Errors.ExecutablePathError(e.message, {path});
         }
     }
 
@@ -82,7 +73,7 @@ class StreamsInfo {
         let jsonResult = JSON.parse(rawResult);
 
         if (!Array.isArray(jsonResult.streams)) {
-            throw new StreamsInfoError(
+            throw new Errors.StreamsInfoError(
                 `'streams' field should be an Array. Instead it has ${Object.prototype.toString.call(jsonResult.streams)} type.`,
                 {url: this._url}
             );
@@ -109,11 +100,11 @@ class StreamsInfo {
 
     _calculateDisplayAspectRatio(width, height) {
         if (!_.isInteger(width) || width <= 0) {
-            throw new StreamsInfoError(`width field has invalid value.`, {width, url: this._url});
+            throw new Errors.StreamsInfoError('width field has invalid value.', {width, url: this._url});
         }
 
         if (!_.isInteger(height) || height <= 0) {
-            throw new StreamsInfoError(`height field has invalid value.`, {height, url: this._url});
+            throw new Errors.StreamsInfoError('height field has invalid value.', {height, url: this._url});
         }
 
         const GCD = this._findGCD(width, height);
