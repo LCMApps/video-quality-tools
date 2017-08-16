@@ -1,57 +1,28 @@
 'use strict';
 
-const sinon    = require('sinon');
-const {assert} = require('chai');
+const sinon       = require('sinon');
+const {assert}    = require('chai');
+const data_driven = require('data-driven');
 
-const {
-          correctPath,
-          correctUrl,
-          StreamsInfo
-      } = require('./');
+const {correctPath, correctUrl, StreamsInfo} = require('./');
 
-const {StreamsInfoError} = require('../../../Errors/');
+const Errors = require('../../../Errors/');
+
+const {invalidParams} = require('./_calculateDisplayAspectRatio.data');
 
 describe('StreamsInfo::_calculateDisplayAspectRatio', () => {
 
     const streamsInfo = new StreamsInfo({
-        ffprobePath:  correctPath,
+        ffprobePath : correctPath,
         timeoutInSec: 1
     }, correctUrl);
 
-    it('calculate display aspect ratio for undefined video width', () => {
-        assert.throws(() => {
-            streamsInfo._calculateDisplayAspectRatio();
-        }, StreamsInfoError, `width field has invalid value.`);
-    });
-
-    it('calculate display aspect ratio for undefined video height', () => {
-        assert.throws(() => {
-            streamsInfo._calculateDisplayAspectRatio(10);
-        }, StreamsInfoError, `height field has invalid value.`);
-    });
-
-    it('calculate display aspect ratio invalid video width', () => {
-        assert.throws(() => {
-            streamsInfo._calculateDisplayAspectRatio(0, 5);
-        }, StreamsInfoError, `width field has invalid value.`);
-    });
-
-    it('calculate display aspect ratio for invalid video height', () => {
-        assert.throws(() => {
-            streamsInfo._calculateDisplayAspectRatio(5, 0);
-        }, StreamsInfoError, `height field has invalid value.`);
-    });
-
-    it('calculate display aspect ratio for decimal width', () => {
-        assert.throws(() => {
-            streamsInfo._calculateDisplayAspectRatio(1.1, 5);
-        }, StreamsInfoError, `width field has invalid value.`);
-    });
-
-    it('calculate display aspect ratio for decimal height', () => {
-        assert.throws(() => {
-            streamsInfo._calculateDisplayAspectRatio(5, 5.5);
-        }, StreamsInfoError, `height field has invalid value.`);
+    data_driven(invalidParams, function () {
+        it('calculate display aspect ratio for {description}', function (ctx) {
+            assert.throws(() => {
+                streamsInfo._calculateDisplayAspectRatio(ctx.data.width, ctx.data.height);
+            }, Errors.StreamsInfoError, ctx.errorMsg);
+        });
     });
 
     it('calculate display aspect ratio for correct input', () => {

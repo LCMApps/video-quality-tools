@@ -17,31 +17,31 @@ describe('StreamsInfo::_parseStreamsInfo', () => {
         timeoutInSec: 1
     }, correctUrl);
 
-    it('_parseStreamsInfo invalid, undefined input', () => {
+    it('invalid, undefined input', () => {
         assert.throws(() => {
             streamsInfo._parseStreamsInfo();
         }, SyntaxError);
     });
 
-    it('_parseStreamsInfo invalid, null input', () => {
+    it('invalid, null input', () => {
         assert.throws(() => {
             streamsInfo._parseStreamsInfo(null);
         }, TypeError);
     });
 
-    it('_parseStreamsInfo invalid, empty input', () => {
+    it('invalid, empty input', () => {
         assert.throws(() => {
             streamsInfo._parseStreamsInfo('{}')
         }, StreamsInfoError, `'streams' field should be an Array. Instead it has [object Undefined] type.`);
     });
 
-    it('_parseStreamsInfo invalid, streams input object', () => {
+    it('invalid, streams input object', () => {
         assert.throws(() => {
             streamsInfo._parseStreamsInfo('{ "streams": {} }')
         }, StreamsInfoError, `'streams' field should be an Array. Instead it has [object Object] type.`);
     });
 
-    it('_parseStreamsInfo empty streams array', () => {
+    it('empty streams array', () => {
         const {videos, audios} = streamsInfo._parseStreamsInfo('{ "streams": [] }');
 
         assert.isArray(videos);
@@ -51,7 +51,7 @@ describe('StreamsInfo::_parseStreamsInfo', () => {
         assert.isEmpty(audios);
     });
 
-    it('_parseStreamsInfo streams array with invalid codec_type', () => {
+    it('streams array with invalid codec_type', () => {
         const {videos, audios} = streamsInfo._parseStreamsInfo(
             `{ "streams": [
                  { "codec_type": "invalid" }
@@ -66,7 +66,7 @@ describe('StreamsInfo::_parseStreamsInfo', () => {
         assert.isEmpty(audios);
     });
 
-    it('_parseStreamsInfo correct streams array with 1 audio and 1 video streams', () => {
+    it('correct streams array with 1 audio and 1 video streams', () => {
         const {videos, audios} = streamsInfo._parseStreamsInfo(
             `{ "streams": [
                  { "codec_type": "video" },
@@ -82,7 +82,7 @@ describe('StreamsInfo::_parseStreamsInfo', () => {
         assert.lengthOf(audios, 1);
     });
 
-    it('_parseStreamsInfo correct streams array with 2 audio and 2 video streams', () => {
+    it('correct streams array with 2 audio and 2 video streams', () => {
         const {videos, audios} = streamsInfo._parseStreamsInfo(
             `{ "streams": [
                  { "codec_type": "video" },

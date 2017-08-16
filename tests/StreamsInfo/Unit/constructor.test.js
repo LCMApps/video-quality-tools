@@ -1,91 +1,47 @@
 'use strict';
 
-const sinon      = require('sinon');
-const {assert}   = require('chai');
-const proxyquire = require('proxyquire');
+const sinon       = require('sinon');
+const {assert}    = require('chai');
+const proxyquire  = require('proxyquire');
+const data_driven = require('data-driven');
 
-const {
-          correctPath,
-          correctUrl,
-          StreamsInfo
-      } = require('./');
+const {correctPath, correctUrl, StreamsInfo} = require('./');
 
-const {
-          ConfigError,
-          ExecutablePathError
-      } = require('../../../Errors');
+const Errors = require('../../../Errors');
+
+const {incorrectInputData, incorrectConfig} = require('./constructor.data');
 
 describe('StreamsInfo::constructor', () => {
 
-    it('do not pass config object', () => {
-        assert.throws(() => {
-            new StreamsInfo();
-        }, TypeError);
+    data_driven(incorrectInputData, function () {
+        it('{description}', function (ctx) {
+            assert.throws(() => {
+                new StreamsInfo(ctx.config, ctx.url);
+            }, TypeError, ctx.errorMsg);
+        });
     });
 
-    it('config param has invalid type', () => {
-        assert.throws(() => {
-            new StreamsInfo(111);
-        }, TypeError);
+    data_driven(incorrectConfig, function () {
+        it('{description}', function (ctx) {
+            assert.throws(() => {
+                new StreamsInfo(ctx.config, ctx.url);
+            }, Errors.ConfigError, ctx.errorMsg);
+        });
     });
 
-    it('do not pass url param', () => {
-        assert.throws(() => {
-            new StreamsInfo({});
-        }, TypeError);
-    });
-
-    it('do not pass valid url param', () => {
-        assert.throws(() => {
-            new StreamsInfo({}, 111);
-        }, TypeError);
-    });
-
-    it('pass empty config object', () => {
-        assert.throws(() => {
-            new StreamsInfo({}, correctUrl);
-        }, ConfigError);
-    });
-
-    it('do not pass config.timeout param', () => {
+    it('config.ffprobePath points to incorrect path', () => {
         assert.throws(() => {
             new StreamsInfo({
-                ffprobePath: correctPath,
-            }, correctUrl);
-        }, ConfigError);
-    });
-
-    it('pass decimal config.timeout param', () => {
-        assert.throws(() => {
-            new StreamsInfo({
-                ffprobePath:  correctPath,
-                timeoutInSec: 1.1
-            }, correctUrl);
-        }, ConfigError);
-    });
-
-    it('pass negative config.timeout param', () => {
-        assert.throws(() => {
-            new StreamsInfo({
-                ffprobePath:  correctPath,
-                timeoutInSec: -1
-            }, correctUrl);
-        }, ConfigError);
-    });
-
-    it('pass incorrect ffprobePath', () => {
-        assert.throws(() => {
-            new StreamsInfo({
-                ffprobePath:  '/bad/ffprobe/path',
+                ffprobePath : '/bad/ffprobe/path',
                 timeoutInSec: 1
             }, correctUrl);
-        }, ExecutablePathError);
+        }, Errors.ExecutablePathError);
     });
 
-    it('pass everything correct', () => {
+    it('all params are good', () => {
         assert.doesNotThrow(() => {
             new StreamsInfo({
-                ffprobePath:  correctPath,
+                ffprobePath : correctPath,
                 timeoutInSec: 1
             }, correctUrl);
         });

@@ -1,65 +1,42 @@
 'use strict';
 
-const sinon    = require('sinon');
-const {assert} = require('chai');
+const sinon       = require('sinon');
+const {assert}    = require('chai');
+const data_driven = require('data-driven');
 
-const {
-          correctPath,
-          correctUrl,
-          StreamsInfo
-      } = require('./');
+const Errors = require('../../../Errors');
+
+const {correctPath, correctUrl, StreamsInfo} = require('./');
+
+const {invalidParams, validParams} = require('./_adjustAspectRatio.data');
 
 describe('StreamsInfo::_adjustAspectRatio', () => {
 
     const streamsInfo = new StreamsInfo({
-        ffprobePath:  correctPath,
+        ffprobePath : correctPath,
         timeoutInSec: 1
     }, correctUrl);
 
-    it('invalid width', () => {
-        assert.throws(() => {
-            streamsInfo._adjustAspectRatio([
-                {sample_aspect_ratio: '0:1', display_aspect_ratio: '10:1', width: 'N/A', height: 10}
-            ])
+    data_driven(invalidParams, function () {
+        it('{description}', function (ctx) {
+            assert.throws(() => {
+                streamsInfo._adjustAspectRatio(ctx.data)
+            }, Errors.StreamsInfoError, ctx.errorMsg);
         });
     });
 
-    it('invalid height', () => {
-        assert.throws(() => {
-            streamsInfo._adjustAspectRatio([
-                {sample_aspect_ratio: '0:1', display_aspect_ratio: '10:1', width: 10, height: 'N/A'}
-            ])
+    data_driven(validParams, function () {
+        it('{description}', function (ctx) {
+            const frames = streamsInfo._adjustAspectRatio(ctx.data);
+
+            const {sample_aspect_ratio, display_aspect_ratio} = ctx.res;
+
+            assert(frames[0].sample_aspect_ratio === sample_aspect_ratio);
+            assert(frames[0].display_aspect_ratio === display_aspect_ratio);
         });
     });
 
-    it('invalid sample_aspect_ratio field', () => {
-        const frames = streamsInfo._adjustAspectRatio([
-            {sample_aspect_ratio: '0:1', display_aspect_ratio: '200:100', width: 10, height: 4}
-        ]);
-
-        assert(frames[0].sample_aspect_ratio === '1:1');
-        assert(frames[0].display_aspect_ratio === '5:2');
-    });
-
-    it('invalid display_aspect_ratio field', () => {
-        const frames = streamsInfo._adjustAspectRatio([
-            {sample_aspect_ratio: '200:100', display_aspect_ratio: '0:1', width: 20, height: 10}
-        ]);
-
-        assert(frames[0].sample_aspect_ratio === '1:1');
-        assert(frames[0].display_aspect_ratio === '2:1');
-    });
-
-    it('valid case', () => {
-        const frames = streamsInfo._adjustAspectRatio([
-            {sample_aspect_ratio: '10:1', display_aspect_ratio: '10:1', width: 30, height: 10}
-        ]);
-
-        assert(frames[0].sample_aspect_ratio === '10:1');
-        assert(frames[0].display_aspect_ratio === '10:1');
-    });
-
-    it('valid case', () => {
+    it('all params are good', () => {
         const frames = streamsInfo._adjustAspectRatio([
             {sample_aspect_ratio: '10:1', display_aspect_ratio: '10:1', width: 30, height: 10}
         ]);
