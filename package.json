@@ -1,23 +1,24 @@
 {
-  "name": "stream-checker",
+  "name": "video-quality-tools",
   "version": "1.0.0",
-  "description": "stream-checker repo",
+  "description": "Set of tools to evaluate video stream quality.",
   "main": "index.js",
+  "engines": {
+    "node": ">=8.1"
+  },
   "directories": {
     "test": "tests"
   },
   "scripts": {
-    "test": "yarn run unit-tests && yarn run func-tests",
+    "tests": "yarn run unit-tests && yarn run func-tests",
     "unit-tests": "mocha './tests/StreamsInfo/**/Unit/**/*.js'",
     "func-tests": "mocha './tests/StreamsInfo/**/Functional/**/*.js'"
   },
   "repository": {
     "type": "git",
-    "url": "ssh://git@gitlab.auroraglobal.com:26/eduard.bondarenko/stream-checker.git"
+    "url": "ssh://git@gitlab.auroraglobal.com:26/node-modules/video-quality-tools.git"
   },
-  "keywords": [],
-  "author": "Eduard Bondarenko <eduardbcom@gmail.com>",
-  "license": "MIT",
+  "license": "SEE LICENSE IN LICENSE.md",
   "devDependencies": {
     "chai": "^4.1.0",
     "mocha": "^3.5.0",
