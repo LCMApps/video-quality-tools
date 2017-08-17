@@ -4,9 +4,9 @@ const sinon       = require('sinon');
 const {assert}    = require('chai');
 const data_driven = require('data-driven');
 
-const {correctPath, correctUrl, StreamsInfo} = require('./');
+const {StreamsInfoError} = require('Errors');
 
-const Errors = require('../../../Errors/');
+const {correctPath, correctUrl, StreamsInfo} = require('./');
 
 const {invalidParams} = require('./_calculateDisplayAspectRatio.data');
 
@@ -21,7 +21,7 @@ describe('StreamsInfo::_calculateDisplayAspectRatio', () => {
         it('calculate display aspect ratio for {description}', function (ctx) {
             assert.throws(() => {
                 streamsInfo._calculateDisplayAspectRatio(ctx.data.width, ctx.data.height);
-            }, Errors.StreamsInfoError, ctx.errorMsg);
+            }, StreamsInfoError, ctx.errorMsg);
         });
     });
 

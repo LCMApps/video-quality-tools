@@ -12,7 +12,7 @@ const incorrectInputData = [
         "errorMsg"   : "Config param should be an object, bastard."
     },
     {
-        "description": "cconfig param has invalid (Undefined) type",
+        "description": "config param has invalid (Undefined) type",
         "config"     : undefined,
         "errorMsg"   : "Config param should be an object, bastard."
     },
@@ -62,6 +62,12 @@ const incorrectInputData = [
         "errorMsg"   : "You should provide a correct url, bastard."
     },
     {
+        "description": "url param has invalid (Object) type",
+        "config"     : {},
+        "url"        : {},
+        "errorMsg"   : "You should provide a correct url, bastard."
+    },
+    {
         "description": "url param has invalid (Symbol) type",
         "config"     : {},
         "url"        : Symbol(),
@@ -81,7 +87,7 @@ const incorrectConfig = [
         "description": "config object is empty",
         "config"     : {},
         "url"        : correctUrl,
-        "errorMsg"   : "You should provide a correct path to ffprobePath, bastard."
+        "errorMsg"   : "You should provide a correct path to ffprobe, bastard."
     },
     {
         "description": "config.timeout param was not passed",
