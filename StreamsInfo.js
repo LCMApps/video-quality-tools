@@ -20,7 +20,7 @@ class StreamsInfo {
         const {ffprobePath, timeoutInSec} = config;
 
         if (!_.isString(ffprobePath) || _.isEmpty(ffprobePath)) {
-            throw new Errors.ConfigError('You should provide a correct path to ffprobePath, bastard.');
+            throw new Errors.ConfigError('You should provide a correct path to ffprobe, bastard.');
         }
 
         if (!_.isInteger(timeoutInSec) || timeoutInSec <= 0) {
@@ -70,7 +70,17 @@ class StreamsInfo {
     }
 
     _parseStreamsInfo(rawResult) {
-        let jsonResult = JSON.parse(rawResult);
+        let jsonResult;
+
+        try {
+            jsonResult = JSON.parse(rawResult);
+        } catch(e) {
+            throw new Errors.StreamsInfoError(e.message, {error: e, url: this._url});
+        }
+
+        if (_.isNull(jsonResult)) {
+            throw new Errors.StreamsInfoError('Cannot read property \'streams\' of null', {url: this._url});
+        }
 
         if (!Array.isArray(jsonResult.streams)) {
             throw new Errors.StreamsInfoError(
