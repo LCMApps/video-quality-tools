@@ -2,37 +2,45 @@
 
 const {assert} = require('chai');
 
-const {
-          correctPath,
-          correctUrl,
-          StreamsInfo
-      } = require('./');
+const {StreamsInfoError} = require('Errors');
 
-const {StreamsInfoError} = require('../../../Errors/');
+const {correctPath, correctUrl, StreamsInfo} = require('./');
 
 describe('StreamsInfo::_parseStreamsInfo', () => {
 
     const streamsInfo = new StreamsInfo({
-        ffprobePath:  correctPath,
+        ffprobePath : correctPath,
         timeoutInSec: 1
     }, correctUrl);
 
     it('invalid, undefined input', () => {
-        assert.throws(() => {
+        try {
             streamsInfo._parseStreamsInfo();
-        }, SyntaxError);
+        } catch (error) {
+            assert.instanceOf(error, StreamsInfoError);
+
+            assert.equal(error.message, 'Unexpected token u in JSON at position 0');
+            assert.equal(error.extra.url, correctUrl);
+
+            assert.isDefined(error.extra.error);
+        }
     });
 
     it('invalid, null input', () => {
-        assert.throws(() => {
+        try {
             streamsInfo._parseStreamsInfo(null);
-        }, TypeError);
+        } catch (error) {
+            assert.instanceOf(error, StreamsInfoError);
+
+            assert.equal(error.message, 'Cannot read property \'streams\' of null');
+            assert.equal(error.extra.url, correctUrl);
+        }
     });
 
     it('invalid, empty input', () => {
         assert.throws(() => {
             streamsInfo._parseStreamsInfo('{}')
-        }, StreamsInfoError, `'streams' field should be an Array. Instead it has [object Undefined] type.`);
+        }, StreamsInfoError, `'streams' field should be an Array. Instead it has [object Undefined] type.`); // check extra
     });
 
     it('invalid, streams input object', () => {

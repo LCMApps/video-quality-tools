@@ -5,9 +5,9 @@ const {assert}    = require('chai');
 const proxyquire  = require('proxyquire');
 const data_driven = require('data-driven');
 
-const {correctPath, correctUrl, StreamsInfo} = require('./');
+const Errors = require('Errors');
 
-const Errors = require('../../../Errors');
+const {correctPath, correctUrl, StreamsInfo} = require('./');
 
 const {incorrectInputData, incorrectConfig} = require('./constructor.data');
 

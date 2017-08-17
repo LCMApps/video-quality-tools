@@ -4,7 +4,7 @@ const sinon       = require('sinon');
 const {assert}    = require('chai');
 const data_driven = require('data-driven');
 
-const Errors = require('../../../Errors');
+const {StreamsInfoError} = require('Errors');
 
 const {correctPath, correctUrl, StreamsInfo} = require('./');
 
@@ -21,7 +21,7 @@ describe('StreamsInfo::_adjustAspectRatio', () => {
         it('{description}', function (ctx) {
             assert.throws(() => {
                 streamsInfo._adjustAspectRatio(ctx.data)
-            }, Errors.StreamsInfoError, ctx.errorMsg);
+            }, StreamsInfoError, ctx.errorMsg);
         });
     });
 
