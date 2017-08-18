@@ -3,6 +3,7 @@
 const sinon         = require('sinon');
 const chai          = require('chai');
 const chaiAsPromise = require('chai-as-promised');
+const dataDriven    = require('data-driven');
 
 const {StreamsInfoError} = require('Errors');
 
@@ -36,7 +37,7 @@ describe('StreamsInfo::fetch', () => {
         stubRunShowStreamsProcess.restore();
     });
 
-    it('child process returns with error code right after the start, fs.exec throws err', async () => {
+    it('ffmpeg child process returns with error code right after the start, fs.exec throws err', async () => {
         const expectedWrappedErrorMessage = 'Ffprobe failed to fetch streams data';
         const expectedWrappedErrorClass   = StreamsInfoError;
 
@@ -48,6 +49,7 @@ describe('StreamsInfo::fetch', () => {
             await streamsInfo.fetch();
         } catch (err) {
             assert.instanceOf(err, expectedWrappedErrorClass);
+
             assert.strictEqual(err.message, expectedWrappedErrorMessage);
             assert.deepEqual(err.extra, {
                 error: spawnError,
@@ -62,101 +64,125 @@ describe('StreamsInfo::fetch', () => {
         }
     });
 
-    it('child process returns { stdout: undefined, stderr: undefined}', async () => {
-        stubRunShowStreamsProcess.resolves({});
-
-        const err = await streamsInfo.fetch().should.be.rejectedWith(StreamsInfoError);
-
-        assert.containsAllKeys(err, ['extra']);
-        assert.containsAllKeys(err.extra, ['error', 'url']);
-
-        assert(stubRunShowStreamsProcess.calledOnce);
-        assert.isEmpty(stubRunShowStreamsProcess.getCall(0).args);
-
-        assert(stubParseStreamsInfo.calledOnce);
-        assert.deepEqual(stubParseStreamsInfo.getCall(0).args, [undefined]);
-
-        assert.isFalse(stubAdjustAspectRatio.called);
-    });
-
-    it('child process stderr output, even with stdout one', async () => {
+    it('ffmpeg child process wrote to stderr, fetch method must throw an exception', async () => {
         const error = 'some error';
+
+        const expectedErrorMessage = `Ffprobe wrote to stderr: ${error}`;
+        const expectedErrorClass   = StreamsInfoError;
 
         stubRunShowStreamsProcess.resolves({
             stderr: error,
-            stdout: 'even stdout here'
+            stdout: 'even stdout here, but nevermind'
         });
 
-        const res = await streamsInfo.fetch().should.be.rejectedWith(StreamsInfoError);
+        try {
+            await streamsInfo.fetch();
+        } catch (err) {
+            assert.instanceOf(err, expectedErrorClass);
 
-        assert.strictEqual(res.message, `StreamsInfo::fetch stderr: ${error}`);
-        assert.deepEqual(res.extra, {
-            url: correctUrl
-        });
+            assert.strictEqual(err.message, expectedErrorMessage);
+            assert.deepEqual(err.extra, {
+                url: correctUrl
+            });
 
-        assert(stubRunShowStreamsProcess.calledOnce);
-        assert.isEmpty(stubRunShowStreamsProcess.getCall(0).args);
+            assert(stubRunShowStreamsProcess.calledOnce);
+            assert.isTrue(stubRunShowStreamsProcess.firstCall.calledWithExactly());
 
-        assert.isFalse(stubParseStreamsInfo.called);
-        assert.isFalse(stubAdjustAspectRatio.called);
+            assert.isFalse(stubParseStreamsInfo.called);
+            assert.isFalse(stubAdjustAspectRatio.called);
+        }
     });
 
-    it('child process stdout is null', async () => {
-        stubRunShowStreamsProcess.resolves({
-            stdout: null
-        });
+    dataDriven(
+        [
+            {stdout: undefined},
+            {stdout: null},
+            {stdout: 1},
+            {stdout: []},
+            {stdout: {}},
+            {
+                stdout: function () {
+                }
+            },
+            {stdout: Symbol()}
+        ], () => {
+            it('ffmpeg child process processed correct, but stdout has invalid type.', async (ctx) => {
+                const expectedErrorMessage = 'Ffprobe stdout has invalid type';
+                const expectedErrorClass   = StreamsInfoError;
 
-        const err = await streamsInfo.fetch().should.be.rejectedWith(StreamsInfoError);
+                stubRunShowStreamsProcess.resolves({stdout: ctx.stdout});
 
-        assert.containsAllKeys(err, ['extra']);
-        assert.containsAllKeys(err.extra, ['url']);
+                try {
+                    await streamsInfo.fetch()
+                } catch (error) {
+                    assert.instanceOf(error, expectedErrorClass);
 
-        assert(stubRunShowStreamsProcess.calledOnce);
-        assert.isEmpty(stubRunShowStreamsProcess.getCall(0).args);
+                    assert.equal(error.message, expectedErrorMessage);
+                    assert.deepEqual(error.extra, {
+                        stdout: ctx.stdout,
+                        url   : correctUrl,
+                        type  : Object.prototype.toString.call(ctx.stdout)
+                    });
+                }
+            });
+        }
+    );
 
-        assert(stubParseStreamsInfo.calledOnce);
-        assert.deepEqual(stubParseStreamsInfo.getCall(0).args, [null]);
+    it('ffmpeg child process processed correct, but stdout is empty. fetch method must throw an exception', async () => {
+        const expectedErrorMessage = 'Ffprobe stdout is empty';
+        const expectedErrorClass   = StreamsInfoError;
 
-        assert.isFalse(stubAdjustAspectRatio.called);
+        stubRunShowStreamsProcess.resolves({stdout: ''});
+
+        try {
+            await streamsInfo.fetch()
+        } catch (err) {
+            assert.instanceOf(err, expectedErrorClass);
+
+            assert.strictEqual(err.message, expectedErrorMessage);
+            assert.deepEqual(err.extra, {
+                url: correctUrl
+            });
+
+            assert(stubRunShowStreamsProcess.calledOnce);
+            assert.isTrue(stubRunShowStreamsProcess.firstCall.calledWithExactly());
+
+            assert.isFalse(stubParseStreamsInfo.called);
+            assert.isFalse(stubAdjustAspectRatio.called);
+        }
     });
 
-    it('child process stdout is empty object', async () => {
-        stubRunShowStreamsProcess.resolves({
-            stdout: '{}'
-        });
+    dataDriven(
+        [
+            {type: '[object Boolean]', rawData: true},
+            {type: '[object Object]', rawData: {}},
+            {type: '[object Null]', rawData: null},
+            {type: '[object Number]', rawData: 123},
+        ],
+        () => {
+            it("ffmpeg child process processed correct, but stdout must for 'streams' prop of array type, but {type} received", async (ctx) => {
+                const expectedErrorClass = StreamsInfoError;
+                const rawStreamInfo      = JSON.stringify(ctx.rawData);
 
-        const err = await streamsInfo.fetch().should.be.rejectedWith(StreamsInfoError);
+                stubRunShowStreamsProcess.resolves({stdout: rawStreamInfo});
 
-        assert.containsAllKeys(err, ['extra']);
-        assert.containsAllKeys(err.extra, ['url']);
+                try {
+                    await streamsInfo.fetch();
+                } catch (err) {
+                    assert.instanceOf(err, expectedErrorClass);
 
-        assert(stubRunShowStreamsProcess.calledOnce);
-        assert.isEmpty(stubRunShowStreamsProcess.getCall(0).args);
+                    assert(stubRunShowStreamsProcess.calledOnce);
+                    assert.isTrue(stubRunShowStreamsProcess.firstCall.calledWithExactly());
 
-        assert(stubParseStreamsInfo.calledOnce);
-        assert.deepEqual(stubParseStreamsInfo.getCall(0).args, ['{}']);
+                    assert(stubParseStreamsInfo.calledOnce);
+                    assert.isTrue(stubParseStreamsInfo.firstCall.calledWithExactly(rawStreamInfo));
 
-        assert.isFalse(stubAdjustAspectRatio.called);
-    });
+                    assert.isFalse(stubAdjustAspectRatio.called);
+                }
+            });
+        }
+    );
 
-    it('child process stdout contains empty streams array', async () => {
-        const stdout              = '{ "streams": [] }';
-        stubRunShowStreamsProcess.resolves({stdout});
-
-        await streamsInfo.fetch().should.eventually.deep.equal({
-            videos: [],
-            audios: []
-        });
-
-        assert(stubRunShowStreamsProcess.calledOnce);
-        assert.isEmpty(stubRunShowStreamsProcess.getCall(0).args);
-
-        assert(stubParseStreamsInfo.calledOnce);
-        assert.deepEqual(stubParseStreamsInfo.getCall(0).args, [stdout]);
-
-        assert.isTrue(stubAdjustAspectRatio.called);
-        assert.deepEqual(stubAdjustAspectRatio.getCall(0).args, [[]]);
-    });
 
     it('child process stdout contains not empty streams array, 1 audio and 1 video streams', async () => {
         const stdout = '{ "streams": [ {"codec_type": "video"}, {"codec_type": "audio"} ] }';
