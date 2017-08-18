@@ -2,6 +2,7 @@
 
 const {assert}   = require('chai');
 const dataDriven = require('data-driven');
+const _          = require('lodash');
 
 const {StreamsInfoError} = require('Errors');
 
@@ -17,31 +18,36 @@ describe('StreamsInfo::_adjustAspectRatio', () => {
     }, correctUrl);
 
     dataDriven(invalidParams, function () {
+        const expectedErrorMessage = 'Can not calculate aspect rate due to invalid video resolution';
+        const expectedErrorClass   = StreamsInfoError;
+
         it('{description}', function (ctx) {
             assert.throws(() => {
                 streamsInfo._adjustAspectRatio(ctx.data);
-            }, StreamsInfoError, ctx.errorMsg);
+            }, expectedErrorClass, expectedErrorMessage);
         });
     });
 
     dataDriven(validParams, function () {
         it('{description}', function (ctx) {
+            const expected = ctx.res;
+
             const frames = streamsInfo._adjustAspectRatio(ctx.data);
 
-            const {sample_aspect_ratio, display_aspect_ratio} = ctx.res; // eslint-disable-line
-
-            assert(frames[0].sample_aspect_ratio === sample_aspect_ratio); // eslint-disable-line
-            assert(frames[0].display_aspect_ratio === display_aspect_ratio); // eslint-disable-line
+            assert.deepEqual(frames, expected);
         });
     });
 
     it('all params are good', () => {
-        const frames = streamsInfo._adjustAspectRatio([
+        const inputData = [
             {sample_aspect_ratio: '10:1', display_aspect_ratio: '10:1', width: 30, height: 10}
-        ]);
+        ];
 
-        assert(frames[0].sample_aspect_ratio === '10:1');
-        assert(frames[0].display_aspect_ratio === '10:1');
+        const expected = _.cloneDeep(inputData);
+
+        const frames = streamsInfo._adjustAspectRatio(inputData);
+
+        assert.deepEqual(frames, expected);
     });
 
 });
