@@ -27,7 +27,7 @@ describe('StreamsInfo::_calculateDisplayAspectRatio', () => {
         });
     });
 
-    dataDriven(validParams, function() {
+    dataDriven(validParams, function () {
         it('calculate display aspect ratio for correct input {aspectRate}', (ctx) => {
             const expected = ctx.aspectRate;
 

@@ -7,6 +7,9 @@ const {promisify} = require('util');
 
 const Errors = require('./Errors');
 
+const DAR_OR_SAR_NA = 'N/A';
+const DAR_OR_SAR_01 = '0:1';
+
 class StreamsInfo {
     constructor(config, url) {
         if (!_.isObject(config) || _.isFunction(config)) {
@@ -108,7 +111,11 @@ class StreamsInfo {
         const frames = videoFrames.slice();
 
         return frames.map(video => {
-            if (video.sample_aspect_ratio === '0:1' || video.display_aspect_ratio === '0:1') {
+            if (video.sample_aspect_ratio === DAR_OR_SAR_01 ||
+                video.display_aspect_ratio === DAR_OR_SAR_01 ||
+                video.sample_aspect_ratio === DAR_OR_SAR_NA ||
+                video.display_aspect_ratio === DAR_OR_SAR_NA
+            ) {
                 video.sample_aspect_ratio  = '1:1';
                 video.display_aspect_ratio = this._calculateDisplayAspectRatio(video.width, video.height);
             }
