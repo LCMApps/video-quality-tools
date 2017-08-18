@@ -31,6 +31,8 @@ describe('StreamsInfo::fetch functional', () => {
             });
     });
 
+    // TODO: process.env.FFMPEG
+    // TODO: kill ffmpeg
     it('fetch streams info from active stream', function (done) {
         this.timeout(5 * 1000);
 
