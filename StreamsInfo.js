@@ -43,11 +43,15 @@ class StreamsInfo {
         try {
             ({stdout, stderr} = await this._runShowStreamsProcess());
         } catch (e) {
-            throw new Errors.StreamsInfoError(e.message, {error: e, url: this._url});
+            throw new Errors.StreamsInfoError('Ffprobe failed to fetch streams data', {error: e, url: this._url});
         }
 
         if (stderr) {
             throw new Errors.StreamsInfoError(`StreamsInfo::fetch stderr: ${stderr}`, {url: this._url});
+        }
+
+        if (!_.isString(stdout) || _.isEmpty(stdout)) {
+            throw new Errors.StreamsInfoError('Ffprobe had not respond to stdout', {url: this._url});
         }
 
         let {videos, audios} = this._parseStreamsInfo(stdout);
@@ -86,11 +90,11 @@ class StreamsInfo {
         try {
             jsonResult = JSON.parse(rawResult);
         } catch(e) {
-            throw new Errors.StreamsInfoError(e.message, {error: e, url: this._url});
+            throw new Errors.StreamsInfoError('Failed to parse ffprobe data', {error: e, url: this._url});
         }
 
-        if (_.isNull(jsonResult)) {
-            throw new Errors.StreamsInfoError('Cannot read property \'streams\' of null', {url: this._url});
+        if (!_.isObject(jsonResult) || _.isArray(jsonResult)) {
+            throw new Errors.StreamsInfoError('Ffprobe streams data must be an object', {url: this._url});
         }
 
         if (!Array.isArray(jsonResult.streams)) {

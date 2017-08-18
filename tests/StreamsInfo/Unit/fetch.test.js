@@ -25,39 +25,45 @@ describe('StreamsInfo::fetch', () => {
     let stubAdjustAspectRatio;
 
     beforeEach(() => {
-        stubParseStreamsInfo  = sinon.stub(streamsInfo, '_parseStreamsInfo').callThrough();
-        stubAdjustAspectRatio = sinon.stub(streamsInfo, '_adjustAspectRatio').callThrough();
+        stubParseStreamsInfo      = sinon.stub(streamsInfo, '_parseStreamsInfo').callThrough();
+        stubAdjustAspectRatio     = sinon.stub(streamsInfo, '_adjustAspectRatio').callThrough();
+        stubRunShowStreamsProcess = sinon.stub(streamsInfo, '_runShowStreamsProcess');
     });
 
     afterEach(() => {
         stubParseStreamsInfo.restore();
         stubAdjustAspectRatio.restore();
-
         stubRunShowStreamsProcess.restore();
     });
 
     it('child process returns with error code right after the start, fs.exec throws err', async () => {
-        const error = new Error('some exception');
+        const expectedWrappedErrorMessage = 'Ffprobe failed to fetch streams data';
+        const expectedWrappedErrorClass   = StreamsInfoError;
 
-        stubRunShowStreamsProcess = sinon.stub(streamsInfo, '_runShowStreamsProcess').rejects(error);
+        const spawnError = new Error('some exception');
 
-        const err = await streamsInfo.fetch().should.be.rejectedWith(StreamsInfoError);
+        stubRunShowStreamsProcess.rejects(spawnError);
 
-        assert.strictEqual(err.message, error.message);
-        assert.deepEqual(err.extra, {
-            error: error,
-            url  : correctUrl
-        });
+        try {
+            await streamsInfo.fetch();
+        } catch (err) {
+            assert.instanceOf(err, expectedWrappedErrorClass);
+            assert.strictEqual(err.message, expectedWrappedErrorMessage);
+            assert.deepEqual(err.extra, {
+                error: spawnError,
+                url  : correctUrl
+            });
 
-        assert(stubRunShowStreamsProcess.calledOnce);
-        assert.isEmpty(stubRunShowStreamsProcess.getCall(0).args);
+            assert(stubRunShowStreamsProcess.calledOnce);
+            assert.isTrue(stubRunShowStreamsProcess.firstCall.calledWithExactly());
 
-        assert.isFalse(stubParseStreamsInfo.called);
-        assert.isFalse(stubAdjustAspectRatio.called);
+            assert.isFalse(stubParseStreamsInfo.called);
+            assert.isFalse(stubAdjustAspectRatio.called);
+        }
     });
 
     it('child process returns { stdout: undefined, stderr: undefined}', async () => {
-        stubRunShowStreamsProcess = sinon.stub(streamsInfo, '_runShowStreamsProcess').resolves({});
+        stubRunShowStreamsProcess.resolves({});
 
         const err = await streamsInfo.fetch().should.be.rejectedWith(StreamsInfoError);
 
@@ -76,7 +82,7 @@ describe('StreamsInfo::fetch', () => {
     it('child process stderr output, even with stdout one', async () => {
         const error = 'some error';
 
-        stubRunShowStreamsProcess = sinon.stub(streamsInfo, '_runShowStreamsProcess').resolves({
+        stubRunShowStreamsProcess.resolves({
             stderr: error,
             stdout: 'even stdout here'
         });
@@ -96,7 +102,7 @@ describe('StreamsInfo::fetch', () => {
     });
 
     it('child process stdout is null', async () => {
-        stubRunShowStreamsProcess = sinon.stub(streamsInfo, '_runShowStreamsProcess').resolves({
+        stubRunShowStreamsProcess.resolves({
             stdout: null
         });
 
@@ -115,7 +121,7 @@ describe('StreamsInfo::fetch', () => {
     });
 
     it('child process stdout is empty object', async () => {
-        stubRunShowStreamsProcess = sinon.stub(streamsInfo, '_runShowStreamsProcess').resolves({
+        stubRunShowStreamsProcess.resolves({
             stdout: '{}'
         });
 
@@ -135,7 +141,7 @@ describe('StreamsInfo::fetch', () => {
 
     it('child process stdout contains empty streams array', async () => {
         const stdout              = '{ "streams": [] }';
-        stubRunShowStreamsProcess = sinon.stub(streamsInfo, '_runShowStreamsProcess').resolves({stdout});
+        stubRunShowStreamsProcess.resolves({stdout});
 
         await streamsInfo.fetch().should.eventually.deep.equal({
             videos: [],
@@ -155,7 +161,7 @@ describe('StreamsInfo::fetch', () => {
     it('child process stdout contains not empty streams array, 1 audio and 1 video streams', async () => {
         const stdout = '{ "streams": [ {"codec_type": "video"}, {"codec_type": "audio"} ] }';
 
-        stubRunShowStreamsProcess = sinon.stub(streamsInfo, '_runShowStreamsProcess').resolves({stdout});
+        stubRunShowStreamsProcess.resolves({stdout});
 
         await streamsInfo.fetch().should.eventually.deep.equal({
             videos: [{codec_type: 'video'}],
