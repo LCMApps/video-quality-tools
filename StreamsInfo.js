@@ -34,7 +34,8 @@ class StreamsInfo {
     }
 
     async fetch() {
-        let stdout, stderr;
+        let stdout;
+        let stderr;
 
         try {
             ({stdout, stderr} = await this._runShowStreamsProcess());
@@ -64,7 +65,14 @@ class StreamsInfo {
     _runShowStreamsProcess() {
         const {ffprobePath, timeoutInSec} = this._config;
 
-        const command = `${ffprobePath} -hide_banner -v error -show_streams -print_format json '${this._url} timeout=${timeoutInSec}'`;
+        const command = `
+            ${ffprobePath}\
+            -hide_banner\
+            -v error\
+            -show_streams\
+            -print_format json\
+            '${this._url} timeout=${timeoutInSec}'
+        `;
 
         return promisify(exec)(command);
     }
@@ -84,7 +92,8 @@ class StreamsInfo {
 
         if (!Array.isArray(jsonResult.streams)) {
             throw new Errors.StreamsInfoError(
-                `'streams' field should be an Array. Instead it has ${Object.prototype.toString.call(jsonResult.streams)} type.`,
+                "'streams' field should be an Array. " +
+                `Instead it has ${Object.prototype.toString.call(jsonResult.streams)} type.`,
                 {url: this._url}
             );
         }
