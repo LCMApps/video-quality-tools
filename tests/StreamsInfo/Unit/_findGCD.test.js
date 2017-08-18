@@ -5,7 +5,7 @@ const dataDriven = require('data-driven');
 
 const {correctPath, correctUrl, StreamsInfo} = require('./Helpers');
 
-describe('StreamsInfo::_findGCD', () => {
+describe('StreamsInfo::_findGcd', () => {
 
     const streamsInfo = new StreamsInfo({
         ffprobePath : correctPath,
@@ -13,33 +13,23 @@ describe('StreamsInfo::_findGCD', () => {
     }, correctUrl);
 
     const data = [
-        {
-            description: 'zeros input values',
-            data       : {a: 0, b: 0},
-            answer     : 0
-        },
-        {
-            description: 'ones input values',
-            data       : {a: 1, b: 1},
-            answer     : 1
-        },
-        {
-            description: 'correct positive natural numbers',
-            data       : {a: 98, b: 56},
-            answer     : 14
-        },
-        {
-            description: 'correct positive natural numbers in reverse order',
-            data       : {a: 56, b: 98},
-            answer     : 14
-        }
+        {a: 0, b: 0, answer: 0},
+        {a: 1, b: 0, answer: 1},
+        {a: 0, b: 1, answer: 1},
+        {a: 1, b: 1, answer: 1},
+        {a: 13, b: 7, answer: 1},
+        {a: 7, b: 13, answer: 1},
+        {a: 56, b: 98, answer: 14},
+        {a: 98, b: 56, answer: 14},
     ];
 
     dataDriven(data, function () {
-        it('{description}', function (ctx) {
-            const answer = streamsInfo._findGCD(ctx.data.a, ctx.data.b);
+        it('for ({a}, {b})', function (ctx) {
+            const expectation = ctx.answer;
 
-            assert(answer === ctx.answer);
+            const result = streamsInfo._findGcd(ctx.a, ctx.b);
+
+            assert.strictEqual(result, expectation);
         });
     });
 
