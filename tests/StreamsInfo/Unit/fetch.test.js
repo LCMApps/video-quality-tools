@@ -1,6 +1,5 @@
 'use strict';
 
-const _             = require('lodash');
 const sinon         = require('sinon');
 const chai          = require('chai');
 const chaiAsPromise = require('chai-as-promised');
@@ -12,7 +11,7 @@ const assert = chai.assert;
 chai.use(chaiAsPromise);
 chai.should();
 
-const {correctPath, correctUrl, StreamsInfo} = require('./');
+const {correctPath, correctUrl, StreamsInfo} = require('./Helpers');
 
 describe('StreamsInfo::fetch', () => {
 
@@ -117,7 +116,7 @@ describe('StreamsInfo::fetch', () => {
 
     it('child process stdout is empty object', async () => {
         stubRunShowStreamsProcess = sinon.stub(streamsInfo, '_runShowStreamsProcess').resolves({
-            stdout: "{}"
+            stdout: '{}'
         });
 
         const err = await streamsInfo.fetch().should.be.rejectedWith(StreamsInfoError);

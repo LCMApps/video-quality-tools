@@ -1,12 +1,11 @@
 'use strict';
 
-const sinon       = require('sinon');
-const {assert}    = require('chai');
-const data_driven = require('data-driven');
+const {assert}   = require('chai');
+const dataDriven = require('data-driven');
 
 const {StreamsInfoError} = require('Errors');
 
-const {correctPath, correctUrl, StreamsInfo} = require('./');
+const {correctPath, correctUrl, StreamsInfo} = require('./Helpers');
 
 const {invalidParams} = require('./_calculateDisplayAspectRatio.data');
 
@@ -17,7 +16,7 @@ describe('StreamsInfo::_calculateDisplayAspectRatio', () => {
         timeoutInSec: 1
     }, correctUrl);
 
-    data_driven(invalidParams, function () {
+    dataDriven(invalidParams, function () {
         it('calculate display aspect ratio for {description}', function (ctx) {
             assert.throws(() => {
                 streamsInfo._calculateDisplayAspectRatio(ctx.data.width, ctx.data.height);

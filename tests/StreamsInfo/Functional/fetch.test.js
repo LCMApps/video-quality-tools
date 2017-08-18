@@ -1,6 +1,5 @@
 'use strict';
 
-const _       = require('lodash');
 const path    = require('path');
 const {spawn} = require('child_process');
 
@@ -16,11 +15,11 @@ describe('StreamsInfo::fetch functional', () => {
     const streamURL = 'http://localhost:8888';
 
     let streamsInfo = new StreamsInfo({
-        ffprobePath:  process.env.FFPROBE_PATH,
+        ffprobePath : process.env.FFPROBE_PATH,
         timeoutInSec: 1,
     }, streamURL);
 
-    it('fetch streams info from inactive stream', function() {
+    it('fetch streams info from inactive stream', function () {
         this.timeout(5 * 1000);
 
         return streamsInfo.fetch()
@@ -32,7 +31,7 @@ describe('StreamsInfo::fetch functional', () => {
             });
     });
 
-    it('fetch streams info from active stream', function(done) {
+    it('fetch streams info from active stream', function (done) {
         this.timeout(5 * 1000);
 
         let command  = `ffmpeg -re -i ${testFile} -vcodec copy -acodec copy -listen 1 -f flv ${streamURL}`.split(' ');
