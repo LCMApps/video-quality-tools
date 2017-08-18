@@ -1,115 +1,99 @@
-const {correctPath, correctUrl} = require('./Helpers');
+const {correctPath} = require('./Helpers');
 
-const incorrectInputData = [
+const incorrectConfigData = [
     {
-        'description': 'config param has invalid (Boolean) type',
+        'type': 'Boolean',
         'config'     : false,
-        'errorMsg'   : 'Config param should be an object, bastard.'
     },
     {
-        'description': 'config param has invalid (Null) type',
+        'type': 'Null',
         'config'     : null,
-        'errorMsg'   : 'Config param should be an object, bastard.'
     },
     {
-        'description': 'config param has invalid (Undefined) type',
+        'type': 'Undefined',
         'config'     : undefined,
-        'errorMsg'   : 'Config param should be an object, bastard.'
     },
     {
-        'description': 'config param has invalid (Number) type',
+        'type': 'Number',
         'config'     : 111,
-        'errorMsg'   : 'Config param should be an object, bastard.'
     },
     {
-        'description': 'config param has invalid (String) type',
+        'type': 'String',
         'config'     : '111',
-        'errorMsg'   : 'Config param should be an object, bastard.'
     },
     {
-        'description': 'config param has invalid (Symbol) type',
+        'type': 'Symbol',
         'config'     : Symbol(),
-        'errorMsg'   : 'Config param should be an object, bastard.'
     },
     {
-        'description': 'config param has invalid (Function) type',
+        'type': 'Function',
         'config'     : function () {
         },
-        'errorMsg'   : 'Config param should be an object, bastard.'
     },
+];
+
+const incorrectUrlData = [
     {
-        'description': 'url param has invalid (Boolean) type',
-        'config'     : {},
+        'type': 'Boolean',
         'url'        : false,
-        'errorMsg'   : 'You should provide a correct url, bastard.'
     },
     {
-        'description': 'url param has invalid (Null) type',
-        'config'     : {},
+        'type': 'Null',
         'url'        : null,
-        'errorMsg'   : 'You should provide a correct url, bastard.'
     },
     {
-        'description': 'url param has invalid (Undefined) type',
-        'config'     : {},
+        'type': 'Undefined',
         'url'        : undefined,
-        'errorMsg'   : 'You should provide a correct url, bastard.'
     },
     {
-        'description': 'url param has invalid (Number) type',
-        'config'     : {},
+        'type': 'Number',
         'url'        : 111,
-        'errorMsg'   : 'You should provide a correct url, bastard.'
     },
     {
-        'description': 'url param has invalid (Object) type',
-        'config'     : {},
+        'type': 'Object',
         'url'        : {},
-        'errorMsg'   : 'You should provide a correct url, bastard.'
     },
     {
-        'description': 'url param has invalid (Symbol) type',
-        'config'     : {},
+        'type': 'Symbol',
         'url'        : Symbol(),
-        'errorMsg'   : 'You should provide a correct url, bastard.'
     },
     {
-        'description': 'url param has invalid (Function) type',
-        'config'     : {},
+        'type': 'Function',
         'url'        : function () {
         },
-        'errorMsg'   : 'You should provide a correct url, bastard.'
     },
 ];
 
 const incorrectConfig = [
     {
-        'description': 'config object is empty',
+        'description': 'config object must not be empty',
         'config'     : {},
-        'url'        : correctUrl,
         'errorMsg'   : 'You should provide a correct path to ffprobe, bastard.'
     },
     {
-        'description': 'config.timeout param was not passed',
+        'description': 'config.timeout must be passed',
         'config'     : {ffprobePath: correctPath},
-        'url'        : correctUrl,
         'errorMsg'   : 'You should provide a correct timeout, bastard.'
     },
     {
-        'description': 'config.timeout param is decimal',
+        'description': 'config.timeout param must be a positive integer, float is passed',
         'config'     : {ffprobePath: correctPath, timeoutInSec: 1.1},
-        'url'        : correctUrl,
         'errorMsg'   : 'You should provide a correct timeout, bastard.'
     },
     {
-        'description': 'config.timeout param is negative',
+        'description': 'config.timeout param must be a positive integer, negative is passed',
         'config'     : {ffprobePath: correctPath, timeoutInSec: -1},
-        'url'        : correctUrl,
         'errorMsg'   : 'You should provide a correct timeout, bastard.'
-    }
+    },
+    {
+        'description': 'config.timeout param must be a positive integer, string is passed',
+        'config'     : {ffprobePath: correctPath, timeoutInSec: '10'},
+        'errorMsg'   : 'You should provide a correct timeout, bastard.'
+    },
 ];
 
 module.exports = {
-    incorrectInputData,
+    incorrectConfigData,
+    incorrectUrlData,
     incorrectConfig
 };

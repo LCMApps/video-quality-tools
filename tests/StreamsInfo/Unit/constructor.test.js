@@ -7,22 +7,30 @@ const Errors = require('Errors');
 
 const {correctPath, correctUrl, StreamsInfo} = require('./Helpers');
 
-const {incorrectInputData, incorrectConfig} = require('./constructor.data');
+const {incorrectConfigData, incorrectUrlData, incorrectConfig} = require('./constructor.data');
 
 describe('StreamsInfo::constructor', () => {
 
-    dataDriven(incorrectInputData, function () {
-        it('{description}', function (ctx) {
+    dataDriven(incorrectConfigData, function () {
+        it('config param has invalid ({type}) type', function (ctx) {
             assert.throws(() => {
-                new StreamsInfo(ctx.config, ctx.url);
-            }, TypeError, ctx.errorMsg);
+                new StreamsInfo(ctx.config, undefined);
+            }, TypeError, 'Config param should be an object, bastard.');
+        });
+    });
+
+    dataDriven(incorrectUrlData, function () {
+        it('url param has invalid ({type}) type', function (ctx) {
+            assert.throws(() => {
+                new StreamsInfo({}, ctx.url);
+            }, TypeError, 'You should provide a correct url, bastard.');
         });
     });
 
     dataDriven(incorrectConfig, function () {
         it('{description}', function (ctx) {
             assert.throws(() => {
-                new StreamsInfo(ctx.config, ctx.url);
+                new StreamsInfo(ctx.config, correctUrl);
             }, Errors.ConfigError, ctx.errorMsg);
         });
     });
@@ -30,7 +38,7 @@ describe('StreamsInfo::constructor', () => {
     it('config.ffprobePath points to incorrect path', () => {
         assert.throws(() => {
             new StreamsInfo({
-                ffprobePath : '/bad/ffprobe/path',
+                ffprobePath : `/incorrect/path/${correctUrl}`,
                 timeoutInSec: 1
             }, correctUrl);
         }, Errors.ExecutablePathError);
