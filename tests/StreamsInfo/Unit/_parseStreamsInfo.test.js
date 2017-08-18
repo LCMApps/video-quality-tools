@@ -4,7 +4,7 @@ const {assert} = require('chai');
 
 const {StreamsInfoError} = require('Errors');
 
-const {correctPath, correctUrl, StreamsInfo} = require('./');
+const {correctPath, correctUrl, StreamsInfo} = require('./Helpers');
 
 describe('StreamsInfo::_parseStreamsInfo', () => {
 
@@ -38,15 +38,17 @@ describe('StreamsInfo::_parseStreamsInfo', () => {
     });
 
     it('invalid, empty input', () => {
-        assert.throws(() => {
-            streamsInfo._parseStreamsInfo('{}')
-        }, StreamsInfoError, `'streams' field should be an Array. Instead it has [object Undefined] type.`); // check extra
+        assert.throws(
+            () => streamsInfo._parseStreamsInfo('{}'),
+            StreamsInfoError,
+            "'streams' field should be an Array. Instead it has [object Undefined] type."
+        ); // check extra
     });
 
     it('invalid, streams input object', () => {
         assert.throws(() => {
-            streamsInfo._parseStreamsInfo('{ "streams": {} }')
-        }, StreamsInfoError, `'streams' field should be an Array. Instead it has [object Object] type.`);
+            streamsInfo._parseStreamsInfo('{ "streams": {} }');
+        }, StreamsInfoError, "'streams' field should be an Array. Instead it has [object Object] type.");
     });
 
     it('empty streams array', () => {

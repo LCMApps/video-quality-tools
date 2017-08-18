@@ -1,12 +1,11 @@
 'use strict';
 
-const sinon       = require('sinon');
-const {assert}    = require('chai');
-const data_driven = require('data-driven');
+const {assert}   = require('chai');
+const dataDriven = require('data-driven');
 
 const {StreamsInfoError} = require('Errors');
 
-const {correctPath, correctUrl, StreamsInfo} = require('./');
+const {correctPath, correctUrl, StreamsInfo} = require('./Helpers');
 
 const {invalidParams, validParams} = require('./_adjustAspectRatio.data');
 
@@ -17,22 +16,22 @@ describe('StreamsInfo::_adjustAspectRatio', () => {
         timeoutInSec: 1
     }, correctUrl);
 
-    data_driven(invalidParams, function () {
+    dataDriven(invalidParams, function () {
         it('{description}', function (ctx) {
             assert.throws(() => {
-                streamsInfo._adjustAspectRatio(ctx.data)
+                streamsInfo._adjustAspectRatio(ctx.data);
             }, StreamsInfoError, ctx.errorMsg);
         });
     });
 
-    data_driven(validParams, function () {
+    dataDriven(validParams, function () {
         it('{description}', function (ctx) {
             const frames = streamsInfo._adjustAspectRatio(ctx.data);
 
-            const {sample_aspect_ratio, display_aspect_ratio} = ctx.res;
+            const {sample_aspect_ratio, display_aspect_ratio} = ctx.res; // eslint-disable-line
 
-            assert(frames[0].sample_aspect_ratio === sample_aspect_ratio);
-            assert(frames[0].display_aspect_ratio === display_aspect_ratio);
+            assert(frames[0].sample_aspect_ratio === sample_aspect_ratio); // eslint-disable-line
+            assert(frames[0].display_aspect_ratio === display_aspect_ratio); // eslint-disable-line
         });
     });
 

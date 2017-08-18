@@ -1,19 +1,17 @@
 'use strict';
 
-const sinon       = require('sinon');
 const {assert}    = require('chai');
-const proxyquire  = require('proxyquire');
-const data_driven = require('data-driven');
+const dataDriven = require('data-driven');
 
 const Errors = require('Errors');
 
-const {correctPath, correctUrl, StreamsInfo} = require('./');
+const {correctPath, correctUrl, StreamsInfo} = require('./Helpers');
 
 const {incorrectInputData, incorrectConfig} = require('./constructor.data');
 
 describe('StreamsInfo::constructor', () => {
 
-    data_driven(incorrectInputData, function () {
+    dataDriven(incorrectInputData, function () {
         it('{description}', function (ctx) {
             assert.throws(() => {
                 new StreamsInfo(ctx.config, ctx.url);
@@ -21,7 +19,7 @@ describe('StreamsInfo::constructor', () => {
         });
     });
 
-    data_driven(incorrectConfig, function () {
+    dataDriven(incorrectConfig, function () {
         it('{description}', function (ctx) {
             assert.throws(() => {
                 new StreamsInfo(ctx.config, ctx.url);
