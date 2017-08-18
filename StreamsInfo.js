@@ -47,11 +47,19 @@ class StreamsInfo {
         }
 
         if (stderr) {
-            throw new Errors.StreamsInfoError(`StreamsInfo::fetch stderr: ${stderr}`, {url: this._url});
+            throw new Errors.StreamsInfoError(`Ffprobe wrote to stderr: ${stderr}`, {url: this._url});
         }
 
-        if (!_.isString(stdout) || _.isEmpty(stdout)) {
-            throw new Errors.StreamsInfoError('Ffprobe had not respond to stdout', {url: this._url});
+        if (!_.isString(stdout)) {
+            throw new Errors.StreamsInfoError('Ffprobe stdout has invalid type', {
+                stdout: stdout,
+                type  : Object.prototype.toString.call(stdout),
+                url   : this._url
+            });
+        }
+
+        if (_.isEmpty(stdout)) {
+            throw new Errors.StreamsInfoError('Ffprobe stdout is empty', {url: this._url});
         }
 
         let {videos, audios} = this._parseStreamsInfo(stdout);
@@ -89,11 +97,11 @@ class StreamsInfo {
 
         try {
             jsonResult = JSON.parse(rawResult);
-        } catch(e) {
+        } catch (e) {
             throw new Errors.StreamsInfoError('Failed to parse ffprobe data', {error: e, url: this._url});
         }
 
-        if (!_.isObject(jsonResult) || _.isArray(jsonResult)) {
+        if (Object.prototype.toString.call(jsonResult) !== '[object Object]') {
             throw new Errors.StreamsInfoError('Ffprobe streams data must be an object', {url: this._url});
         }
 
