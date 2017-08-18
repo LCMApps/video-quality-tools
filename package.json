@@ -22,17 +22,17 @@
   },
   "license": "SEE LICENSE IN LICENSE.md",
   "devDependencies": {
-    "app-module-path": "^2.2.0",
     "chai": "^4.1.0",
     "chai-as-promised": "^7.1.1",
+    "data-driven": "^1.3.0",
     "eslint": "^4.4.1",
     "mocha": "^3.5.0",
+    "proxyquire": "^1.8.0",
     "sinon": "^2.4.1"
   },
   "dependencies": {
-    "data-driven": "^1.3.0",
+    "app-module-path": "^2.2.0",
     "lodash": "^4.17.4",
-    "longest-repeating-and-non-overlapping-pattern": "^1.0.4",
-    "proxyquire": "^1.8.0"
+    "longest-repeating-and-non-overlapping-pattern": "^1.0.4"
   }
 }
