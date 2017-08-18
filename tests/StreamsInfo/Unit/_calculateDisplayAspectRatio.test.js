@@ -7,7 +7,7 @@ const {StreamsInfoError} = require('Errors');
 
 const {correctPath, correctUrl, StreamsInfo} = require('./Helpers');
 
-const {invalidParams} = require('./_calculateDisplayAspectRatio.data');
+const {invalidParams, validParams} = require('./_calculateDisplayAspectRatio.data');
 
 describe('StreamsInfo::_calculateDisplayAspectRatio', () => {
 
@@ -17,17 +17,23 @@ describe('StreamsInfo::_calculateDisplayAspectRatio', () => {
     }, correctUrl);
 
     dataDriven(invalidParams, function () {
-        it('calculate display aspect ratio for {description}', function (ctx) {
+        it('width or height must be a positive integers, but {description} was passed', function (ctx) {
+            const expectedErrorMsg   = 'Can not calculate aspect rate due to invalid video resolution';
+            const expectedErrorClass = StreamsInfoError;
+
             assert.throws(() => {
-                streamsInfo._calculateDisplayAspectRatio(ctx.data.width, ctx.data.height);
-            }, StreamsInfoError, ctx.errorMsg);
+                streamsInfo._calculateDisplayAspectRatio(ctx.width, ctx.height);
+            }, expectedErrorClass, expectedErrorMsg);
         });
     });
 
-    it('calculate display aspect ratio for correct input', () => {
-        const res = streamsInfo._calculateDisplayAspectRatio(10, 5);
+    dataDriven(validParams, function() {
+        it('calculate display aspect ratio for correct input {aspectRate}', (ctx) => {
+            const expected = ctx.aspectRate;
 
-        assert.equal(res, '2:1');
+            const result = streamsInfo._calculateDisplayAspectRatio(ctx.width, ctx.height);
+
+            assert.strictEqual(result, expected);
+        });
     });
-
 });

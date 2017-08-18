@@ -118,24 +118,27 @@ class StreamsInfo {
     }
 
     _calculateDisplayAspectRatio(width, height) {
-        if (!_.isInteger(width) || width <= 0) {
-            throw new Errors.StreamsInfoError('width field has invalid value.', {width, url: this._url});
+        if (!_.isInteger(width) || !_.isInteger(height) || width <= 0 || height <= 0) {
+            throw new Errors.StreamsInfoError(
+                'Can not calculate aspect rate due to invalid video resolution',
+                {width, height, url: this._url}
+            );
         }
 
-        if (!_.isInteger(height) || height <= 0) {
-            throw new Errors.StreamsInfoError('height field has invalid value.', {height, url: this._url});
-        }
+        const gcd = this._findGcd(width, height);
 
-        const GCD = this._findGCD(width, height);
-
-        return `${width / GCD}:${height / GCD}`;
+        return `${width / gcd}:${height / gcd}`;
     }
 
-    _findGCD(a, b) {
+    _findGcd(a, b) {
+        if (a === 0 && b === 0) {
+            return 0;
+        }
+
         if (b === 0) {
             return a;
         }
-        return this._findGCD(b, a % b);
+        return this._findGcd(b, a % b);
     }
 }
 

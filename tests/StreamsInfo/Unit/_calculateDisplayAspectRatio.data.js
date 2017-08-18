@@ -1,34 +1,82 @@
 const invalidParams = [
     {
-        'description': 'undefined video width',
-        'data'       : {},
-        'errorMsg'   : 'width field has invalid value.'
+        description: 'undefined width',
+        width      : undefined,
+        height     : 123,
     },
     {
-        'description': 'undefined video height',
-        'data'       : {width: 10},
-        'errorMsg'   : 'height field has invalid value.'
+        description: 'undefined height',
+        width      : 123,
+        height     : undefined,
     },
     {
-        'description': 'invalid video width',
-        'data'       : {width: 0},
-        'errorMsg'   : 'width field has invalid value.'
+        description: 'not-int width',
+        width      : 10,
+        height     : '123',
     },
     {
-        'description': 'invalid video height',
-        'data'       : {width: 5, height: 0},
-        'errorMsg'   : 'height field has invalid value.'
+        description: 'not-int height',
+        width      : '123',
+        height     : 10,
     },
     {
-        'description': 'decimal video width',
-        'data'       : {width: 11.5},
-        'errorMsg'   : 'width field has invalid value.'
+        description: 'float width',
+        width      : 11.5,
+        height     : 10,
     },
     {
-        'description': 'decimal video height',
-        'data'       : {width: 10, height: 11.5},
-        'errorMsg'   : 'height field has invalid value.'
+        description: 'float height',
+        width      : 10,
+        height     : 11.5,
+    },
+    {
+        description: 'zero width',
+        width      : 0,
+        height     : 10,
+    },
+    {
+        description: 'zero height',
+        width      : 10,
+        height     : 0,
+    },
+];
+
+const validParams = [
+    {
+        width     : 1,
+        height    : 1,
+        aspectRate: '1:1'
+    },
+    {
+        width     : 10,
+        height    : 1,
+        aspectRate: '10:1'
+    },
+    {
+        width     : 1,
+        height    : 10,
+        aspectRate: '1:10'
+    },
+    {
+        width     : 13,
+        height    : 7,
+        aspectRate: '13:7'
+    },
+    {
+        width     : 7,
+        height    : 13,
+        aspectRate: '7:13'
+    },
+    {
+        width     : 10,
+        height    : 5,
+        aspectRate: '2:1'
+    },
+    {
+        width     : 5,
+        height    : 10,
+        aspectRate: '1:2'
     }
 ];
 
-module.exports = {invalidParams};
+module.exports = {invalidParams, validParams};
