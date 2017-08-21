@@ -1,6 +1,5 @@
 'use strict';
 
-const _          = require('lodash');
 const sinon      = require('sinon');
 const {assert}   = require('chai');
 const dataDriven = require('data-driven');
@@ -102,7 +101,7 @@ describe('StreamsInfo::fetch', () => {
                 stubRunShowStreamsProcess.resolves({stdout: ctx.stdout});
 
                 try {
-                    await streamsInfo.fetch()
+                    await streamsInfo.fetch();
                 } catch (error) {
                     assert.instanceOf(error, expectedErrorClass);
 
@@ -117,14 +116,14 @@ describe('StreamsInfo::fetch', () => {
         }
     );
 
-    it('ffmpeg child process processed correct, but stdout string is empty. fetch method must throw an exception', async () => {
+    it('ffmpeg child process processed correct, but stdout string is empty. fetch method must throw an exception', async () => { // eslint-disable-line
         const expectedErrorMessage = 'Ffprobe stdout is empty';
         const expectedErrorClass   = StreamsInfoError;
 
         stubRunShowStreamsProcess.resolves({stdout: ''});
 
         try {
-            await streamsInfo.fetch()
+            await streamsInfo.fetch();
         } catch (err) {
             assert.instanceOf(err, expectedErrorClass);
 
@@ -144,7 +143,7 @@ describe('StreamsInfo::fetch', () => {
     dataDriven(
         [undefined, null, true, 123, Symbol(123), {}, () => {}].map(data => ({type: typeOf(data), data})),
         () => {
-            it("ffmpeg child process processed correct, but stdout must has 'streams' prop of array type, but {type} received", async (ctx) => {
+            it("ffmpeg child process processed correct, but stdout must has 'streams' prop of array type, but {type} received", async (ctx) => { // eslint-disable-line
                 const expectedErrorClass = StreamsInfoError;
                 const rawStreamInfo      = JSON.stringify({streams: ctx.data});
 
@@ -168,7 +167,7 @@ describe('StreamsInfo::fetch', () => {
     );
 
 
-    it('child process stdout contains not empty streams array, 2 audios, 2 videos and several data streams', async () => {
+    it('child process stdout contains not empty streams array, 2 audios, 2 videos and several data streams', async () => { // eslint-disable-line
         const expectedResult = {
             videos: [
                 {codec_type: 'video', profile: 'Main', width: 100, height: 100},
