@@ -3,7 +3,7 @@
 const {assert}   = require('chai');
 const dataDriven = require('data-driven');
 
-const {correctPath, correctUrl, StreamsInfo} = require('./Helpers');
+const {correctPath, correctUrl, StreamsInfo} = require('./Helpers/');
 
 describe('StreamsInfo::_findGcd', () => {
 

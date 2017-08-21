@@ -5,7 +5,7 @@ const dataDriven = require('data-driven');
 
 const {StreamsInfoError} = require('src/Errors');
 
-const {correctPath, correctUrl, StreamsInfo} = require('./Helpers');
+const {correctPath, correctUrl, StreamsInfo} = require('./Helpers/');
 
 const {invalidParams, validParams} = require('./_calculateDisplayAspectRatio.data');
 
