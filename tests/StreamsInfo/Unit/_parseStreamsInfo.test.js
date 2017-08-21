@@ -7,6 +7,10 @@ const {StreamsInfoError} = require('Errors');
 
 const {correctPath, correctUrl, StreamsInfo} = require('./Helpers');
 
+function typeOf(obj) {
+    return Object.prototype.toString.call(obj);
+}
+
 describe('StreamsInfo::_parseStreamsInfo', () => {
 
     const streamsInfo = new StreamsInfo({
@@ -31,17 +35,12 @@ describe('StreamsInfo::_parseStreamsInfo', () => {
     });
 
     dataDriven(
-        [
-            {type: 'bool', rawData: 'true'},
-            {type: 'array', rawData: '[]'},
-            {type: 'null', rawData: 'null'},
-            {type: 'number', rawData: '123'},
-        ],
-        function () {
+        [null, true, [], 123, '123'].map(item => ({type: typeOf(item), data: item})),
+        () => {
             it('method awaits for json stringified object, but {type} received', (ctx) => {
                 const expectedErrorMessage = 'Ffprobe streams data must be an object';
                 const expectedErrorClass   = StreamsInfoError;
-                const rawStreamInfo        = ctx.rawData;
+                const rawStreamInfo        = JSON.stringify(ctx.data);
 
                 try {
                     streamsInfo._parseStreamsInfo(rawStreamInfo);
@@ -56,17 +55,12 @@ describe('StreamsInfo::_parseStreamsInfo', () => {
     );
 
     dataDriven(
-        [
-            {type: '[object Boolean]', rawData: true},
-            {type: '[object Object]', rawData: {}},
-            {type: '[object Null]', rawData: null},
-            {type: '[object Number]', rawData: 123},
-        ],
-        function () {
+        [null, true, {}, 123, '123'].map(item => ({type: typeOf(item), data: item})),
+        () => {
             it("method awaits for 'streams' prop of array type, but {type} received", (ctx) => {
                 const expectedErrorMessage = `'streams' field should be an Array. Instead it has ${ctx.type} type.`;
                 const expectedErrorClass   = StreamsInfoError;
-                const rawStreamInfo        = JSON.stringify({streams: ctx.rawData});
+                const rawStreamInfo        = JSON.stringify({streams: ctx.data});
 
                 try {
                     streamsInfo._parseStreamsInfo(rawStreamInfo);
@@ -81,56 +75,55 @@ describe('StreamsInfo::_parseStreamsInfo', () => {
     );
 
     it('empty streams array', () => {
+        const expectedResult = {
+            videos: [],
+            audios: []
+        };
         const rawStreamsData = JSON.stringify({streams: []});
 
-        const {videos, audios} = streamsInfo._parseStreamsInfo(rawStreamsData);
+        const result = streamsInfo._parseStreamsInfo(rawStreamsData);
 
-        assert.isArray(videos);
-        assert.isArray(audios);
-
-        assert.isEmpty(videos);
-        assert.isEmpty(audios);
+        assert.deepEqual(result, expectedResult);
     });
 
-    it('streams array with invalid codec_type', () => {
-        const rawStreamsData = JSON.stringify({streams: [{codec_type: 'invalid'}]});
+    it('streams array with not relevant codec_type', () => {
+        const expectedResult = {
+            videos: [],
+            audios: []
+        };
+        const rawStreamsData = JSON.stringify({streams: [{codec_type: 'data'}]});
 
-        const {videos, audios} = streamsInfo._parseStreamsInfo(rawStreamsData);
+        const result = streamsInfo._parseStreamsInfo(rawStreamsData);
 
-        assert.isArray(videos);
-        assert.isArray(audios);
-
-        assert.isEmpty(videos);
-        assert.isEmpty(audios);
+        assert.deepEqual(result, expectedResult);
     });
 
-    it('correct streams array with 1 audio and 1 video streams', () => {
+    it('correct streams array with 2 audios, 2 videos and several data streams', () => {
 
-        const videoCodecData1 = {codec_type: 'video', width: 123, height: 456};
-        const videoCodecData2 = {codec_type: 'video', width: 902, height: 723};
-        const someCodecData1  = {codec_type: 'data'};
-        const someCodecData2  = {codec_type: 'data'};
-        const audioCodecData1 = {codec_type: 'audio', profile: 'LC'};
-        const audioCodecData2 = {codec_type: 'audio', profile: 'HC'};
+        const expectedResult = {
+            videos: [
+                {codec_type: 'video', profile: 'Main', width: 100, height: 100},
+                {codec_type: 'video', profile: 'Main', width: 101, height: 101}
+            ],
+            audios: [
+                {codec_type: 'audio', profile: 'LC', codec_time_base: '1/44100'},
+                {codec_type: 'audio', profile: 'HC', codec_time_base: '1/44101'}
+            ]
+        };
 
-        const expectedVideos = [videoCodecData1, videoCodecData2];
-        const expectedAudios = [audioCodecData1, audioCodecData2];
+        const streamData = {
+            streams: [
+                ...expectedResult.videos,
+                ...expectedResult.audios,
+                {codec_type: 'data', profile: 'unknown'},
+                {codec_type: 'data', profile: 'unknown'}
+            ]
+        };
 
-        const rawStreamsData = JSON.stringify({streams: [
-            videoCodecData1, videoCodecData2,
-            someCodecData1, someCodecData2,
-            audioCodecData1, audioCodecData2
-        ]});
+        const rawStreamsData = JSON.stringify(streamData);
 
-        const {videos, audios} = streamsInfo._parseStreamsInfo(rawStreamsData);
+        const result = streamsInfo._parseStreamsInfo(rawStreamsData);
 
-        assert.isArray(videos);
-        assert.isArray(audios);
-
-        assert.lengthOf(videos, 2);
-        assert.lengthOf(audios, 2);
-
-        assert.deepEqual(videos, expectedVideos);
-        assert.deepEqual(audios, expectedAudios);
+        assert.deepEqual(result, expectedResult);
     });
 });

@@ -1,18 +1,17 @@
 'use strict';
 
-const sinon         = require('sinon');
-const chai          = require('chai');
-const chaiAsPromise = require('chai-as-promised');
-const dataDriven    = require('data-driven');
+const _          = require('lodash');
+const sinon      = require('sinon');
+const {assert}   = require('chai');
+const dataDriven = require('data-driven');
 
 const {StreamsInfoError} = require('Errors');
 
-const assert = chai.assert;
-
-chai.use(chaiAsPromise);
-chai.should();
-
 const {correctPath, correctUrl, StreamsInfo} = require('./Helpers');
+
+function typeOf(obj) {
+    return Object.prototype.toString.call(obj);
+}
 
 describe('StreamsInfo::fetch', () => {
 
@@ -94,20 +93,10 @@ describe('StreamsInfo::fetch', () => {
     });
 
     dataDriven(
-        [
-            {stdout: undefined},
-            {stdout: null},
-            {stdout: 1},
-            {stdout: []},
-            {stdout: {}},
-            {
-                stdout: function () {
-                }
-            },
-            {stdout: Symbol()}
-        ], () => {
-            it('ffmpeg child process processed correct, but stdout has invalid type.', async (ctx) => {
-                const expectedErrorMessage = 'Ffprobe stdout has invalid type';
+        [undefined, null, true, 123, Symbol(123), [], {}, () => {}].map(data => ({type: typeOf(data), stdout: data})),
+        () => {
+            it('ffmpeg child process processed correct, but stdout has invalid {type} type.', async (ctx) => {
+                const expectedErrorMessage = 'Ffprobe stdout has invalid type. Must be a String.';
                 const expectedErrorClass   = StreamsInfoError;
 
                 stubRunShowStreamsProcess.resolves({stdout: ctx.stdout});
@@ -121,14 +110,14 @@ describe('StreamsInfo::fetch', () => {
                     assert.deepEqual(error.extra, {
                         stdout: ctx.stdout,
                         url   : correctUrl,
-                        type  : Object.prototype.toString.call(ctx.stdout)
+                        type  : typeOf(ctx.stdout)
                     });
                 }
             });
         }
     );
 
-    it('ffmpeg child process processed correct, but stdout is empty. fetch method must throw an exception', async () => {
+    it('ffmpeg child process processed correct, but stdout string is empty. fetch method must throw an exception', async () => {
         const expectedErrorMessage = 'Ffprobe stdout is empty';
         const expectedErrorClass   = StreamsInfoError;
 
@@ -153,16 +142,11 @@ describe('StreamsInfo::fetch', () => {
     });
 
     dataDriven(
-        [
-            {type: '[object Boolean]', rawData: true},
-            {type: '[object Object]', rawData: {}},
-            {type: '[object Null]', rawData: null},
-            {type: '[object Number]', rawData: 123},
-        ],
+        [undefined, null, true, 123, Symbol(123), {}, () => {}].map(data => ({type: typeOf(data), data})),
         () => {
-            it("ffmpeg child process processed correct, but stdout must for 'streams' prop of array type, but {type} received", async (ctx) => {
+            it("ffmpeg child process processed correct, but stdout must has 'streams' prop of array type, but {type} received", async (ctx) => {
                 const expectedErrorClass = StreamsInfoError;
-                const rawStreamInfo      = JSON.stringify(ctx.rawData);
+                const rawStreamInfo      = JSON.stringify({streams: ctx.data});
 
                 stubRunShowStreamsProcess.resolves({stdout: rawStreamInfo});
 
@@ -184,24 +168,46 @@ describe('StreamsInfo::fetch', () => {
     );
 
 
-    it('child process stdout contains not empty streams array, 1 audio and 1 video streams', async () => {
-        const stdout = '{ "streams": [ {"codec_type": "video"}, {"codec_type": "audio"} ] }';
+    it('child process stdout contains not empty streams array, 2 audios, 2 videos and several data streams', async () => {
+        const expectedResult = {
+            videos: [
+                {codec_type: 'video', profile: 'Main', width: 100, height: 100},
+                {codec_type: 'video', profile: 'Main', width: 101, height: 101}
+            ],
+            audios: [
+                {codec_type: 'audio', profile: 'LC', codec_time_base: '1/44100'},
+                {codec_type: 'audio', profile: 'HC', codec_time_base: '1/44101'}
+            ]
+        };
 
-        stubRunShowStreamsProcess.resolves({stdout});
+        const stdout = {
+            streams: [
+                ...expectedResult.videos,
+                ...expectedResult.audios,
+                {codec_type: 'data', profile: 'unknown'},
+                {codec_type: 'data', profile: 'unknown'}
+            ]
+        };
 
-        await streamsInfo.fetch().should.eventually.deep.equal({
-            videos: [{codec_type: 'video'}],
-            audios: [{codec_type: 'audio'}]
-        });
+        const input = JSON.stringify(stdout);
 
-        assert(stubRunShowStreamsProcess.calledOnce);
-        assert.isEmpty(stubRunShowStreamsProcess.getCall(0).args);
+        stubRunShowStreamsProcess.resolves({stdout: input});
 
-        assert(stubParseStreamsInfo.calledOnce);
-        assert.deepEqual(stubParseStreamsInfo.getCall(0).args, [stdout]);
+        try {
+            const result = await streamsInfo.fetch();
 
-        assert.isTrue(stubAdjustAspectRatio.called);
-        assert.deepEqual(stubAdjustAspectRatio.getCall(0).args, [[{codec_type: 'video'}]]);
+            assert(stubRunShowStreamsProcess.calledOnce);
+            assert.isTrue(stubRunShowStreamsProcess.firstCall.calledWithExactly());
+
+            assert(stubParseStreamsInfo.calledOnce);
+            assert.isTrue(stubParseStreamsInfo.firstCall.calledWithExactly(input));
+
+            assert(stubAdjustAspectRatio.calledOnce);
+
+            assert.deepEqual(result, expectedResult);
+        } catch (err) {
+            assert.ifError(err);
+        }
     });
 
 });
