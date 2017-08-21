@@ -1,4 +1,12 @@
-stream-checker repo
+# Video Quality Tools
+
+## Installation
+
+Execute ``yarn run build`` and ``yarn run start``.
+
+See other useful ``yarn run ...`` commands in ``package.json``.
+
+## Example
 
 ```javascript
 const framesMonitor = new FramesMonitor(config, url);
@@ -49,3 +57,7 @@ framesMonitor.on('exit', (code, signal) => {
 
 framesMonitor.listen();
 ```
+
+## Tests
+
+Execute ``yarn run tests`` or ``yarn run unit-tests`` or ``yarn run func-tests``.

@@ -1,0 +1,39 @@
+{
+  "name": "video-quality-tools",
+  "version": "1.0.0",
+  "description": "Set of tools to evaluate video stream quality.",
+  "main": "index.js",
+  "engines": {
+    "node": ">=8.1"
+  },
+  "directories": {
+    "test": "tests"
+  },
+  "scripts": {
+    "lint": "./node_modules/.bin/eslint ./",
+    "tests": "yarn run unit-tests && yarn run func-tests",
+    "test:coverage": "NODE_ENV=test ./node_modules/.bin/istanbul cover ./node_modules/.bin/_mocha  --print both -- --opts test/mocha.opts -R spec",
+    "unit-tests": "NODE_ENV=test ./node_modules/.bin/mocha --opts tests/mocha.opts -R spec './tests/Unit/**/*.js'",
+    "func-tests": "NODE_ENV=test ./node_modules/.bin/mocha --opts tests/mocha.opts -R spec './tests/Functional/**/*.js'"
+  },
+  "repository": {
+    "type": "git",
+    "url": "ssh://git@gitlab.auroraglobal.com:26/node-modules/video-quality-tools.git"
+  },
+  "license": "SEE LICENSE IN LICENSE.md",
+  "devDependencies": {
+    "chai": "^4.1.0",
+    "chai-as-promised": "^7.1.1",
+    "data-driven": "^1.3.0",
+    "eslint": "^4.4.1",
+    "get-port": "^3.2.0",
+    "mocha": "^3.5.0",
+    "proxyquire": "^1.8.0",
+    "sinon": "^2.4.1"
+  },
+  "dependencies": {
+    "app-module-path": "^2.2.0",
+    "lodash": "^4.17.4",
+    "longest-repeating-and-non-overlapping-pattern": "^1.0.4"
+  }
+}

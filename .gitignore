@@ -1,0 +1,13 @@
+/var/cache/*
+/var/log/*
+/web/assets/**
+/node_modules
+/config/local-*.json
+/coverage
+package-lock.json
+.idea
+*.iml
+
+# MUST be the last line of this file
+!.gitkeep
+

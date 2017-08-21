@@ -13,11 +13,23 @@ const {
           AlreadyStoppedListenError,
           FramesMonitorError,
           ProcessError
-      } = require('./Errors');
+      } = require('./Errors/index');
 
 class FramesMonitor extends EventEmitter {
     constructor(config, url) {
         super();
+
+        if (!config || !url) {
+            throw new TypeError('You should provide both arguments.');
+        }
+
+        if (!_.isObject(config)) {
+            throw new TypeError('Config param should be an object, bastard.');
+        }
+
+        if (!_.isString(url)) {
+            throw new TypeError('You should provide a correct url, bastard.');
+        }
 
         const {ffprobePath, timeoutInSec} = config;
 
@@ -25,19 +37,11 @@ class FramesMonitor extends EventEmitter {
             throw new ConfigError('You should provide a correct path to ffprobePath, bastard.');
         }
 
-        if (!_.isNumber(timeoutInSec) || !_.isInteger(timeoutInSec) || timeoutInSec <= 0) {
+        if (!_.isInteger(timeoutInSec) || timeoutInSec <= 0) {
             throw new ConfigError('You should provide a correct timeout, bastard.');
         }
 
-        if (!_.isString(url) || _.isEmpty(url)) {
-            throw new ConfigError('You should provide a correct url, bastard.');
-        }
-
-        try {
-            fs.accessSync(ffprobePath, fs.constants.X_OK);
-        } catch (e) {
-            throw new ExecutablePathError(e.message, {ffprobePath});
-        }
+        this._assertExecutable(ffprobePath);
 
         this._config = config;
         this._url    = url;
@@ -59,21 +63,21 @@ class FramesMonitor extends EventEmitter {
 
         this._cp.on('error', err => {
             this.emit('error', new ProcessError(`${ffprobePath} process could not be spawned or just got an error.`, {
-                url:   this._url,
+                url  : this._url,
                 error: err
             }))
         });
 
         this._cp.stdout.on('error', err => {
             this.emit('error', new ProcessStreamError(`got an error from a ${ffprobePath} STDOUT process stream.`, {
-                url:   this._url,
+                url  : this._url,
                 error: err
             }))
         });
 
         this._cp.stderr.on('error', err => {
             this.emit('error', new ProcessStreamError(`got an error from a ${ffprobePath} STDERR process stream.`, {
-                url:   this._url,
+                url  : this._url,
                 error: err
             }))
         });
@@ -93,6 +97,14 @@ class FramesMonitor extends EventEmitter {
         }
 
         this._cp.kill();
+    }
+
+    _assertExecutable(path) {
+        try {
+            fs.accessSync(path, fs.constants.X_OK);
+        } catch (e) {
+            throw new ExecutablePathError(e.message, {path});
+        }
     }
 
     _onExit(code, signal) {
