@@ -5,25 +5,13 @@ const fs             = require('fs');
 const {EventEmitter} = require('events');
 const {spawn}        = require('child_process');
 
-const {
-          ExecutablePathError,
-          ConfigError,
-          AlreadyListeningError,
-          ProcessStreamError,
-          AlreadyStoppedListenError,
-          FramesMonitorError,
-          ProcessError
-      } = require('./Errors/index');
+const Errors = require('./Errors/index');
 
 class FramesMonitor extends EventEmitter {
     constructor(config, url) {
         super();
 
-        if (!config || !url) {
-            throw new TypeError('You should provide both arguments.');
-        }
-
-        if (!_.isObject(config)) {
+        if (!_.isObject(config) || _.isFunction(config)) {
             throw new TypeError('Config param should be an object, bastard.');
         }
 
@@ -34,11 +22,11 @@ class FramesMonitor extends EventEmitter {
         const {ffprobePath, timeoutInSec} = config;
 
         if (!_.isString(ffprobePath) || _.isEmpty(ffprobePath)) {
-            throw new ConfigError('You should provide a correct path to ffprobePath, bastard.');
+            throw new Errors.ConfigError('You should provide a correct path to ffprobe, bastard.');
         }
 
         if (!_.isInteger(timeoutInSec) || timeoutInSec <= 0) {
-            throw new ConfigError('You should provide a correct timeout, bastard.');
+            throw new Errors.ConfigError('You should provide a correct timeout, bastard.');
         }
 
         this._assertExecutable(ffprobePath);
@@ -54,7 +42,7 @@ class FramesMonitor extends EventEmitter {
         const {ffprobePath} = this._config;
 
         if (this.isListening()) {
-            throw new AlreadyListeningError('You are already listening.');
+            throw new Errors.AlreadyListeningError('You are already listening.');
         }
 
         this._cp = this._runShowFramesProcess();
@@ -62,27 +50,39 @@ class FramesMonitor extends EventEmitter {
         this._cp.once('exit', this._onExit.bind(this));
 
         this._cp.on('error', err => {
-            this.emit('error', new ProcessError(`${ffprobePath} process could not be spawned or just got an error.`, {
-                url  : this._url,
-                error: err
-            }))
+            this.emit('error', new Errors.ProcessError(
+                `${ffprobePath} process could not be spawned or just got an error.`, {
+                    url  : this._url,
+                    error: err
+                })
+            );
         });
 
         this._cp.stdout.on('error', err => {
-            this.emit('error', new ProcessStreamError(`got an error from a ${ffprobePath} STDOUT process stream.`, {
-                url  : this._url,
-                error: err
-            }))
+            this.emit('error', new Errors.ProcessStreamError(
+                `got an error from a ${ffprobePath} STDOUT process stream.`, {
+                    url  : this._url,
+                    error: err
+                })
+            );
         });
 
         this._cp.stderr.on('error', err => {
-            this.emit('error', new ProcessStreamError(`got an error from a ${ffprobePath} STDERR process stream.`, {
-                url  : this._url,
-                error: err
-            }))
+            this.emit('error', new Errors.ProcessStreamError(
+                `got an error from a ${ffprobePath} STDERR process stream.`, {
+                    url  : this._url,
+                    error: err
+                })
+            );
         });
 
-        this._cp.stderr.on('data', data => this.emit('stderr', new FramesMonitorError(data, {url: this._url})));
+        this._cp.stderr.on('data', data => {
+            this.emit('stderr', new Errors.FramesMonitorError(
+                data, {
+                    url: this._url
+                })
+            );
+        });
 
         this._cp.stdout.on('data', this._onStdoutChunk.bind(this));
     }
@@ -93,7 +93,7 @@ class FramesMonitor extends EventEmitter {
 
     stopListen() {
         if (!this.isListening()) {
-            throw new AlreadyStoppedListenError('This service is already stopped.');
+            throw new Errors.AlreadyStoppedListenError('This service is already stopped.');
         }
 
         this._cp.kill();
@@ -103,7 +103,7 @@ class FramesMonitor extends EventEmitter {
         try {
             fs.accessSync(path, fs.constants.X_OK);
         } catch (e) {
-            throw new ExecutablePathError(e.message, {path});
+            throw new Errors.ExecutablePathError(e.message, {path});
         }
     }
 
