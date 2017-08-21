@@ -3,7 +3,7 @@
 const {assert}   = require('chai');
 const dataDriven = require('data-driven');
 
-const {StreamsInfoError} = require('Errors');
+const {StreamsInfoError} = require('src/Errors');
 
 const {correctPath, correctUrl, StreamsInfo} = require('./Helpers');
 

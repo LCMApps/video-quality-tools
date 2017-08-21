@@ -13,7 +13,7 @@ const {
           AlreadyStoppedListenError,
           FramesMonitorError,
           ProcessError
-      } = require('./Errors');
+      } = require('./Errors/index');
 
 class FramesMonitor extends EventEmitter {
     constructor(config, url) {

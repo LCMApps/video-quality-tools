@@ -9,7 +9,7 @@ const {
           CannotFindGopPatternError,
           GopPatternUnstableError,
           BadGopDataError
-      } = require('./Errors');
+      } = require('./Errors/index');
 
 class FramesInfo {
     constructor(url) {

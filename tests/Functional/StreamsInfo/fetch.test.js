@@ -7,9 +7,9 @@ const {assert} = require('chai');
 
 const getPort = require('get-port');
 
-const StreamsInfo = require('StreamsInfo');
+const StreamsInfo = require('src/StreamsInfo');
 
-const {StreamsInfoError} = require('Errors');
+const {StreamsInfoError} = require('src/Errors');
 
 describe('StreamsInfo::fetch functional', () => {
 
@@ -62,6 +62,8 @@ describe('StreamsInfo::fetch functional', () => {
 
                 assert.isNotEmpty(info.videos);
                 assert.isNotEmpty(info.audios);
+            } catch(err) {
+                assert.ifError(err);
             } finally {
                 ffmpeg.kill();
 

@@ -5,7 +5,7 @@ const fs          = require('fs');
 const {exec}      = require('child_process');
 const {promisify} = require('util');
 
-const Errors = require('./Errors');
+const Errors = require('./Errors/');
 
 const DAR_OR_SAR_NA = 'N/A';
 const DAR_OR_SAR_01 = '0:1';
