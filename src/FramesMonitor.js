@@ -122,8 +122,6 @@ class FramesMonitor extends EventEmitter {
                 '-hide_banner',
                 '-v',
                 'error',
-                '-select_streams',
-                'v:0',
                 '-show_entries',
                 'frame=pkt_size,pkt_pts_time,pkt_duration_time,media_type,pict_type',
                 '-show_frames',
@@ -138,7 +136,7 @@ class FramesMonitor extends EventEmitter {
     _onStdoutChunk(chunk) {
         for (let frame of this._reduceFramesFromStdoutBuffer(chunk.toString())) {
             setImmediate(() => {
-                frame = this._frameToJSON(frame);
+                frame = this._frameToJson(frame);
 
                 this.emit('frame', frame);
             });
@@ -159,8 +157,8 @@ class FramesMonitor extends EventEmitter {
         return frames;
     }
 
-    _frameToJSON(rawFrame) {
-        if (!rawFrame) {
+    _frameToJson(rawFrame) {
+        if (!_.isString(rawFrame)) {
             return null;
         }
 
