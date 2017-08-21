@@ -2,7 +2,7 @@ const proxyquire = require('proxyquire');
 
 const correctPath = '/correct/path';
 
-const StreamsInfo = proxyquire('StreamsInfo', {
+const StreamsInfo = proxyquire('src/StreamsInfo', {
     fs: {
         accessSync(filePath) {
             if (filePath !== correctPath) {

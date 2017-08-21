@@ -1,8 +1,8 @@
 'use strict';
 
-const FramesMonitor = require('./FramesMonitor');
-const StreamsInfo   = require('./StreamsInfo');
-const FramesInfo    = require('./FramesInfo');
+const FramesMonitor = require('./src/FramesMonitor');
+const StreamsInfo   = require('./src/StreamsInfo');
+const FramesInfo    = require('./src/FramesInfo');
 
 module.exports = {
     FramesMonitor,
