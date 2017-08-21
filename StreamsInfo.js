@@ -51,7 +51,7 @@ class StreamsInfo {
         }
 
         if (!_.isString(stdout)) {
-            throw new Errors.StreamsInfoError('Ffprobe stdout has invalid type', {
+            throw new Errors.StreamsInfoError('Ffprobe stdout has invalid type. Must be a String.', {
                 stdout: stdout,
                 type  : Object.prototype.toString.call(stdout),
                 url   : this._url
