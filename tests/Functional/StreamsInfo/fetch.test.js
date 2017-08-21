@@ -62,7 +62,7 @@ describe('StreamsInfo::fetch functional', () => {
 
                 assert.isNotEmpty(info.videos);
                 assert.isNotEmpty(info.audios);
-            } catch(err) {
+            } catch (err) {
                 assert.ifError(err);
             } finally {
                 ffmpeg.kill();

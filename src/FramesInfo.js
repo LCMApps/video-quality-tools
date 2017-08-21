@@ -21,7 +21,7 @@ class FramesInfo {
         if (!Array.isArray(frames)) {
             throw new InputTypeError('process method is supposed to accept an array of frames.', {
                 typeOfFrames: Object.prototype.toString.call(frames),
-                url:          this._url
+                url         : this._url
             });
         }
 
@@ -41,8 +41,8 @@ class FramesInfo {
             if (!_.isEqual(this._prevUserGopPattern, currentGopPattern)) {
                 throw new GopPatternUnstableError('Somehow gop pattern for particular url has been changed.', {
                     prevUserGopPattern: this._prevUserGopPattern,
-                    currentGopPattern:  currentGopPattern,
-                    url:                this._url
+                    currentGopPattern : currentGopPattern,
+                    url               : this._url
                 });
             }
         } else {
@@ -91,8 +91,8 @@ class FramesInfo {
 
         return {
             mean: _.mean(bitrates),
-            min:  Math.min.apply(null, bitrates),
-            max:  Math.max.apply(null, bitrates)
+            min : Math.min.apply(null, bitrates),
+            max : Math.max.apply(null, bitrates)
         };
     }
 
@@ -111,8 +111,8 @@ class FramesInfo {
 
         return {
             mean: _.mean(fps),
-            min:  Math.min.apply(null, fps),
-            max:  Math.max.apply(null, fps)
+            min : Math.min.apply(null, fps),
+            max : Math.max.apply(null, fps)
         };
     }
 

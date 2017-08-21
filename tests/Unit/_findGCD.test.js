@@ -1,6 +1,6 @@
 'use strict';
 
-const {assert}    = require('chai');
+const {assert}   = require('chai');
 const dataDriven = require('data-driven');
 
 const {correctPath, correctUrl, StreamsInfo} = require('./Helpers');

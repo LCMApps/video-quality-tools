@@ -63,21 +63,21 @@ class FramesMonitor extends EventEmitter {
 
         this._cp.on('error', err => {
             this.emit('error', new ProcessError(`${ffprobePath} process could not be spawned or just got an error.`, {
-                url:   this._url,
+                url  : this._url,
                 error: err
             }))
         });
 
         this._cp.stdout.on('error', err => {
             this.emit('error', new ProcessStreamError(`got an error from a ${ffprobePath} STDOUT process stream.`, {
-                url:   this._url,
+                url  : this._url,
                 error: err
             }))
         });
 
         this._cp.stderr.on('error', err => {
             this.emit('error', new ProcessStreamError(`got an error from a ${ffprobePath} STDERR process stream.`, {
-                url:   this._url,
+                url  : this._url,
                 error: err
             }))
         });
