@@ -13,8 +13,8 @@ const {StreamsInfoError} = require('Errors');
 
 describe('StreamsInfo::fetch functional', () => {
 
-    assert(process.env.FFPROBE, 'Specify path for ffprobe using FFPROBE env var');
-    assert(process.env.FFMPEG, 'Specify path for ffmpeg using FFMPEG env var');
+    assert(process.env.FFPROBE, 'Specify path for ffprobe via FFPROBE env var');
+    assert(process.env.FFMPEG, 'Specify path for ffmpeg via FFMPEG env var');
 
     const {FFPROBE, FFMPEG} = process.env;
     const testFile          = path.join(__dirname, '../../inputs/test_IPPPP.mp4');
