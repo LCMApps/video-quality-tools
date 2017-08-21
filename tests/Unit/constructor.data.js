@@ -2,32 +2,32 @@ const {correctPath} = require('./Helpers');
 
 const incorrectConfigData = [
     {
-        'type': 'Boolean',
-        'config'     : false,
+        'type'  : 'Boolean',
+        'config': false,
     },
     {
-        'type': 'Null',
-        'config'     : null,
+        'type'  : 'Null',
+        'config': null,
     },
     {
-        'type': 'Undefined',
-        'config'     : undefined,
+        'type'  : 'Undefined',
+        'config': undefined,
     },
     {
-        'type': 'Number',
-        'config'     : 111,
+        'type'  : 'Number',
+        'config': 111,
     },
     {
-        'type': 'String',
-        'config'     : '111',
+        'type'  : 'String',
+        'config': '111',
     },
     {
-        'type': 'Symbol',
-        'config'     : Symbol(),
+        'type'  : 'Symbol',
+        'config': Symbol(),
     },
     {
-        'type': 'Function',
-        'config'     : function () {
+        'type'  : 'Function',
+        'config': function () {
         },
     },
 ];
@@ -35,31 +35,31 @@ const incorrectConfigData = [
 const incorrectUrlData = [
     {
         'type': 'Boolean',
-        'url'        : false,
+        'url' : false,
     },
     {
         'type': 'Null',
-        'url'        : null,
+        'url' : null,
     },
     {
         'type': 'Undefined',
-        'url'        : undefined,
+        'url' : undefined,
     },
     {
         'type': 'Number',
-        'url'        : 111,
+        'url' : 111,
     },
     {
         'type': 'Object',
-        'url'        : {},
+        'url' : {},
     },
     {
         'type': 'Symbol',
-        'url'        : Symbol(),
+        'url' : Symbol(),
     },
     {
         'type': 'Function',
-        'url'        : function () {
+        'url' : function () {
         },
     },
 ];
