@@ -5,7 +5,7 @@ const dataDriven = require('data-driven');
 
 const Errors = require('src/Errors');
 
-const {correctPath, correctUrl, StreamsInfo} = require('./Helpers');
+const {correctPath, correctUrl, StreamsInfo} = require('./Helpers/');
 
 const {incorrectConfigData, incorrectUrlData, incorrectConfig} = require('./constructor.data');
 

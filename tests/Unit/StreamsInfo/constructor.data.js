@@ -1,4 +1,4 @@
-const {correctPath} = require('./Helpers');
+const {correctPath} = require('./Helpers/');
 
 const incorrectConfigData = [
     {
