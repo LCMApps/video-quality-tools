@@ -6,7 +6,7 @@ const _          = require('lodash');
 
 const {StreamsInfoError} = require('src/Errors');
 
-const {correctPath, correctUrl, StreamsInfo} = require('./Helpers');
+const {correctPath, correctUrl, StreamsInfo} = require('./Helpers/');
 
 const {invalidParams, validParams} = require('./_adjustAspectRatio.data');
 
