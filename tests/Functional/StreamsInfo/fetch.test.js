@@ -83,8 +83,30 @@ describe('StreamsInfo::fetch, fetch streams info from active stream', () => {
 
             assert.isObject(info);
 
-            assert.isNotEmpty(info.videos);
-            assert.isNotEmpty(info.audios);
+            const {videos, audios} = info;
+
+            assert.lengthOf(videos, 1);
+            assert.lengthOf(audios, 1);
+
+            assert.deepInclude(videos[0], {
+                codec_name          : 'h264',
+                codec_long_name     : 'H.264 / AVC / MPEG-4 AVC / MPEG-4 part 10',
+                profile             : 'Main',
+                codec_type          : 'video',
+                width               : 854,
+                height              : 480,
+                sample_aspect_ratio : '1280:1281',
+                display_aspect_ratio: '16:9'
+            });
+
+            assert.deepInclude(audios[0], {
+                codec_name     : 'aac',
+                codec_long_name: 'AAC (Advanced Audio Coding)',
+                profile        : 'LC',
+                channels       : 6,
+                channel_layout : '5.1',
+                bit_rate       : '64775'
+            });
 
             done();
         });
