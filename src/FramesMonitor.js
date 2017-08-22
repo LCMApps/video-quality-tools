@@ -134,6 +134,10 @@ class FramesMonitor extends EventEmitter {
     }
 
     _onStdoutChunk(chunk) {
+        if (!Buffer.isBuffer(chunk)) {
+            return;
+        }
+
         for (let frame of this._reduceFramesFromStdoutBuffer(chunk.toString())) {
             setImmediate(() => {
                 frame = this._frameToJson(frame);
