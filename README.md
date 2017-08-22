@@ -2,9 +2,7 @@
 
 ## Installation
 
-Execute ``yarn run build`` and ``yarn run start``.
-
-See other useful ``yarn run ...`` commands in ``package.json``.
+Execute ``yarn install``.
 
 ## Example
 
@@ -61,3 +59,7 @@ framesMonitor.listen();
 ## Tests
 
 Execute ``yarn run tests`` or ``yarn run unit-tests`` or ``yarn run func-tests``.
+
+## Other
+
+See other usefull ``yarn run ...`` commands in ``package.json``.
