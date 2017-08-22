@@ -146,13 +146,15 @@ class FramesMonitor extends EventEmitter {
     _reduceFramesFromStdoutBuffer(chunk) {
         const data = this._chunkRemainder + chunk;
 
-        const frames = data.split('[/FRAME]');
+        let frames = data.split('[/FRAME]');
 
         if (frames[frames.length - 1]) {
             this._chunkRemainder = frames[frames.length - 1];
         }
 
         frames.splice(-1);
+
+        frames = frames.map(frame => frame.trim());
 
         return frames;
     }
