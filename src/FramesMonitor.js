@@ -97,6 +97,7 @@ class FramesMonitor extends EventEmitter {
         }
 
         this._cp.kill();
+        this._cp = null;
     }
 
     _assertExecutable(path) {
