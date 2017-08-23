@@ -5,11 +5,12 @@ const {assert} = require('chai');
 
 const Errors = require('src/Errors');
 
-const {correctPath, correctUrl, FramesMonitor, childProcess} = require('./Helpers/');
+const {correctPath, correctUrl, FramesMonitor, makeChildProcess} = require('./Helpers/');
 
 describe('FramesMonitor::stopListen', () => {
 
     let framesMonitor;
+    let childProcess;
 
     let stubRunShowFramesProcess;
 
@@ -22,6 +23,7 @@ describe('FramesMonitor::stopListen', () => {
             timeoutInSec: 1
         }, correctUrl);
 
+        childProcess             = makeChildProcess();
         stubRunShowFramesProcess = sinon.stub(framesMonitor, '_runShowFramesProcess').returns(childProcess);
 
         spyIsListening = sinon.spy(framesMonitor, 'isListening');
