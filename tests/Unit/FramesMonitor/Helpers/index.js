@@ -18,14 +18,18 @@ const FramesMonitor = proxyquire('src/FramesMonitor', {
 
 const correctUrl = 'rtmp://localhost:1935/myapp/mystream';
 
-const childProcess  = new EventEmitter();
-childProcess.stdout = new EventEmitter();
-childProcess.stderr = new EventEmitter();
-childProcess.kill   = () => {};
+function makeChildProcess() {
+    const childProcess  = new EventEmitter();
+    childProcess.stdout = new EventEmitter();
+    childProcess.stderr = new EventEmitter();
+    childProcess.kill   = () => {};
+
+    return childProcess;
+}
 
 module.exports = {
     correctPath,
     correctUrl,
     FramesMonitor,
-    childProcess
+    makeChildProcess
 };
