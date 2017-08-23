@@ -33,7 +33,7 @@ describe('FramesMonitor::_onStdoutChunk must skip invalid type, only Buffer type
     let spyFrameToJson;
 
     beforeEach(() => {
-        spyReduceFramesFromStdoutBuffer = sinon.stub(framesMonitor, '_reduceFramesFromStdoutBuffer');
+        spyReduceFramesFromStdoutBuffer = sinon.spy(framesMonitor, '_reduceFramesFromStdoutBuffer');
         spyFrameToJson                  = sinon.spy(framesMonitor, '_frameToJson');
     });
 
@@ -74,8 +74,8 @@ describe('FramesMonitor::_onStdoutChunk must process correct input', () => {
     });
 
     afterEach(() => {
-        spyReduceFramesFromStdoutBuffer.reset();
-        spyFrameToJson.reset();
+        spyReduceFramesFromStdoutBuffer.restore();
+        spyFrameToJson.restore();
     });
 
     it('must not emit empty frame', done => {
