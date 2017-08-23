@@ -4,12 +4,12 @@ const sinon      = require('sinon');
 const {assert}   = require('chai');
 const dataDriven = require('data-driven');
 
-const {correctPath, correctUrl, FramesMonitor, childProcess} = require('./Helpers/');
+const {correctPath, correctUrl, FramesMonitor, makeChildProcess} = require('./Helpers/');
 
 describe('FramesMonitor::_onExit', () => {
 
     let framesMonitor;
-
+    let childProcess;
     let stubRunShowFramesProcess;
 
     beforeEach(() => {
@@ -18,6 +18,7 @@ describe('FramesMonitor::_onExit', () => {
             timeoutInSec: 1
         }, correctUrl);
 
+        childProcess             = makeChildProcess();
         stubRunShowFramesProcess = sinon.stub(framesMonitor, '_runShowFramesProcess').returns(childProcess);
     });
 

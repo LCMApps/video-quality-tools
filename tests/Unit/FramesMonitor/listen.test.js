@@ -5,14 +5,13 @@ const {assert} = require('chai');
 
 const Errors = require('src/Errors');
 
-const {correctPath, correctUrl, FramesMonitor, childProcess} = require('./Helpers/');
+const {correctPath, correctUrl, FramesMonitor, makeChildProcess} = require('./Helpers/');
 
 describe('FramesMonitor::listen', () => {
 
     let framesMonitor;
-
+    let childProcess;
     let stubRunShowFramesProcess;
-
     let spyIsListening;
 
     beforeEach(() => {
@@ -21,13 +20,14 @@ describe('FramesMonitor::listen', () => {
             timeoutInSec: 1
         }, correctUrl);
 
+        childProcess             = makeChildProcess();
         stubRunShowFramesProcess = sinon.stub(framesMonitor, '_runShowFramesProcess').returns(childProcess);
 
         spyIsListening = sinon.spy(framesMonitor, 'isListening');
     });
 
     afterEach(() => {
-        stubRunShowFramesProcess.restore();
+        stubRunShowFramesProcess.reset();
 
         spyIsListening.restore();
     });
@@ -72,6 +72,37 @@ describe('FramesMonitor::listen', () => {
 
             assert.isTrue(framesMonitor.isListening());
         }
+    });
+
+    it('must set _onExit as a callback for child process exit event', () => {
+        const spyOnExit = sinon.spy(framesMonitor, '_onExit');
+
+        framesMonitor.listen();
+
+        childProcess.emit('exit');
+
+        assert.isTrue(spyOnExit.calledOnce);
+
+        spyOnExit.restore();
+    });
+
+    it('must wrap and re-emit error emitted by the child process', done => {
+        const expectedError = new Error('test error 123');
+
+        framesMonitor.listen();
+
+        childProcess.emit('error', expectedError);
+
+        framesMonitor.on('error', err => {
+
+            assert.instanceOf(err, Errors.ProcessError);
+
+            assert.strictEqual(err.message, `${correctPath} process could not be spawned or just got an error.`);
+            assert.strictEqual(err.extra.error.message, expectedError.message);
+            assert.strictEqual(err.extra.url, correctUrl);
+
+            done();
+        });
     });
 
 });
