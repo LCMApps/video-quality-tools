@@ -49,14 +49,7 @@ class FramesMonitor extends EventEmitter {
 
         this._cp.once('exit', this._onExit.bind(this));
 
-        this._cp.on('error', err => {
-            this.emit('error', new Errors.ProcessError(
-                `${ffprobePath} process could not be spawned or just got an error.`, {
-                    url  : this._url,
-                    error: err
-                })
-            );
-        });
+        this._cp.on('error', this._onProcessError.bind(this));
 
         this._cp.stdout.on('error', err => {
             this.emit('error', new Errors.ProcessStreamError(
@@ -106,6 +99,19 @@ class FramesMonitor extends EventEmitter {
         } catch (e) {
             throw new Errors.ExecutablePathError(e.message, {path});
         }
+    }
+
+    _onProcessError(err) {
+        const {ffprobePath} = this._config;
+
+        setImmediate(() => {
+            this.emit('error', new Errors.ProcessError(
+                `${ffprobePath} process could not be spawned or just got an error.`, {
+                    url  : this._url,
+                    error: err
+                })
+            );
+        });
     }
 
     _onExit(code, signal) {
