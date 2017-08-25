@@ -46,7 +46,7 @@ describe('FramesMonitor::listen', () => {
         assert.isTrue(framesMonitor.isListening());
     });
 
-    it('must throw an exception when try listen several times', () => {
+    it('must throw an exception when try listen several times in a row', () => {
         const expectedErrorType    = Errors.AlreadyListeningError;
         const expectedErrorMessage = 'You are already listening.';
 

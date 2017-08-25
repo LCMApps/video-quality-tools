@@ -7,11 +7,14 @@ const {spawn}        = require('child_process');
 
 const Errors = require('./Errors/index');
 
+const STDOUT = 'STDOUT';
+const STDERR = 'STDERR';
+
 class FramesMonitor extends EventEmitter {
     constructor(config, url) {
         super();
 
-        if (!_.isObject(config) || _.isFunction(config)) {
+        if (!_.isObject(config) || _.isFunction(config) || Buffer.isBuffer(config)) {
             throw new TypeError('Config param should be an object, bastard.');
         }
 
@@ -39,8 +42,6 @@ class FramesMonitor extends EventEmitter {
     }
 
     listen() {
-        const {ffprobePath} = this._config;
-
         if (this.isListening()) {
             throw new Errors.AlreadyListeningError('You are already listening.');
         }
@@ -51,31 +52,10 @@ class FramesMonitor extends EventEmitter {
 
         this._cp.on('error', this._onProcessError.bind(this));
 
-        this._cp.stdout.on('error', err => {
-            this.emit('error', new Errors.ProcessStreamError(
-                `got an error from a ${ffprobePath} STDOUT process stream.`, {
-                    url  : this._url,
-                    error: err
-                })
-            );
-        });
+        this._cp.stdout.on('error', this._onProcessStreamsError.bind(this, STDOUT));
+        this._cp.stderr.on('error', this._onProcessStreamsError.bind(this, STDERR));
 
-        this._cp.stderr.on('error', err => {
-            this.emit('error', new Errors.ProcessStreamError(
-                `got an error from a ${ffprobePath} STDERR process stream.`, {
-                    url  : this._url,
-                    error: err
-                })
-            );
-        });
-
-        this._cp.stderr.on('data', data => {
-            this.emit('stderr', new Errors.FramesMonitorError(
-                data, {
-                    url: this._url
-                })
-            );
-        });
+        this._cp.stderr.on('data', this._onStderrData.bind(this));
 
         this._cp.stdout.on('data', this._onStdoutChunk.bind(this));
     }
@@ -114,10 +94,38 @@ class FramesMonitor extends EventEmitter {
         });
     }
 
-    _onExit(code, signal) {
-        this._cp = null;
+    _onProcessStreamsError(streamType, err) {
+        const {ffprobePath} = this._config;
 
-        this.emit('exit', code, signal);
+        setImmediate(() => {
+            this.emit('error', new Errors.ProcessStreamError(
+                `got an error from a ${ffprobePath} ${streamType} process stream.`, {
+                    url  : this._url,
+                    error: err
+                })
+            );
+        });
+    }
+
+    _onStderrData(data) {
+        const {ffprobePath} = this._config;
+
+        setImmediate(() => {
+            this.emit('stderr', new Errors.FramesMonitorError(
+                `got stderr output from a ${ffprobePath} process`, {
+                    data: data,
+                    url : this._url
+                })
+            );
+        });
+    }
+
+    _onExit(code, signal) {
+        setImmediate(() => {
+            this._cp = null;
+
+            this.emit('exit', code, signal);
+        });
     }
 
     _runShowFramesProcess() {

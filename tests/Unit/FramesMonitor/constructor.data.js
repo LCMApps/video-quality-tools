@@ -1,5 +1,8 @@
 const {correctPath} = require('./Helpers/');
 
+const incorrectConfigData = [undefined, null, false, 1, '1', Symbol(), () => {}, Buffer.alloc(1)];
+const incorrectUrlData    = [undefined, null, false, 1, {}, Symbol(), () => {}, Buffer.alloc(1)];
+
 const incorrectConfig = [
     {
         'description': 'config object must not be empty',
@@ -29,5 +32,7 @@ const incorrectConfig = [
 ];
 
 module.exports = {
+    incorrectConfigData,
+    incorrectUrlData,
     incorrectConfig
 };
