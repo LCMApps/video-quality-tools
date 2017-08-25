@@ -7,28 +7,41 @@ const Errors = require('src/Errors/');
 
 const {correctPath, correctUrl, FramesMonitor} = require('./Helpers/');
 
-const {incorrectConfigData, incorrectUrlData, incorrectConfig} = require('./constructor.data');
+const {incorrectConfig} = require('./constructor.data');
+
+function typeOf(item) {
+    return Object.prototype.toString.call(item);
+}
 
 describe('FramesMonitor::constructor', () => {
 
-    dataDriven(incorrectConfigData, function () {
-        it('config param has invalid ({type}) type', function (ctx) {
-            assert.throws(() => {
-                new FramesMonitor(ctx.config, undefined);
-            }, TypeError, 'Config param should be an object, bastard.');
-        });
-    });
+    const incorrectConfigData = [undefined, null, false, 1, '1', Symbol(), () => {}, Buffer.alloc(1)];
+    const incorrectUrlData    = [undefined, null, false, 1, {}, Symbol(), () => {}, Buffer.alloc(1)];
 
-    dataDriven(incorrectUrlData, function () {
-        it('url param has invalid ({type}) type', function (ctx) {
-            assert.throws(() => {
-                new FramesMonitor({}, ctx.url);
-            }, TypeError, 'You should provide a correct url, bastard.');
-        });
-    });
+    dataDriven(
+        incorrectConfigData.map(item => ({type: typeOf(item), config: item})),
+        () => {
+            it('config param has invalid ({type}) type', ctx => {
+                assert.throws(() => {
+                    new FramesMonitor(ctx.config, undefined);
+                }, TypeError, 'Config param should be an object, bastard.');
+            });
+        }
+    );
 
-    dataDriven(incorrectConfig, function () {
-        it('{description}', function (ctx) {
+    dataDriven(
+        incorrectUrlData.map(item => ({type: typeOf(item), url: item})),
+        () => {
+            it('url param has invalid ({type}) type', ctx => {
+                assert.throws(() => {
+                    new FramesMonitor({}, ctx.url);
+                }, TypeError, 'You should provide a correct url, bastard.');
+            });
+        }
+    );
+
+    dataDriven(incorrectConfig, () => {
+        it('{description}', ctx => {
             assert.throws(() => {
                 new FramesMonitor(ctx.config, correctUrl);
             }, Errors.ConfigError, ctx.errorMsg);

@@ -13,7 +13,6 @@ describe('FramesMonitor::stopListen', () => {
     let childProcess;
 
     let stubRunShowFramesProcess;
-
     let spyIsListening;
     let spyKill;
 
@@ -23,16 +22,15 @@ describe('FramesMonitor::stopListen', () => {
             timeoutInSec: 1
         }, correctUrl);
 
-        childProcess             = makeChildProcess();
-        stubRunShowFramesProcess = sinon.stub(framesMonitor, '_runShowFramesProcess').returns(childProcess);
+        childProcess = makeChildProcess();
 
-        spyIsListening = sinon.spy(framesMonitor, 'isListening');
-        spyKill        = sinon.spy(childProcess, 'kill');
+        stubRunShowFramesProcess = sinon.stub(framesMonitor, '_runShowFramesProcess').returns(childProcess);
+        spyIsListening           = sinon.spy(framesMonitor, 'isListening');
+        spyKill                  = sinon.spy(childProcess, 'kill');
     });
 
     afterEach(() => {
         stubRunShowFramesProcess.restore();
-
         spyIsListening.restore();
         spyKill.restore();
     });
@@ -46,6 +44,7 @@ describe('FramesMonitor::stopListen', () => {
         } catch (err) {
             assert.isTrue(spyIsListening.calledOnce);
             assert.isTrue(spyIsListening.firstCall.calledWithExactly());
+            assert.isFalse(spyIsListening.firstCall.returnValue);
 
             assert.isTrue(spyKill.notCalled);
 
@@ -62,8 +61,12 @@ describe('FramesMonitor::stopListen', () => {
         framesMonitor.stopListen();
 
         assert.isTrue(spyIsListening.calledTwice);
+
         assert.isTrue(spyIsListening.firstCall.calledWithExactly());
+        assert.isFalse(spyIsListening.firstCall.returnValue);
+
         assert.isTrue(spyIsListening.secondCall.calledWithExactly());
+        assert.isTrue(spyIsListening.secondCall.returnValue);
 
         assert.isTrue(spyKill.calledOnce);
         assert.isTrue(spyKill.firstCall.calledWithExactly());
@@ -86,8 +89,13 @@ describe('FramesMonitor::stopListen', () => {
 
             assert.isTrue(spyIsListening.calledThrice);
             assert.isTrue(spyIsListening.firstCall.calledWithExactly());
+            assert.isFalse(spyIsListening.firstCall.returnValue);
+
             assert.isTrue(spyIsListening.secondCall.calledWithExactly());
+            assert.isTrue(spyIsListening.secondCall.returnValue);
+
             assert.isTrue(spyIsListening.thirdCall.calledWithExactly());
+            assert.isFalse(spyIsListening.thirdCall.returnValue);
 
             assert.isTrue(spyKill.calledOnce);
             assert.isTrue(spyKill.firstCall.calledWithExactly());

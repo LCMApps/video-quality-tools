@@ -28,22 +28,22 @@ describe('FramesMonitor::_reduceFramesFromStdoutBuffer', () => {
             expectedFrames: []
         },
         {
-            description   : 'must return array with one raw frame',
+            description   : 'must return an array with one raw frame',
             input         : '[FRAME]\na=b\nc=d\n[/FRAME]',
             expectedFrames: ['[FRAME]\na=b\nc=d']
         },
         {
-            description   : 'must return array with one raw frame, corner case',
+            description   : 'must return an array with one raw frame, corner case',
             input         : '[FRAME]\na=b\nc=d\n[FRAME]\na2=b2\nc2=d2\n[/FRAME]',
             expectedFrames: ['[FRAME]\na=b\nc=d\n[FRAME]\na2=b2\nc2=d2']
         },
         {
-            description   : 'must return array with one raw frame, without start block',
+            description   : 'must return an array with one raw frame, without start block',
             input         : '\na=b\nc=d\n[/FRAME]',
             expectedFrames: ['a=b\nc=d']
         },
         {
-            description   : 'must return array with two raw frames',
+            description   : 'must return an array with two raw frames',
             input         : '[FRAME]\na=b\nc=d\n[/FRAME]\n[FRAME]\na2=b2\nc2=d2\n[/FRAME]\n[FRAME]\na3=b3\nc2=d2',
             expectedFrames: ['[FRAME]\na=b\nc=d', '[FRAME]\na2=b2\nc2=d2']
         }
@@ -65,7 +65,6 @@ describe('FramesMonitor::_reduceFramesFromStdoutBuffer', () => {
             {input: '[FRAME]\na=b\n[/FRAME]\n', expectedResult: ['[FRAME]\na=b']},
             {input: '[FRAME]\na=b\nc=d\n', expectedResult: []},
         ];
-
 
         tests.forEach(item => {
             const frames = framesMonitor._reduceFramesFromStdoutBuffer(item.input);

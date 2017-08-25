@@ -11,7 +11,6 @@ describe('FramesMonitor::isListening', () => {
     let childProcess;
 
     let stubRunShowFramesProcess;
-
     let spyIsListening;
     let spyKill;
 
@@ -21,16 +20,15 @@ describe('FramesMonitor::isListening', () => {
             timeoutInSec: 1
         }, correctUrl);
 
-        childProcess             = makeChildProcess();
-        stubRunShowFramesProcess = sinon.stub(framesMonitor, '_runShowFramesProcess').returns(childProcess);
+        childProcess = makeChildProcess();
 
-        spyIsListening = sinon.spy(framesMonitor, 'isListening');
-        spyKill        = sinon.spy(childProcess, 'kill');
+        stubRunShowFramesProcess = sinon.stub(framesMonitor, '_runShowFramesProcess').returns(childProcess);
+        spyIsListening           = sinon.spy(framesMonitor, 'isListening');
+        spyKill                  = sinon.spy(childProcess, 'kill');
     });
 
     afterEach(() => {
         stubRunShowFramesProcess.restore();
-
         spyIsListening.restore();
         spyKill.restore();
     });
@@ -54,8 +52,12 @@ describe('FramesMonitor::isListening', () => {
         assert.isTrue(stubRunShowFramesProcess.firstCall.calledWithExactly());
 
         assert.isTrue(spyIsListening.calledTwice);
+
         assert.isTrue(spyIsListening.firstCall.calledWithExactly());
+        assert.isTrue(spyIsListening.firstCall.returned(false));
+
         assert.isTrue(spyIsListening.secondCall.calledWithExactly());
+        assert.isTrue(spyIsListening.secondCall.returned(true));
 
         assert.isTrue(spyKill.calledOnce);
         assert.isTrue(spyKill.firstCall.calledWithExactly());
@@ -71,6 +73,7 @@ describe('FramesMonitor::isListening', () => {
 
         assert.isTrue(spyIsListening.calledOnce);
         assert.isTrue(spyIsListening.firstCall.calledWithExactly());
+        assert.isTrue(spyIsListening.firstCall.returned(false));
 
         assert.isTrue(spyKill.notCalled);
 
