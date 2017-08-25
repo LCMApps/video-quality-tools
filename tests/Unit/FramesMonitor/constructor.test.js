@@ -7,16 +7,13 @@ const Errors = require('src/Errors/');
 
 const {correctPath, correctUrl, FramesMonitor} = require('./Helpers/');
 
-const {incorrectConfig} = require('./constructor.data');
+const {incorrectConfigData, incorrectUrlData, incorrectConfig} = require('./constructor.data');
 
 function typeOf(item) {
     return Object.prototype.toString.call(item);
 }
 
 describe('FramesMonitor::constructor', () => {
-
-    const incorrectConfigData = [undefined, null, false, 1, '1', Symbol(), () => {}, Buffer.alloc(1)];
-    const incorrectUrlData    = [undefined, null, false, 1, {}, Symbol(), () => {}, Buffer.alloc(1)];
 
     dataDriven(
         incorrectConfigData.map(item => ({type: typeOf(item), config: item})),

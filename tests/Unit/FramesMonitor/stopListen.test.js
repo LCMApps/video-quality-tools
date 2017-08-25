@@ -74,7 +74,7 @@ describe('FramesMonitor::stopListen', () => {
         assert.isFalse(framesMonitor.isListening());
     });
 
-    it('must throw an exception when try to stop listen several times', () => {
+    it('must throw an exception when try to stop listen several times in a row', () => {
         const expectedErrorType    = Errors.AlreadyStoppedListenError;
         const expectedErrorMessage = 'This service is already stopped.';
 
