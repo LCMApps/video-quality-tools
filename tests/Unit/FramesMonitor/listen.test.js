@@ -20,15 +20,14 @@ describe('FramesMonitor::listen', () => {
             timeoutInSec: 1
         }, correctUrl);
 
-        childProcess             = makeChildProcess();
-        stubRunShowFramesProcess = sinon.stub(framesMonitor, '_runShowFramesProcess').returns(childProcess);
+        childProcess = makeChildProcess();
 
-        spyIsListening = sinon.spy(framesMonitor, 'isListening');
+        stubRunShowFramesProcess = sinon.stub(framesMonitor, '_runShowFramesProcess').returns(childProcess);
+        spyIsListening           = sinon.spy(framesMonitor, 'isListening');
     });
 
     afterEach(() => {
-        stubRunShowFramesProcess.reset();
-
+        stubRunShowFramesProcess.restore();
         spyIsListening.restore();
     });
 
@@ -74,35 +73,72 @@ describe('FramesMonitor::listen', () => {
         }
     });
 
-    it('must set _onExit as a callback for child process exit event', () => {
-        const spyOnExit = sinon.spy(framesMonitor, '_onExit');
+    it('must not call any callback, cuz they were not set during the listen call', () => {
+        const spyOnExit               = sinon.spy(framesMonitor, '_onExit');
+        const spyOnProcessError       = sinon.spy(framesMonitor, '_onProcessError');
+        const spyOnProcessStreamError = sinon.spy(framesMonitor, '_onProcessStreamsError');
+        const spyOnStderrData         = sinon.spy(framesMonitor, '_onStderrData');
+        const spyOnStdoutChunk        = sinon.spy(framesMonitor, '_onStdoutChunk');
+
+        childProcess.on('error', () => {
+            // catch err to prevent throw exception
+        });
+
+        childProcess.stdout.on('error', () => {
+            // catch err to prevent throw exception
+        });
+
+        childProcess.stderr.on('error', () => {
+            // catch err to prevent throw exception
+        });
+
+        childProcess.emit('exit');
+        childProcess.emit('error', new Error(1));
+        childProcess.stdout.emit('error', new Error(1));
+        childProcess.stderr.emit('error', new Error(1));
+        childProcess.stderr.emit('data', 'worst possible error');
+        childProcess.stdout.emit('data', '[FRAME]a=');
+
+        assert.isTrue(spyOnExit.notCalled);
+        assert.isTrue(spyOnProcessError.notCalled);
+        assert.isTrue(spyOnProcessStreamError.notCalled);
+        assert.isTrue(spyOnStderrData.notCalled);
+        assert.isTrue(spyOnStdoutChunk.notCalled);
+
+        spyOnExit.restore();
+        spyOnProcessError.restore();
+        spyOnProcessStreamError.restore();
+        spyOnStderrData.restore();
+        spyOnStdoutChunk.restore();
+    });
+
+    it('must set all appropriate callbacks for the child process during the listen call', () => {
+        const spyOnExit               = sinon.spy(framesMonitor, '_onExit');
+        const spyOnProcessError       = sinon.spy(framesMonitor, '_onProcessError');
+        const spyOnProcessStreamError = sinon.spy(framesMonitor, '_onProcessStreamsError');
+        const spyOnStderrData         = sinon.spy(framesMonitor, '_onStderrData');
+        const spyOnStdoutChunk        = sinon.spy(framesMonitor, '_onStdoutChunk');
 
         framesMonitor.listen();
 
         childProcess.emit('exit');
+        childProcess.emit('error', new Error(1));
+        childProcess.stdout.emit('error', new Error(1));
+        childProcess.stderr.emit('error', new Error(1));
+        childProcess.stderr.emit('data', 'worst possible error');
+        childProcess.stdout.emit('data', '[FRAME]a=');
 
         assert.isTrue(spyOnExit.calledOnce);
+        assert.isTrue(spyOnProcessError.calledOnce);
+        assert.isTrue(spyOnProcessStreamError.calledTwice);
+        assert.isTrue(spyOnStderrData.calledOnce);
+        assert.isTrue(spyOnStdoutChunk.calledOnce);
 
         spyOnExit.restore();
-    });
-
-    it('must wrap and re-emit error emitted by the child process', done => {
-        const expectedError = new Error('test error 123');
-
-        framesMonitor.listen();
-
-        childProcess.emit('error', expectedError);
-
-        framesMonitor.on('error', err => {
-
-            assert.instanceOf(err, Errors.ProcessError);
-
-            assert.strictEqual(err.message, `${correctPath} process could not be spawned or just got an error.`);
-            assert.strictEqual(err.extra.error.message, expectedError.message);
-            assert.strictEqual(err.extra.url, correctUrl);
-
-            done();
-        });
+        spyOnProcessError.restore();
+        spyOnProcessStreamError.restore();
+        spyOnStderrData.restore();
+        spyOnStdoutChunk.restore();
     });
 
 });

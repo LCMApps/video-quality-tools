@@ -45,12 +45,16 @@ describe('FramesMonitor::_onStdoutChunk must skip invalid type, only Buffer type
     dataDriven(
         incorrectInputData.map(item => ({type: typeOf(item), data: item})),
         () => {
-            it('must skip invalid input type {type}', ctx => {
+            it('must skip invalid input type {type}', (ctx, done) => {
 
                 framesMonitor._onStdoutChunk(ctx.data);
 
-                assert.isFalse(spyReduceFramesFromStdoutBuffer.called);
-                assert.isFalse(spyFrameToJson.called);
+                setImmediate(() => {
+                    assert.isFalse(spyReduceFramesFromStdoutBuffer.called);
+                    assert.isFalse(spyFrameToJson.called);
+
+                    done();
+                });
             });
         }
     );
@@ -62,6 +66,7 @@ describe('FramesMonitor::_onStdoutChunk must process correct input', () => {
     let framesMonitor;
     let spyReduceFramesFromStdoutBuffer;
     let spyFrameToJson;
+    let spyOnCompleteFrame;
 
     beforeEach(() => {
         framesMonitor = new FramesMonitor({
@@ -71,11 +76,13 @@ describe('FramesMonitor::_onStdoutChunk must process correct input', () => {
 
         spyReduceFramesFromStdoutBuffer = sinon.spy(framesMonitor, '_reduceFramesFromStdoutBuffer');
         spyFrameToJson                  = sinon.spy(framesMonitor, '_frameToJson');
+        spyOnCompleteFrame              = sinon.spy();
     });
 
     afterEach(() => {
         spyReduceFramesFromStdoutBuffer.restore();
         spyFrameToJson.restore();
+        spyOnCompleteFrame.reset();
     });
 
     it('must not emit empty frame', done => {
@@ -83,9 +90,7 @@ describe('FramesMonitor::_onStdoutChunk must process correct input', () => {
 
         const input = Buffer.from('');
 
-        const spyEmit = sinon.spy();
-
-        framesMonitor.on('frame', spyEmit);
+        framesMonitor.on('frame', spyOnCompleteFrame);
 
         framesMonitor._onStdoutChunk(input);
 
@@ -96,7 +101,7 @@ describe('FramesMonitor::_onStdoutChunk must process correct input', () => {
 
             assert(spyFrameToJson.notCalled);
 
-            assert(spyEmit.notCalled);
+            assert(spyOnCompleteFrame.notCalled);
 
             done();
         });
@@ -107,9 +112,7 @@ describe('FramesMonitor::_onStdoutChunk must process correct input', () => {
 
         const input = Buffer.from('[FRAME]\na=b\n');
 
-        const spyEmit = sinon.spy();
-
-        framesMonitor.on('frame', spyEmit);
+        framesMonitor.on('frame', spyOnCompleteFrame);
 
         framesMonitor._onStdoutChunk(input);
 
@@ -120,7 +123,7 @@ describe('FramesMonitor::_onStdoutChunk must process correct input', () => {
 
             assert(spyFrameToJson.notCalled);
 
-            assert(spyEmit.notCalled);
+            assert(spyOnCompleteFrame.notCalled);
 
             done();
         });
@@ -134,15 +137,11 @@ describe('FramesMonitor::_onStdoutChunk must process correct input', () => {
 
         const input = Buffer.from('[FRAME]\na=1\nb=b\n[/FRAME]');
 
-        const spyEmit = sinon.spy();
-
-        framesMonitor.on('frame', spyEmit);
-
         framesMonitor._onStdoutChunk(input);
 
-        framesMonitor.on('frame', frame => {
-            assert.deepEqual(frame, expectedResult);
+        framesMonitor.on('frame', spyOnCompleteFrame);
 
+        setImmediate(() => {
             assert(spyReduceFramesFromStdoutBuffer.calledOnce);
             assert.isTrue(spyReduceFramesFromStdoutBuffer.firstCall.calledWithExactly('[FRAME]\na=1\nb=b\n[/FRAME]'));
             assert.isTrue(spyReduceFramesFromStdoutBuffer.firstCall.returned(['[FRAME]\na=1\nb=b']));
@@ -151,9 +150,9 @@ describe('FramesMonitor::_onStdoutChunk must process correct input', () => {
             assert.isTrue(spyFrameToJson.firstCall.calledWithExactly('[FRAME]\na=1\nb=b'));
             assert.isTrue(spyFrameToJson.firstCall.returned(expectedResult));
 
-            assert(spyEmit.calledOnce);
+            assert(spyOnCompleteFrame.calledOnce);
 
-            assert.isTrue(spyEmit.firstCall.calledWithExactly(expectedResult));
+            assert.isTrue(spyOnCompleteFrame.firstCall.calledWithExactly(expectedResult));
 
             done();
         });
@@ -178,19 +177,17 @@ describe('FramesMonitor::_onStdoutChunk must process correct input', () => {
 
         const expectedResult2 = {a: 'b'};
 
-        const spyEmit = sinon.spy();
-
         tests.forEach(item => {
             framesMonitor._onStdoutChunk(item.input);
         });
 
-        framesMonitor.on('frame', spyEmit);
+        framesMonitor.on('frame', spyOnCompleteFrame);
 
         setImmediate(() => {
-            assert(spyEmit.calledTwice);
+            assert(spyOnCompleteFrame.calledTwice);
 
-            assert.isTrue(spyEmit.firstCall.calledWithExactly(expectedResult1));
-            assert.isTrue(spyEmit.secondCall.calledWithExactly(expectedResult2));
+            assert.isTrue(spyOnCompleteFrame.firstCall.calledWithExactly(expectedResult1));
+            assert.isTrue(spyOnCompleteFrame.secondCall.calledWithExactly(expectedResult2));
 
             assert(spyReduceFramesFromStdoutBuffer.callCount, tests.length);
 

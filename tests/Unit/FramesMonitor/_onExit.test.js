@@ -10,7 +10,10 @@ describe('FramesMonitor::_onExit', () => {
 
     let framesMonitor;
     let childProcess;
+
     let stubRunShowFramesProcess;
+    let spyOnExit;
+    let spyOnExitEvent;
 
     beforeEach(() => {
         framesMonitor = new FramesMonitor({
@@ -18,12 +21,19 @@ describe('FramesMonitor::_onExit', () => {
             timeoutInSec: 1
         }, correctUrl);
 
-        childProcess             = makeChildProcess();
+        childProcess = makeChildProcess();
+
         stubRunShowFramesProcess = sinon.stub(framesMonitor, '_runShowFramesProcess').returns(childProcess);
+        spyOnExit                = sinon.spy(framesMonitor, '_onExit');
+        spyOnExitEvent           = sinon.spy();
+
+        framesMonitor.listen();
     });
 
     afterEach(() => {
         stubRunShowFramesProcess.restore();
+        spyOnExit.restore();
+        spyOnExitEvent.reset();
     });
 
     const data = [
@@ -33,46 +43,39 @@ describe('FramesMonitor::_onExit', () => {
     ];
 
     dataDriven(data, () => {
-        it('must handle exit event that could be emitter by the child process with {type}', ctx => {
+        it('must handle exit event that could be emitter by the child process with {type}', (ctx, done) => {
             const expectedExitCode   = ctx.exitCode;
             const expectedExitSignal = ctx.signal;
 
-            framesMonitor.listen();
+            childProcess.emit('exit', ctx.exitCode, ctx.signal);
 
-            framesMonitor.on('exit', (code, signal) => {
+            framesMonitor.on('exit', spyOnExitEvent);
 
-                assert.strictEqual(code, expectedExitCode);
-                assert.strictEqual(signal, expectedExitSignal);
+            setImmediate(() => {
+                assert.isTrue(spyOnExit.calledOnce);
+                assert.isTrue(spyOnExitEvent.calledOnce);
+
+                assert.isTrue(spyOnExitEvent.alwaysCalledWithExactly(expectedExitCode, expectedExitSignal));
 
                 assert.isFalse(framesMonitor.isListening());
-            });
 
-            childProcess.emit('exit', ctx.exitCode, ctx.signal);
+                done();
+            });
         });
     });
 
-    it('must call _onExit callback just once', () => {
-        const spyOnExit = sinon.spy(framesMonitor, '_onExit');
-
-        framesMonitor.listen();
-
+    it('must call _onExit callback just once', done => {
         childProcess.emit('exit');
         childProcess.emit('exit');
 
-        assert.isTrue(spyOnExit.calledOnce);
+        framesMonitor.on('exit', spyOnExitEvent);
 
-        spyOnExit.restore();
-    });
+        setImmediate(() => {
+            assert.isTrue(spyOnExit.calledOnce);
+            assert.isTrue(spyOnExitEvent.calledOnce);
 
-    it("must not call _onExit callback cuz it wasn't set by the 'listen' method call", () => {
-        const spyOnExit = sinon.spy(framesMonitor, '_onExit');
-
-        childProcess.emit('exit');
-        childProcess.emit('exit');
-
-        assert.isTrue(spyOnExit.notCalled);
-
-        spyOnExit.restore();
+            done();
+        });
     });
 
 });
