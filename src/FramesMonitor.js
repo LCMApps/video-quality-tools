@@ -14,8 +14,8 @@ class FramesMonitor extends EventEmitter {
     constructor(config, url) {
         super();
 
-        if (!_.isObject(config) || _.isFunction(config) || Buffer.isBuffer(config)) {
-            throw new TypeError('Config param should be an object, bastard.');
+        if (!_.isPlainObject(config)) {
+            throw new TypeError('Config param should be a plain object, bastard.');
         }
 
         if (!_.isString(url)) {
@@ -34,7 +34,7 @@ class FramesMonitor extends EventEmitter {
 
         this._assertExecutable(ffprobePath);
 
-        this._config = config;
+        this._config = _.cloneDeep(config);
         this._url    = url;
 
         this._cp             = null;
@@ -84,7 +84,7 @@ class FramesMonitor extends EventEmitter {
     _onProcessError(err) {
         const {ffprobePath} = this._config;
 
-        setImmediate(() => {
+        process.nextTick(() => {
             this.emit('error', new Errors.ProcessError(
                 `${ffprobePath} process could not be spawned or just got an error.`, {
                     url  : this._url,
@@ -97,7 +97,7 @@ class FramesMonitor extends EventEmitter {
     _onProcessStreamsError(streamType, err) {
         const {ffprobePath} = this._config;
 
-        setImmediate(() => {
+        process.nextTick(() => {
             this.emit('error', new Errors.ProcessStreamError(
                 `got an error from a ${ffprobePath} ${streamType} process stream.`, {
                     url  : this._url,
@@ -110,7 +110,7 @@ class FramesMonitor extends EventEmitter {
     _onStderrData(data) {
         const {ffprobePath} = this._config;
 
-        setImmediate(() => {
+        process.nextTick(() => {
             this.emit('stderr', new Errors.FramesMonitorError(
                 `got stderr output from a ${ffprobePath} process`, {
                     data: data,
@@ -121,7 +121,7 @@ class FramesMonitor extends EventEmitter {
     }
 
     _onExit(code, signal) {
-        setImmediate(() => {
+        process.nextTick(() => {
             this._cp = null;
 
             this.emit('exit', code, signal);
@@ -149,10 +149,6 @@ class FramesMonitor extends EventEmitter {
     }
 
     _onStdoutChunk(chunk) {
-        if (!Buffer.isBuffer(chunk)) {
-            return;
-        }
-
         for (let frame of this._reduceFramesFromStdoutBuffer(chunk.toString())) {
             setImmediate(() => {
                 frame = this._frameToJson(frame);
