@@ -21,7 +21,7 @@ describe('FramesMonitor::constructor', () => {
             it('config param has invalid ({type}) type', ctx => {
                 assert.throws(() => {
                     new FramesMonitor(ctx.config, undefined);
-                }, TypeError, 'Config param should be an object, bastard.');
+                }, TypeError, 'Config param should be a plain object, bastard.');
             });
         }
     );

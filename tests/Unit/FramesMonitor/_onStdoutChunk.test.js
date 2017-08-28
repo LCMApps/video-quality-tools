@@ -1,14 +1,9 @@
 'use strict';
 
-const sinon      = require('sinon');
-const {assert}   = require('chai');
-const dataDriven = require('data-driven');
+const sinon    = require('sinon');
+const {assert} = require('chai');
 
 const {correctPath, correctUrl, FramesMonitor} = require('./Helpers/');
-
-function typeOf(item) {
-    return Object.prototype.toString.call(item);
-}
 
 describe('FramesMonitor::_onStdoutChunk must skip invalid type, only Buffer type is accepted', () => {
 
@@ -16,18 +11,6 @@ describe('FramesMonitor::_onStdoutChunk must skip invalid type, only Buffer type
         ffprobePath : correctPath,
         timeoutInSec: 1
     }, correctUrl);
-
-    const incorrectInputData = [
-        undefined,
-        null,
-        true,
-        123,
-        '123',
-        [],
-        {},
-        Symbol(),
-        () => {}
-    ];
 
     let spyReduceFramesFromStdoutBuffer;
     let spyFrameToJson;
@@ -41,23 +24,6 @@ describe('FramesMonitor::_onStdoutChunk must skip invalid type, only Buffer type
         spyReduceFramesFromStdoutBuffer.restore();
         spyFrameToJson.restore();
     });
-
-    dataDriven(
-        incorrectInputData.map(item => ({type: typeOf(item), data: item})),
-        () => {
-            it('must skip invalid input type {type}', (ctx, done) => {
-
-                framesMonitor._onStdoutChunk(ctx.data);
-
-                setImmediate(() => {
-                    assert.isFalse(spyReduceFramesFromStdoutBuffer.called);
-                    assert.isFalse(spyFrameToJson.called);
-
-                    done();
-                });
-            });
-        }
-    );
 
 });
 
