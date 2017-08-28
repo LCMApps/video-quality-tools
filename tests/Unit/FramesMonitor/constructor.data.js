@@ -1,7 +1,7 @@
 const {correctPath} = require('./Helpers/');
 
-const incorrectConfigData = [undefined, null, false, 1, '1', Symbol(), () => {}, Buffer.alloc(1)];
-const incorrectUrlData    = [undefined, null, false, 1, {}, Symbol(), () => {}, Buffer.alloc(1)];
+const incorrectConfigData = [undefined, null, false, 1, '1', Symbol(), () => {}, Buffer.alloc(1), new Error('bastard')];
+const incorrectUrlData    = [undefined, null, false, 1, {}, Symbol(), () => {}, Buffer.alloc(1), new Error('bastard')];
 
 const incorrectConfig = [
     {

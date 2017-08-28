@@ -11,8 +11,6 @@ describe('FramesMonitor::isListening', () => {
     let childProcess;
 
     let stubRunShowFramesProcess;
-    let spyIsListening;
-    let spyKill;
 
     beforeEach(() => {
         framesMonitor = new FramesMonitor({
@@ -23,61 +21,33 @@ describe('FramesMonitor::isListening', () => {
         childProcess = makeChildProcess();
 
         stubRunShowFramesProcess = sinon.stub(framesMonitor, '_runShowFramesProcess').returns(childProcess);
-        spyIsListening           = sinon.spy(framesMonitor, 'isListening');
-        spyKill                  = sinon.spy(childProcess, 'kill');
     });
 
     afterEach(() => {
         stubRunShowFramesProcess.restore();
-        spyIsListening.restore();
-        spyKill.restore();
     });
 
     it("must return false, cuz we didn't run listen method", () => {
-        assert.isFalse(framesMonitor.isListening());
+        const expectedIsListening = false;
 
-        assert.isTrue(stubRunShowFramesProcess.notCalled);
-        assert.isTrue(spyKill.notCalled);
+        assert.strictEqual(expectedIsListening, framesMonitor.isListening());
+    });
 
-        assert.isTrue(spyIsListening.calledOnce);
-        assert.isTrue(spyIsListening.firstCall.calledWithExactly());
+    it('must return true, cuz we started listen', () => {
+        const expectedIsListening = true;
 
+        framesMonitor.listen();
+
+        assert.strictEqual(expectedIsListening, framesMonitor.isListening());
     });
 
     it('must return false, cuz we stopped listen', () => {
+        const expectedIsListening = false;
+
         framesMonitor.listen();
         framesMonitor.stopListen();
 
-        assert.isTrue(stubRunShowFramesProcess.calledOnce);
-        assert.isTrue(stubRunShowFramesProcess.firstCall.calledWithExactly());
-
-        assert.isTrue(spyIsListening.calledTwice);
-
-        assert.isTrue(spyIsListening.firstCall.calledWithExactly());
-        assert.isTrue(spyIsListening.firstCall.returned(false));
-
-        assert.isTrue(spyIsListening.secondCall.calledWithExactly());
-        assert.isTrue(spyIsListening.secondCall.returned(true));
-
-        assert.isTrue(spyKill.calledOnce);
-        assert.isTrue(spyKill.firstCall.calledWithExactly());
-
-        assert.isFalse(framesMonitor.isListening());
-    });
-
-    it('must return true, cuz we started listen and forgot to stop', () => {
-        framesMonitor.listen();
-
-        assert.isTrue(stubRunShowFramesProcess.calledOnce);
-        assert.isTrue(stubRunShowFramesProcess.firstCall.calledWithExactly());
-
-        assert.isTrue(spyIsListening.calledOnce);
-        assert.isTrue(spyIsListening.firstCall.calledWithExactly());
-        assert.isTrue(spyIsListening.firstCall.returned(false));
-
-        assert.isTrue(spyKill.notCalled);
-
-        assert.isTrue(framesMonitor.isListening());
+        assert.strictEqual(expectedIsListening, framesMonitor.isListening());
     });
 
 });
