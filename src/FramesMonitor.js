@@ -72,16 +72,12 @@ class FramesMonitor extends EventEmitter {
         return !!this._cp;
     }
 
-    stopListen() {
+    stopListen(signal) {
         if (!this.isListening()) {
             throw new Errors.AlreadyStoppedListenError('This service is already stopped.');
         }
 
-        this._framesReducer.reset();
-        this._framesReducer.removeAllListeners('frame');
-
-        this._cp.kill();
-        this._cp = null;
+        this._cp.kill(signal);
     }
 
     _assertExecutable(path) {
