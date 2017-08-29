@@ -84,48 +84,40 @@ class FramesMonitor extends EventEmitter {
     _onProcessError(err) {
         const {ffprobePath} = this._config;
 
-        process.nextTick(() => {
-            this.emit('error', new Errors.ProcessError(
-                `${ffprobePath} process could not be spawned or just got an error.`, {
-                    url  : this._url,
-                    error: err
-                })
-            );
-        });
+        this.emit('error', new Errors.ProcessError(
+            `${ffprobePath} process could not be spawned or just got an error.`, {
+                url  : this._url,
+                error: err
+            })
+        );
     }
 
     _onProcessStreamsError(streamType, err) {
         const {ffprobePath} = this._config;
 
-        process.nextTick(() => {
-            this.emit('error', new Errors.ProcessStreamError(
-                `got an error from a ${ffprobePath} ${streamType} process stream.`, {
-                    url  : this._url,
-                    error: err
-                })
-            );
-        });
+        this.emit('error', new Errors.ProcessStreamError(
+            `got an error from a ${ffprobePath} ${streamType} process stream.`, {
+                url  : this._url,
+                error: err
+            })
+        );
     }
 
     _onStderrData(data) {
         const {ffprobePath} = this._config;
 
-        process.nextTick(() => {
-            this.emit('stderr', new Errors.FramesMonitorError(
-                `got stderr output from a ${ffprobePath} process`, {
-                    data: data,
-                    url : this._url
-                })
-            );
-        });
+        this.emit('stderr', new Errors.FramesMonitorError(
+            `got stderr output from a ${ffprobePath} process`, {
+                data: data,
+                url : this._url
+            })
+        );
     }
 
     _onExit(code, signal) {
-        process.nextTick(() => {
-            this._cp = null;
+        this._cp = null;
 
-            this.emit('exit', code, signal);
-        });
+        this.emit('exit', code, signal);
     }
 
     _runShowFramesProcess() {
