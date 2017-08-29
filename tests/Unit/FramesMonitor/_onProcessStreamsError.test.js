@@ -42,7 +42,7 @@ describe('FramesMonitor::_onProcessStreamsError', () => {
     ];
 
     dataDriven(data, () => {
-        it('must wrap and re-emit each error emitted by the child process {type} object', (ctx, done) => {
+        it('must wrap and re-emit each error emitted by the child process {type} object', ctx => {
             const expectedErrorType = Errors.ProcessStreamError;
             const expectedErrorMsg  = `got an error from a ${correctPath} ${ctx.type.toUpperCase()} process stream.`;
 
@@ -51,33 +51,29 @@ describe('FramesMonitor::_onProcessStreamsError', () => {
 
             framesMonitor.listen();
 
+            framesMonitor.on('error', spyOnStreamErrorEvent);
+
             childProcess[ctx.type].emit('error', expectedError1);
             childProcess[ctx.type].emit('error', expectedError2);
 
-            framesMonitor.on('error', spyOnStreamErrorEvent);
+            assert.isTrue(spyOnProcessStreamsError.calledTwice);
 
-            setImmediate(() => {
-                assert.isTrue(spyOnProcessStreamsError.calledTwice);
+            assert.isTrue(spyOnStreamErrorEvent.calledTwice);
 
-                assert.isTrue(spyOnStreamErrorEvent.calledTwice);
+            const firstCallErrorData  = spyOnStreamErrorEvent.firstCall.args[0];
+            const secondCallErrorData = spyOnStreamErrorEvent.secondCall.args[0];
 
-                const firstCallErrorData  = spyOnStreamErrorEvent.firstCall.args[0];
-                const secondCallErrorData = spyOnStreamErrorEvent.secondCall.args[0];
+            assert.instanceOf(firstCallErrorData, expectedErrorType);
+            assert.instanceOf(secondCallErrorData, expectedErrorType);
 
-                assert.instanceOf(firstCallErrorData, expectedErrorType);
-                assert.instanceOf(secondCallErrorData, expectedErrorType);
+            assert.strictEqual(firstCallErrorData.message, expectedErrorMsg);
+            assert.strictEqual(secondCallErrorData.message, expectedErrorMsg);
 
-                assert.strictEqual(firstCallErrorData.message, expectedErrorMsg);
-                assert.strictEqual(secondCallErrorData.message, expectedErrorMsg);
+            assert.strictEqual(firstCallErrorData.extra.url, correctUrl);
+            assert.strictEqual(secondCallErrorData.extra.url, correctUrl);
 
-                assert.strictEqual(firstCallErrorData.extra.url, correctUrl);
-                assert.strictEqual(secondCallErrorData.extra.url, correctUrl);
-
-                assert.strictEqual(firstCallErrorData.extra.error.message, expectedError1.message);
-                assert.strictEqual(secondCallErrorData.extra.error.message, expectedError2.message);
-
-                done();
-            });
+            assert.strictEqual(firstCallErrorData.extra.error.message, expectedError1.message);
+            assert.strictEqual(secondCallErrorData.extra.error.message, expectedError2.message);
         });
     });
 
