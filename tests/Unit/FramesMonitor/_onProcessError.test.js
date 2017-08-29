@@ -34,7 +34,7 @@ describe('FramesMonitor::onProcessError', () => {
         spyOnProcessError.restore();
     });
 
-    it('must wrap and re-emit each error emitted by the child process', done => {
+    it('must wrap and re-emit each error emitted by the child process', () => {
         const spyOnErrorEvent = sinon.spy();
 
         const expectedErrorType = Errors.ProcessError;
@@ -42,40 +42,37 @@ describe('FramesMonitor::onProcessError', () => {
         const expectedError1 = new Error('test error 1');
         const expectedError2 = new Error('test error 2');
 
+        framesMonitor.on('error', spyOnErrorEvent);
+
         childProcess.emit('error', expectedError1);
         childProcess.emit('error', expectedError2);
 
-        framesMonitor.on('error', spyOnErrorEvent);
+        assert.isTrue(spyOnProcessError.calledTwice);
 
-        setImmediate(() => {
-            assert.isTrue(spyOnProcessError.calledTwice);
+        assert.isTrue(spyOnErrorEvent.calledTwice);
 
-            assert.isTrue(spyOnErrorEvent.calledTwice);
+        const firstCallErrorData  = spyOnErrorEvent.firstCall.args[0];
+        const secondCallErrorData = spyOnErrorEvent.secondCall.args[0];
 
-            const firstCallErrorData  = spyOnErrorEvent.firstCall.args[0];
-            const secondCallErrorData = spyOnErrorEvent.secondCall.args[0];
+        assert.instanceOf(firstCallErrorData, expectedErrorType);
+        assert.instanceOf(secondCallErrorData, expectedErrorType);
 
-            assert.instanceOf(firstCallErrorData, expectedErrorType);
-            assert.instanceOf(secondCallErrorData, expectedErrorType);
+        assert.strictEqual(
+            firstCallErrorData.message,
+            `${correctPath} process could not be spawned or just got an error.`
+        );
 
-            assert.strictEqual(
-                firstCallErrorData.message,
-                `${correctPath} process could not be spawned or just got an error.`
-            );
+        assert.strictEqual(
+            secondCallErrorData.message,
+            `${correctPath} process could not be spawned or just got an error.`
+        );
 
-            assert.strictEqual(
-                secondCallErrorData.message,
-                `${correctPath} process could not be spawned or just got an error.`
-            );
+        assert.strictEqual(firstCallErrorData.extra.url, correctUrl);
+        assert.strictEqual(secondCallErrorData.extra.url, correctUrl);
 
-            assert.strictEqual(firstCallErrorData.extra.url, correctUrl);
-            assert.strictEqual(secondCallErrorData.extra.url, correctUrl);
+        assert.strictEqual(firstCallErrorData.extra.error.message, expectedError1.message);
+        assert.strictEqual(secondCallErrorData.extra.error.message, expectedError2.message);
 
-            assert.strictEqual(firstCallErrorData.extra.error.message, expectedError1.message);
-            assert.strictEqual(secondCallErrorData.extra.error.message, expectedError2.message);
-
-            done();
-        });
     });
 
 });
