@@ -4,10 +4,11 @@ const sinon      = require('sinon');
 const {assert}   = require('chai');
 const dataDriven = require('data-driven');
 
-const {correctPath, correctUrl, FramesMonitor, makeChildProcess} = require('./Helpers/');
+const {url, path, FramesMonitor, makeFramesReducer, makeChildProcess} = require('./Helpers');
 
 describe('FramesMonitor::_onExit', () => {
 
+    let framesReducer;
     let framesMonitor;
     let childProcess;
 
@@ -16,10 +17,13 @@ describe('FramesMonitor::_onExit', () => {
     let spyOnExitEvent;
 
     beforeEach(() => {
+
+        framesReducer = makeFramesReducer();
+
         framesMonitor = new FramesMonitor({
-            ffprobePath : correctPath,
-            timeoutInSec: 1
-        }, correctUrl);
+            ffprobePath : path,
+            timeoutInSec: 1,
+        }, url, framesReducer);
 
         childProcess = makeChildProcess();
 

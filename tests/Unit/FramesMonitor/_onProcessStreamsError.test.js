@@ -6,10 +6,11 @@ const dataDriven = require('data-driven');
 
 const Errors = require('src/Errors');
 
-const {correctPath, correctUrl, FramesMonitor, makeChildProcess} = require('./Helpers/');
+const {url, path, FramesMonitor, makeFramesReducer, makeChildProcess} = require('./Helpers');
 
 describe('FramesMonitor::_onProcessStreamsError', () => {
 
+    let framesReducer;
     let framesMonitor;
     let childProcess;
 
@@ -18,10 +19,12 @@ describe('FramesMonitor::_onProcessStreamsError', () => {
     let spyOnStreamErrorEvent;
 
     beforeEach(() => {
+        framesReducer = makeFramesReducer();
+
         framesMonitor = new FramesMonitor({
-            ffprobePath : correctPath,
-            timeoutInSec: 1
-        }, correctUrl);
+            ffprobePath : path,
+            timeoutInSec: 1,
+        }, url, framesReducer);
 
         childProcess = makeChildProcess();
 
@@ -44,7 +47,7 @@ describe('FramesMonitor::_onProcessStreamsError', () => {
     dataDriven(data, () => {
         it('must wrap and re-emit each error emitted by the child process {type} object', ctx => {
             const expectedErrorType = Errors.ProcessStreamError;
-            const expectedErrorMsg  = `got an error from a ${correctPath} ${ctx.type.toUpperCase()} process stream.`;
+            const expectedErrorMsg  = `got an error from a ${path} ${ctx.type.toUpperCase()} process stream.`;
 
             const expectedError1 = new Error('test error 1');
             const expectedError2 = new Error('test error 2');
@@ -69,8 +72,8 @@ describe('FramesMonitor::_onProcessStreamsError', () => {
             assert.strictEqual(firstCallErrorData.message, expectedErrorMsg);
             assert.strictEqual(secondCallErrorData.message, expectedErrorMsg);
 
-            assert.strictEqual(firstCallErrorData.extra.url, correctUrl);
-            assert.strictEqual(secondCallErrorData.extra.url, correctUrl);
+            assert.strictEqual(firstCallErrorData.extra.url, url);
+            assert.strictEqual(secondCallErrorData.extra.url, url);
 
             assert.strictEqual(firstCallErrorData.extra.error.message, expectedError1.message);
             assert.strictEqual(secondCallErrorData.extra.error.message, expectedError2.message);

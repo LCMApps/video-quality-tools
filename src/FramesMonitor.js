@@ -11,7 +11,7 @@ const STDOUT = 'STDOUT';
 const STDERR = 'STDERR';
 
 class FramesMonitor extends EventEmitter {
-    constructor(config, url) {
+    constructor(config, url, framesReducer) {
         super();
 
         if (!_.isPlainObject(config)) {
@@ -20,6 +20,10 @@ class FramesMonitor extends EventEmitter {
 
         if (!_.isString(url)) {
             throw new TypeError('You should provide a correct url, bastard.');
+        }
+
+        if (!(framesReducer instanceof EventEmitter)) {
+            throw new TypeError('frames reducer should be an event emitter object, bastard.');
         }
 
         const {ffprobePath, timeoutInSec} = config;
@@ -37,8 +41,9 @@ class FramesMonitor extends EventEmitter {
         this._config = _.cloneDeep(config);
         this._url    = url;
 
-        this._cp             = null;
-        this._chunkRemainder = '';
+        this._cp = null;
+
+        this._framesReducer = framesReducer;
     }
 
     listen() {
@@ -58,18 +63,24 @@ class FramesMonitor extends EventEmitter {
         this._cp.stderr.on('data', this._onStderrData.bind(this));
 
         this._cp.stdout.on('data', this._onStdoutChunk.bind(this));
+
+        this._framesReducer.on('error', this._onFramesReducerError.bind(this));
+        this._framesReducer.on('frame', this._onFramesReducerFrame.bind(this));
     }
 
     isListening() {
         return !!this._cp;
     }
 
-    stopListen() {
+    stopListen(signal) {
         if (!this.isListening()) {
             throw new Errors.AlreadyStoppedListenError('This service is already stopped.');
         }
 
-        this._cp.kill();
+        this._framesReducer.reset();
+        this._framesReducer.removeAllListeners('frame');
+
+        this._cp.kill(signal);
         this._cp = null;
     }
 
@@ -141,49 +152,15 @@ class FramesMonitor extends EventEmitter {
     }
 
     _onStdoutChunk(chunk) {
-        for (let frame of this._reduceFramesFromStdoutBuffer(chunk.toString())) {
-            setImmediate(() => {
-                frame = this._frameToJson(frame);
-
-                this.emit('frame', frame);
-            });
-        }
+        this._framesReducer.process(chunk.toString());
     }
 
-    _reduceFramesFromStdoutBuffer(chunk) {
-        const data = this._chunkRemainder + chunk;
-
-        let frames = data.split('[/FRAME]');
-
-        if (frames[frames.length - 1]) {
-            this._chunkRemainder = frames[frames.length - 1];
-        }
-
-        frames.splice(-1);
-
-        frames = frames.map(frame => frame.trim());
-
-        return frames;
+    _onFramesReducerError(error) {
+        this.emit('error', error);
     }
 
-    _frameToJson(rawFrame) {
-        if (!_.isString(rawFrame)) {
-            return null;
-        }
-
-        const frame      = {};
-        const frameLines = rawFrame.split('\n');
-
-        frameLines.forEach(frameLine => {
-            let [key, value] = frameLine.split('=').map(item => item.trim());
-
-            if (key && value) {
-                value      = Number(value) ? Number(value) : value;
-                frame[key] = value;
-            }
-        });
-
-        return frame;
+    _onFramesReducerFrame(frame) {
+        this.emit('frame', frame);
     }
 }
 
