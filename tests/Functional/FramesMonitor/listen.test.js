@@ -16,7 +16,7 @@ assert(process.env.FFMPEG, 'Specify path for ffmpeg via FFMPEG env var');
 const {FFPROBE, FFMPEG} = process.env;
 const testFile          = path.join(__dirname, '../../inputs/test_IPPPP.mp4');
 
-describe('FrameMonitor::listen, fetch frames from inactive stream', () => {
+describe('FramesMonitor::listen, fetch frames from inactive stream', () => {
 
     let streamUrl;
     let framesMonitor;
