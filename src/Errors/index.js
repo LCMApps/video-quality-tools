@@ -14,6 +14,11 @@ class CannotFindGopPatternError extends ExtendableError {}
 class GopPatternUnstableError extends ExtendableError {}
 class BadGopDataError extends ExtendableError {}
 class ExecutablePathError extends ExtendableError {}
+class FrameInvalidData extends ExtendableError {}
+class NoVideoFramesError extends ExtendableError {}
+class NoGopPatternError extends ExtendableError {}
+class NoMainFramePatternError extends ExtendableError {}
+class UnstableGopPatternError extends ExtendableError {}
 
 module.exports = {
     AlreadyListeningError,
@@ -29,5 +34,10 @@ module.exports = {
     CannotFindGopPatternError,
     GopPatternUnstableError,
     BadGopDataError,
-    ExecutablePathError
+    ExecutablePathError,
+    FrameInvalidData,
+    NoVideoFramesError,
+    NoGopPatternError,
+    NoMainFramePatternError,
+    UnstableGopPatternError
 };
