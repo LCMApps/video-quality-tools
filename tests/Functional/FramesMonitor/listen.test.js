@@ -166,7 +166,7 @@ describe('FramesMonitor::listen, kill ffprobe process', () => {
             framesMonitor.listen();
 
             framesMonitor.once('frame', () => {
-                framesMonitor.stopListen('SIGKILL');
+                framesMonitor.stopListen(expectedSignal);
             });
 
             framesMonitor.on('exit', (code, signal) => {
