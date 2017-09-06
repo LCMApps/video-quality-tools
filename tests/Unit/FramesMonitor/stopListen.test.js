@@ -60,8 +60,6 @@ describe('FramesMonitor::stopListen', () => {
         framesMonitor.stopListen();
 
         assert.isTrue(spyOnKill.calledOnce);
-
-        console.log(spyOnKill.firstCall);
         assert.isTrue(spyOnKill.alwaysCalledWithExactly());
 
         assert.strictEqual(expectedIsListening, framesMonitor.isListening());

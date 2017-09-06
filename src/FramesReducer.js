@@ -3,7 +3,7 @@
 const _            = require('lodash');
 const EventEmitter = require('events');
 
-const Errors = require('src/Errors');
+const Errors = require('./Errors');
 
 const startFrameTag = '[FRAME]';
 const endFrameTag   = '[/FRAME]';

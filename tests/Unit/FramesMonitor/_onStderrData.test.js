@@ -49,8 +49,8 @@ describe('FramesMonitor::_onStderrData', () => {
 
         framesMonitor.on('stderr', spyOnStderrDataEvent);
 
-        childProcess.stderr.emit('data', expectedDataMsg1);
-        childProcess.stderr.emit('data', expectedDataMsg2);
+        childProcess.stderr.emit('data', Buffer.from(expectedDataMsg1));
+        childProcess.stderr.emit('data', Buffer.from(expectedDataMsg2));
 
         assert.isTrue(spyOnStderrData.calledTwice);
         assert.isTrue(spyOnStderrDataEvent.calledTwice);
