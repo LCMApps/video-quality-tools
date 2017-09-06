@@ -15,7 +15,7 @@ describe('FramesReducer::process', () => {
         framesReducer = makeFramesReducer();
     });
 
-    it('must emit complete raw frames which has been accumulated by several chunks', done => {
+    it('must emit complete raw frames which has been accumulated by several chunks', () => {
         const tests = [
             '[FRAME]\na=b\nc=d\n',
             'a2=b2\nc2=d2\n',
@@ -29,27 +29,20 @@ describe('FramesReducer::process', () => {
 
         const spy = sinon.spy();
 
-        tests.forEach(test => framesReducer.process(test));
-
         framesReducer.on('frame', spy);
 
-        setTimeout(() => {
-            assert.isTrue(spy.calledTwice);
-            assert.isTrue(spy.firstCall.calledWithExactly(expectedResult1));
-            assert.isTrue(spy.secondCall.calledWithExactly(expectedResult2));
+        tests.forEach(test => framesReducer.process(test));
 
-            spy.reset();
+        assert.isTrue(spy.calledTwice);
+        assert.isTrue(spy.firstCall.calledWithExactly(expectedResult1));
+        assert.isTrue(spy.secondCall.calledWithExactly(expectedResult2));
 
-            done();
-        }, 0);
+        spy.reset();
     });
 
-    it('must emit error, invalid data input (too big frame, probably infinite)', done => {
+    it('must emit error, invalid data input (too big frame, probably infinite)', () => {
         const smallInput = '\na=b\n'.repeat(10);
         const largeInput = '\na=b\n'.repeat(bufferMaxLengthInBytes - 10);
-
-        framesReducer.process(smallInput);
-        framesReducer.process(largeInput);
 
         framesReducer.on('error', error => {
             assert.instanceOf(error, Errors.InvalidFrameError);
@@ -60,9 +53,10 @@ describe('FramesReducer::process', () => {
                 `The frame length is ${smallInput.length + largeInput.length}.` +
                 `The max frame length must be ${bufferMaxLengthInBytes}`
             );
-
-            done();
         });
+
+        framesReducer.process(smallInput);
+        framesReducer.process(largeInput);
     });
 
 });

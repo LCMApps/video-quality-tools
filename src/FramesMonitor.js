@@ -72,7 +72,7 @@ class FramesMonitor extends EventEmitter {
         return !!this._cp;
     }
 
-    stopListen(signal) {
+    stopListen() {
         if (!this.isListening()) {
             throw new Errors.AlreadyStoppedListenError('This service is already stopped.');
         }
@@ -80,7 +80,7 @@ class FramesMonitor extends EventEmitter {
         this._framesReducer.reset();
         this._framesReducer.removeAllListeners('frame');
 
-        this._cp.kill(signal);
+        this._cp.kill();
         this._cp = null;
     }
 
@@ -152,7 +152,9 @@ class FramesMonitor extends EventEmitter {
     }
 
     _onStdoutChunk(chunk) {
-        this._framesReducer.process(chunk.toString());
+        setTimeout(() => {
+            this._framesReducer.process(chunk.toString());
+        }, 0);
     }
 
     _onFramesReducerError(error) {
