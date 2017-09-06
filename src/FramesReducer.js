@@ -34,19 +34,17 @@ function createFramesReducer(config) {
                     `The max frame length must be ${config.bufferMaxLengthInBytes}`
                 );
 
-                return process.nextTick(() => this.emit('error', error));
+                return this.emit('error', error);
             }
 
             try {
                 ({chunkRemainder, frames} = this._reduceFramesFromChunks(data));
             } catch (error) {
-                return process.nextTick(() => this.emit('error', error));
+                return this.emit('error', error);
             }
 
             for (const frame of frames) {
-                setTimeout(() => {
-                    this.emit('frame', this._frameToJson(frame));
-                }, 0);
+                this.emit('frame', this._frameToJson(frame));
             }
         },
         reset() {
