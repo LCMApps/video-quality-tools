@@ -17,7 +17,6 @@ const {FFPROBE, FFMPEG} = process.env;
 const testFile          = path.join(__dirname, '../../inputs/test_IPPPP.mp4');
 
 describe('FramesMonitor::listen, fetch frames from inactive stream', () => {
-
     let streamUrl;
     let framesMonitor;
 
@@ -63,11 +62,9 @@ describe('FramesMonitor::listen, fetch frames from inactive stream', () => {
             done();
         });
     });
-
 });
 
 describe('FramesMonitor::listen, fetch frames from active stream', () => {
-
     let ffmpeg;
     let streamUrl;
     let framesMonitor;
@@ -97,6 +94,8 @@ describe('FramesMonitor::listen, fetch frames from active stream', () => {
         spyOnPFrame.reset();
         spyOnIFrame.reset();
 
+        // at this stage ffmpeg process should be stopped
+        // but for sure let's kill it
         ffmpeg.kill('SIGKILL');
     });
 
@@ -128,12 +127,10 @@ describe('FramesMonitor::listen, fetch frames from active stream', () => {
                 done();
             });
         });
-
     });
 });
 
-describe('FramesMonitor::listen, kill ffprobe process', () => {
-
+describe('FramesMonitor::listen, stop ffprobe process', () => {
     let ffmpeg;
     let streamUrl;
     let framesMonitor;
@@ -154,19 +151,20 @@ describe('FramesMonitor::listen, kill ffprobe process', () => {
     });
 
     after(() => {
+        // kill with SIGKILL for sure
         ffmpeg.kill('SIGKILL');
     });
 
     it('must exit with correct signal after kill', function (done) {
         const expectedReturnCode = null;
-        const expectedSignal     = 'SIGKILL';
+        const expectedSignal     = 'SIGTERM';
 
         ffmpeg.stderr.once('data', () => {
 
             framesMonitor.listen();
 
             framesMonitor.once('frame', () => {
-                framesMonitor.stopListen(expectedSignal);
+                framesMonitor.stopListen();
             });
 
             framesMonitor.on('exit', (code, signal) => {
@@ -181,7 +179,6 @@ describe('FramesMonitor::listen, kill ffprobe process', () => {
 });
 
 describe('FramesMonitor::listen, exit with correct code after stream has been finished', () => {
-
     let ffmpeg;
     let streamUrl;
     let framesMonitor;
@@ -202,6 +199,8 @@ describe('FramesMonitor::listen, exit with correct code after stream has been fi
     });
 
     after(() => {
+        // at this stage ffmpeg process should be stopped
+        // but for sure let's kill it
         ffmpeg.kill('SIGKILL');
     });
 
@@ -217,7 +216,7 @@ describe('FramesMonitor::listen, exit with correct code after stream has been fi
 
             framesMonitor.once('frame', () => {
                 setTimeout(() => {
-                    ffmpeg.kill('SIGKILL');
+                    ffmpeg.kill();
                 }, 1000);
             });
 
