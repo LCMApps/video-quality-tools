@@ -119,7 +119,7 @@ class FramesMonitor extends EventEmitter {
 
         this.emit('stderr', new Errors.FramesMonitorError(
             `got stderr output from a ${ffprobePath} process`, {
-                data: data,
+                data: data.toString(),
                 url : this._url
             })
         );
