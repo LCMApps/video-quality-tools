@@ -1,11 +1,11 @@
 'use strict';
 
-const createFramesReducer = require('src/FramesReducer');
+const FramesReducer = require('src/FramesReducer');
 
 const bufferMaxLengthInBytes = 1024;
 
 function makeFramesReducer() {
-    return createFramesReducer({bufferMaxLengthInBytes});
+    return new FramesReducer({bufferMaxLengthInBytes});
 }
 
 module.exports = {

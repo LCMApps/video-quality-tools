@@ -3,17 +3,11 @@
 const {assert}   = require('chai');
 const dataDriven = require('data-driven');
 
-const {makeFramesReducer} = require('./Helpers');
+const FramesReducer = require('src/FramesReducer');
 
 const Errors = require('src/Errors');
 
-describe('FramesReducer::_reduceFramesFromChunks', () => {
-
-    let framesReducer;
-
-    beforeEach(() => {
-        framesReducer = makeFramesReducer();
-    });
+describe('FramesReducer::reduceFramesFromChunks', () => {
 
     const data = [
         {
@@ -52,7 +46,7 @@ describe('FramesReducer::_reduceFramesFromChunks', () => {
             let frames;
 
             assert.doesNotThrow(() => {
-                ({chunkRemainder, frames} = framesReducer._reduceFramesFromChunks(ctx.inputChunkRemainder + ctx.input));
+                ({chunkRemainder, frames} = FramesReducer.reduceFramesFromChunks(ctx.inputChunkRemainder + ctx.input));
             });
 
             assert.deepStrictEqual(frames, ctx.expectedFrames);
@@ -68,7 +62,7 @@ describe('FramesReducer::_reduceFramesFromChunks', () => {
         const newChunk       = '[FRAME]\na=b\nc=d\n[/FRAME]';
 
         try {
-            framesReducer._reduceFramesFromChunks(chunkRemainder + newChunk);
+            FramesReducer.reduceFramesFromChunks(chunkRemainder + newChunk);
             assert.isFalse(true, 'Should not be here');
         } catch (err) {
             assert.instanceOf(err, expectedErrorType);
@@ -90,7 +84,7 @@ describe('FramesReducer::_reduceFramesFromChunks', () => {
         const newChunk       = 'a=b\nc=d\n[/FRAME]';
 
         try {
-            framesReducer._reduceFramesFromChunks(chunkRemainder + newChunk);
+            FramesReducer.reduceFramesFromChunks(chunkRemainder + newChunk);
             assert.isFalse(true, 'Should not be here');
         } catch (err) {
             assert.instanceOf(err, expectedErrorType);
