@@ -2,7 +2,7 @@
 
 const _ = require('lodash');
 
-const Errors = require('src/Errors');
+const Errors = require('./Errors');
 
 function processFrames(frames) {
     if (!Array.isArray(frames)) {
@@ -44,7 +44,7 @@ function identifyGops(frames) {
     let gop         = [];
 
     for (let i = 0; i < frames.length; i++) {
-        if (frames[i].key_frame) {
+        if (frames[i].key_frame === 1) {
             if (gop.length === 0) {
                 gop.push(frames[i]);
             } else {
@@ -107,6 +107,10 @@ function gopBitrate(gop) {
     }, 0);
 
     const accumulatedPktDuration = gop.reduce((accumulator, frame) => {
+
+        // TODO: remove this line after proper investigation when pkt_duration_time can equals to N/A (eduard.bondarenko)
+        frame.pkt_duration_time = !_.isNumber(frame.pkt_duration_time) ? 0 : frame.pkt_duration_time;
+
         if (!_.isNumber(frame.pkt_duration_time)) {
             throw new Errors.FrameInvalidData(
                 `frame's pkt_duration_time field has invalid type ${Object.prototype.toString.call(frame.pkt_duration_time)}`, // eslint-disable-line
@@ -119,12 +123,12 @@ function gopBitrate(gop) {
 
     if (accumulatedPktDuration === 0) {
         throw new Errors.FrameInvalidData(
-            "the sum of pkt_ducation_time fields === 0, so we can't devide by 0, thus can't calculate gop bitrate",
+            "the sum of pkt_duration_time fields === 0, so we can't devide by 0, thus can't calculate gop bitrate",
             {gop}
         );
     }
 
-    return accumulatedPktSize / accumulatedPktDuration;
+    return (accumulatedPktSize / accumulatedPktDuration) * 8 / 1024;
 }
 
 function calculateFps(gops) {
@@ -145,6 +149,10 @@ function calculateFps(gops) {
 
 function gopFps(gop) {
     const accumulatedPktDuration = gop.reduce((accumulator, frame) => {
+
+        // TODO: remove this line after proper investigation when pkt_duration_time can equals to N/A (eduard.bondarenko)
+        frame.pkt_duration_time = !_.isNumber(frame.pkt_duration_time) ? 0 : frame.pkt_duration_time;
+
         if (!_.isNumber(frame.pkt_duration_time)) {
             throw new Errors.FrameInvalidData(
                 `frame's pkt_duration_time field has invalid type ${Object.prototype.toString.call(frame.pkt_duration_time)}`, // eslint-disable-line

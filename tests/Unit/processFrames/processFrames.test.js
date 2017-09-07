@@ -3,8 +3,6 @@
 const {assert}   = require('chai');
 const dataDriven = require('data-driven');
 
-const Errors = require('src/Errors');
-
 const processFrames = require('src/processFrames');
 
 function typeOf(item) {
@@ -68,8 +66,8 @@ describe('processFrames', () => {
     });
 
     it('must return correct info just fine', () => {
-        const expectedBitrate1 = {min: 0.5, max: 0.5, mean: 0.5};
-        const expectedBitrate2 = {min: 1, max: 1, mean: 1};
+        const expectedBitrate1 = {min: 0.5 * 8 / 1024, max: 0.5 * 8 / 1024, mean: 0.5 * 8 / 1024};
+        const expectedBitrate2 = {min: 1 * 8 / 1024, max: 1 * 8 / 1024, mean: 1 * 8 / 1024};
 
         const expectedFps1 = {min: 0.5, max: 0.5, mean: 0.5};
         const expectedFps2 = {min: 0.5, max: 0.5, mean: 0.5};
