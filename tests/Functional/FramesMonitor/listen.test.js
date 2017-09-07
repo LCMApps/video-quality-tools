@@ -118,7 +118,7 @@ describe('FramesMonitor::listen, fetch frames from active stream', () => {
         const expectedSignal           = null;
         const expectedIFramesCount     = 60;
         const expectedPFramesCount     = 240;
-        const expectedAudioFramesCount = 431;
+        const expectedAudioFramesCount = 0;
 
         const onFrame = {I: spyOnIFrame, P: spyOnPFrame};
 

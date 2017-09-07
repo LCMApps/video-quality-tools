@@ -140,9 +140,11 @@ class FramesMonitor extends EventEmitter {
                 '-hide_banner',
                 '-v',
                 'error',
-                '-show_entries',
-                'frame=pkt_size,pkt_pts_time,pkt_duration_time,media_type,pict_type',
+                '-select_streams',
+                'v:0',
                 '-show_frames',
+                '-show_entries',
+                'frame=pkt_size,pkt_pts_time,pkt_duration_time,media_type,pict_type,key_frame',
                 '-i',
                 `${this._url} timeout=${timeoutInSec}`
             ]
