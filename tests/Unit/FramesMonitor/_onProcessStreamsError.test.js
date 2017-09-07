@@ -6,11 +6,10 @@ const dataDriven = require('data-driven');
 
 const Errors = require('src/Errors');
 
-const {url, path, FramesMonitor, makeFramesReducer, makeChildProcess} = require('./Helpers');
+const {config, url, FramesMonitor, makeChildProcess} = require('./Helpers');
 
 describe('FramesMonitor::_onProcessStreamsError', () => {
 
-    let framesReducer;
     let framesMonitor;
     let childProcess;
 
@@ -19,12 +18,7 @@ describe('FramesMonitor::_onProcessStreamsError', () => {
     let spyOnStreamErrorEvent;
 
     beforeEach(() => {
-        framesReducer = makeFramesReducer();
-
-        framesMonitor = new FramesMonitor({
-            ffprobePath : path,
-            timeoutInSec: 1,
-        }, url, framesReducer);
+        framesMonitor = new FramesMonitor(config, url);
 
         childProcess = makeChildProcess();
 
@@ -47,7 +41,7 @@ describe('FramesMonitor::_onProcessStreamsError', () => {
     dataDriven(data, () => {
         it('must wrap and re-emit each error emitted by the child process {type} object', ctx => {
             const expectedErrorType = Errors.ProcessStreamError;
-            const expectedErrorMsg  = `got an error from a ${path} ${ctx.type.toUpperCase()} process stream.`;
+            const expectedErrorMsg  = `got an error from a ${config.ffprobePath} ${ctx.type.toUpperCase()} process stream.`; // eslint-disable-line
 
             const expectedError1 = new Error('test error 1');
             const expectedError2 = new Error('test error 2');

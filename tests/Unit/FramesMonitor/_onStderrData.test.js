@@ -5,11 +5,10 @@ const {assert} = require('chai');
 
 const Errors = require('src/Errors');
 
-const {url, path, FramesMonitor, makeFramesReducer, makeChildProcess} = require('./Helpers');
+const {config, url, FramesMonitor, makeChildProcess} = require('./Helpers');
 
 describe('FramesMonitor::_onStderrData', () => {
 
-    let framesReducer;
     let framesMonitor;
     let childProcess;
 
@@ -18,12 +17,7 @@ describe('FramesMonitor::_onStderrData', () => {
     let spyOnStderrDataEvent;
 
     beforeEach(() => {
-        framesReducer = makeFramesReducer();
-
-        framesMonitor = new FramesMonitor({
-            ffprobePath : path,
-            timeoutInSec: 1,
-        }, url, framesReducer);
+        framesMonitor = new FramesMonitor(config, url);
 
         childProcess = makeChildProcess();
 
@@ -40,7 +34,7 @@ describe('FramesMonitor::_onStderrData', () => {
 
     it('must re-emit each data from stderr', () => {
         const expectedErrorType = Errors.FramesMonitorError;
-        const expectedErrorMsg  = `got stderr output from a ${path} process`;
+        const expectedErrorMsg  = `got stderr output from a ${config.ffprobePath} process`;
 
         const expectedDataMsg1 = 'some stderr worst possible data1';
         const expectedDataMsg2 = 'some stderr worst possible data2';

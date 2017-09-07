@@ -4,13 +4,16 @@ const {EventEmitter} = require('events');
 
 const proxyquire = require('proxyquire');
 
-const path = '/correct/path';
-const url  = 'rtmp://localhost:1935/myapp/mystream';
+const ffprobePath            = '/correct/path';
+const bufferMaxLengthInBytes = 2 ** 20;
+const timeoutInSec           = 1;
+const url                    = 'rtmp://localhost:1935/myapp/mystream';
+
 
 const FramesMonitor = proxyquire('src/FramesMonitor', {
     fs: {
         accessSync(filePath) {
-            if (filePath !== path) {
+            if (filePath !== ffprobePath) {
                 throw new Error('no such file or directory');
             }
         }
@@ -26,17 +29,13 @@ function makeChildProcess() {
     return childProcess;
 }
 
-function makeFramesReducer() {
-    return Object.assign(Object.create(new EventEmitter()), {
-        process() {},
-        reset() {}
-    });
-}
-
 module.exports = {
-    path,
+    config: {
+        ffprobePath,
+        timeoutInSec,
+        bufferMaxLengthInBytes,
+    },
     url,
     FramesMonitor,
-    makeChildProcess,
-    makeFramesReducer
+    makeChildProcess
 };

@@ -4,11 +4,10 @@ const {assert} = require('chai');
 const sinon    = require('sinon');
 const Errors   = require('src/Errors');
 
-const {url, path, FramesMonitor, makeFramesReducer, makeChildProcess} = require('./Helpers/');
+const {config, url, FramesMonitor, makeChildProcess} = require('./Helpers/');
 
 describe('FramesMonitor::stopListen', () => {
 
-    let framesReducer;
     let framesMonitor;
     let childProcess;
 
@@ -16,12 +15,7 @@ describe('FramesMonitor::stopListen', () => {
     let stubRunShowFramesProcess;
 
     beforeEach(() => {
-        framesReducer = makeFramesReducer();
-
-        framesMonitor = new FramesMonitor({
-            ffprobePath : path,
-            timeoutInSec: 1,
-        }, url, framesReducer);
+        framesMonitor = new FramesMonitor(config, url);
 
         childProcess = makeChildProcess();
 

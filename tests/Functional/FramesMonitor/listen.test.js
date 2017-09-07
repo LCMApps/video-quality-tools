@@ -9,7 +9,6 @@ const sinon    = require('sinon');
 const getPort = require('get-port');
 
 const FramesMonitor = require('src/FramesMonitor');
-const FramesReducer = require('src/FramesReducer');
 
 assert(process.env.FFPROBE, 'Specify path for ffprobe via FFPROBE env var');
 assert(process.env.FFMPEG, 'Specify path for ffmpeg via FFMPEG env var');
@@ -21,7 +20,6 @@ const bufferMaxLengthInBytes = 2 ** 20;
 
 describe('FramesMonitor::listen, fetch frames from inactive stream', () => {
     let streamUrl;
-    let framesReducer;
     let framesMonitor;
 
     let spyOnFrame;
@@ -32,12 +30,11 @@ describe('FramesMonitor::listen, fetch frames from inactive stream', () => {
 
         streamUrl = `http://localhost:${port}`;
 
-        framesReducer = new FramesReducer({bufferMaxLengthInBytes});
-
         framesMonitor = new FramesMonitor({
-            ffprobePath : FFPROBE,
-            timeoutInSec: 1,
-        }, streamUrl, framesReducer);
+            ffprobePath           : FFPROBE,
+            timeoutInSec          : 1,
+            bufferMaxLengthInBytes: bufferMaxLengthInBytes
+        }, streamUrl);
 
         spyOnFrame  = sinon.spy();
         spyOnStderr = sinon.spy();
@@ -73,7 +70,6 @@ describe('FramesMonitor::listen, fetch frames from inactive stream', () => {
 describe('FramesMonitor::listen, fetch frames from active stream', () => {
     let ffmpeg;
     let streamUrl;
-    let framesReducer;
     let framesMonitor;
 
     let spyOnIFrame;
@@ -85,12 +81,11 @@ describe('FramesMonitor::listen, fetch frames from active stream', () => {
 
         streamUrl = `http://localhost:${port}`;
 
-        framesReducer = new FramesReducer({bufferMaxLengthInBytes});
-
         framesMonitor = new FramesMonitor({
-            ffprobePath : FFPROBE,
-            timeoutInSec: 1,
-        }, streamUrl, framesReducer);
+            ffprobePath           : FFPROBE,
+            timeoutInSec          : 1,
+            bufferMaxLengthInBytes: bufferMaxLengthInBytes
+        }, streamUrl);
 
         spyOnIFrame     = sinon.spy();
         spyOnPFrame     = sinon.spy();
@@ -118,7 +113,7 @@ describe('FramesMonitor::listen, fetch frames from active stream', () => {
         const expectedSignal           = null;
         const expectedIFramesCount     = 60;
         const expectedPFramesCount     = 240;
-        const expectedAudioFramesCount = 431;
+        const expectedAudioFramesCount = 0;
 
         const onFrame = {I: spyOnIFrame, P: spyOnPFrame};
 
@@ -152,7 +147,6 @@ describe('FramesMonitor::listen, fetch frames from active stream', () => {
 describe('FramesMonitor::listen, stop ffprobe process', () => {
     let ffmpeg;
     let streamUrl;
-    let framesReducer;
     let framesMonitor;
 
     before(async () => {
@@ -160,12 +154,11 @@ describe('FramesMonitor::listen, stop ffprobe process', () => {
 
         streamUrl = `http://localhost:${port}`;
 
-        framesReducer = new FramesReducer({bufferMaxLengthInBytes});
-
         framesMonitor = new FramesMonitor({
-            ffprobePath : FFPROBE,
-            timeoutInSec: 1,
-        }, streamUrl, framesReducer);
+            ffprobePath           : FFPROBE,
+            timeoutInSec          : 1,
+            bufferMaxLengthInBytes: bufferMaxLengthInBytes
+        }, streamUrl);
 
         let command = `${FFMPEG} -re -i ${testFile} -vcodec copy -acodec copy -listen 1 -f flv ${streamUrl}`.split(' ');
 
@@ -203,7 +196,6 @@ describe('FramesMonitor::listen, stop ffprobe process', () => {
 describe('FramesMonitor::listen, exit with correct code after stream has been finished', () => {
     let ffmpeg;
     let streamUrl;
-    let framesReducer;
     let framesMonitor;
 
     before(async () => {
@@ -211,12 +203,11 @@ describe('FramesMonitor::listen, exit with correct code after stream has been fi
 
         streamUrl = `http://localhost:${port}`;
 
-        framesReducer = new FramesReducer({bufferMaxLengthInBytes});
-
         framesMonitor = new FramesMonitor({
-            ffprobePath : FFPROBE,
-            timeoutInSec: 1,
-        }, streamUrl, framesReducer);
+            ffprobePath           : FFPROBE,
+            timeoutInSec          : 1,
+            bufferMaxLengthInBytes: bufferMaxLengthInBytes
+        }, streamUrl);
 
         let command = `${FFMPEG} -re -i ${testFile} -vcodec copy -acodec copy -listen 1 -f flv ${streamUrl}`.split(' ');
 

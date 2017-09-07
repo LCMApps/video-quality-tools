@@ -2,14 +2,14 @@
 
 const {assert} = require('chai');
 
-const FramesReducer = require('src/FramesReducer');
+const {FramesMonitor} = require('./Helpers');
 
-describe('FramesReducer::frameToJson', () => {
+describe('FramesMonitor::frameToJson', () => {
 
     it('must return empty object for empty string input', () => {
         const expectedResult = {};
 
-        const result = FramesReducer.frameToJson('');
+        const result = FramesMonitor.frameToJson('');
 
         assert.deepEqual(result, expectedResult);
     });
@@ -17,7 +17,7 @@ describe('FramesReducer::frameToJson', () => {
     it('must return empty object for arbitrary string, with no key value pairs', () => {
         const expectedResult = {};
 
-        const result = FramesReducer.frameToJson('lorem lorem lorem lorem !!!');
+        const result = FramesMonitor.frameToJson('lorem lorem lorem lorem !!!');
 
         assert.deepEqual(result, expectedResult);
     });
@@ -25,7 +25,7 @@ describe('FramesReducer::frameToJson', () => {
     it('must return empty object for arbitrary string, with one key value pair', () => {
         const expectedResult = {'lorem key': 'value lorem !!!'};
 
-        const result = FramesReducer.frameToJson('lorem key=value lorem !!!');
+        const result = FramesMonitor.frameToJson('lorem key=value lorem !!!');
 
         assert.deepEqual(result, expectedResult);
     });
@@ -39,7 +39,7 @@ describe('FramesReducer::frameToJson', () => {
             pict_type        : 'P'
         };
 
-        const result = FramesReducer.frameToJson(
+        const result = FramesMonitor.frameToJson(
             '[FRAME]\nmedia_type=video\npkt_pts_time=9.9679000\n' +
             'pkt_duration_time=0.033000\npkt_size=4253\npict_type=P\n'
         );

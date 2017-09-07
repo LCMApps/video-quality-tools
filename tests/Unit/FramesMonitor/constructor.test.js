@@ -5,7 +5,7 @@ const dataDriven = require('data-driven');
 
 const Errors = require('src/Errors/');
 
-const {url, path, FramesMonitor, makeFramesReducer} = require('./Helpers');
+const {config, url, FramesMonitor} = require('./Helpers');
 
 const testData = require('./constructor.data');
 
@@ -19,11 +19,10 @@ describe('FramesMonitor::constructor', () => {
         testData.incorrectConfig.map(item => ({type: typeOf(item), config: item})),
         () => {
             it('config param has invalid ({type}) type', ctx => {
-                const url           = undefined;
-                const framesReducer = undefined;
+                const url = undefined;
 
                 assert.throws(() => {
-                    new FramesMonitor(ctx.config, url, framesReducer);
+                    new FramesMonitor(ctx.config, url);
                 }, TypeError, 'Config param should be a plain object, bastard.');
             });
         }
@@ -33,59 +32,36 @@ describe('FramesMonitor::constructor', () => {
         testData.incorrectUrl.map(item => ({type: typeOf(item), url: item})),
         () => {
             it('url param has invalid ({type}) type', ctx => {
-                const config        = {};
-                const framesReducer = undefined;
-
-                assert.throws(() => {
-                    new FramesMonitor(config, ctx.url, framesReducer);
-                }, TypeError, 'You should provide a correct url, bastard.');
-            });
-        }
-    );
-
-    dataDriven(
-        testData.incorrectFramesReducer.map(item => ({type: typeOf(item), framesReducer: item})),
-        () => {
-            it('framesReducer param has invalid ({type}) type', ctx => {
                 const config = {};
-                const url    = '';
 
                 assert.throws(() => {
-                    new FramesMonitor(config, url, ctx.framesReducer);
-                }, TypeError, 'frames reducer should be an event emitter object, bastard.');
+                    new FramesMonitor(config, ctx.url);
+                }, TypeError, 'You should provide a correct url, bastard.');
             });
         }
     );
 
     dataDriven(testData.incorrectConfigObject, () => {
         it('{description}', ctx => {
-            const framesReducer = makeFramesReducer();
-
             assert.throws(() => {
-                new FramesMonitor(ctx.config, url, framesReducer);
+                new FramesMonitor(ctx.config, url);
             }, Errors.ConfigError, ctx.errorMsg);
         });
     });
 
     it('config.ffprobePath points to incorrect path', () => {
-        const framesReducer = makeFramesReducer();
-
         assert.throws(() => {
             new FramesMonitor({
-                ffprobePath : `/incorrect/path/${path}`,
-                timeoutInSec: 1,
-            }, url, framesReducer);
+                ffprobePath           : `/incorrect/path/${config.ffprobePath}`,
+                timeoutInSec          : config.timeoutInSec,
+                bufferMaxLengthInBytes: config.bufferMaxLengthInBytes
+            }, url);
         }, Errors.ExecutablePathError);
     });
 
     it('all params are good', () => {
-        const framesReducer = makeFramesReducer();
-
         assert.doesNotThrow(() => {
-            new FramesMonitor({
-                ffprobePath : path,
-                timeoutInSec: 1
-            }, url, framesReducer);
+            new FramesMonitor(config, url);
         });
     });
 
