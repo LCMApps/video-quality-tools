@@ -3,23 +3,17 @@
 const sinon    = require('sinon');
 const {assert} = require('chai');
 
-const {url, path, FramesMonitor, makeFramesReducer, makeChildProcess} = require('./Helpers/');
+const {config, url, FramesMonitor, makeChildProcess} = require('./Helpers/');
 
 describe('FramesMonitor::isListening', () => {
 
-    let framesReducer;
     let framesMonitor;
     let childProcess;
 
     let stubRunShowFramesProcess;
 
     beforeEach(() => {
-        framesReducer = makeFramesReducer();
-
-        framesMonitor = new FramesMonitor({
-            ffprobePath : path,
-            timeoutInSec: 1,
-        }, url, framesReducer);
+        framesMonitor = new FramesMonitor(config, url);
 
         childProcess = makeChildProcess();
 

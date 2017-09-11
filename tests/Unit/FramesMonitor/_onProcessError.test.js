@@ -5,11 +5,10 @@ const {assert} = require('chai');
 
 const Errors = require('src/Errors');
 
-const {url, path, FramesMonitor, makeFramesReducer, makeChildProcess} = require('./Helpers');
+const {config, url, FramesMonitor, makeChildProcess} = require('./Helpers');
 
 describe('FramesMonitor::onProcessError', () => {
 
-    let framesReducer;
     let framesMonitor;
     let childProcess;
 
@@ -17,12 +16,7 @@ describe('FramesMonitor::onProcessError', () => {
     let spyOnProcessError;
 
     beforeEach(() => {
-        framesReducer = makeFramesReducer();
-
-        framesMonitor = new FramesMonitor({
-            ffprobePath : path,
-            timeoutInSec: 1,
-        }, url, framesReducer);
+        framesMonitor = new FramesMonitor(config, url);
 
         childProcess = makeChildProcess();
 
@@ -62,12 +56,12 @@ describe('FramesMonitor::onProcessError', () => {
 
         assert.strictEqual(
             firstCallErrorData.message,
-            `${path} process could not be spawned or just got an error.`
+            `${config.ffprobePath} process could not be spawned or just got an error.`
         );
 
         assert.strictEqual(
             secondCallErrorData.message,
-            `${path} process could not be spawned or just got an error.`
+            `${config.ffprobePath} process could not be spawned or just got an error.`
         );
 
         assert.strictEqual(firstCallErrorData.extra.url, url);
