@@ -9,6 +9,7 @@ class ProcessStreamError extends ExtendableError {}
 class StopListenError extends ExtendableError {}
 class ProcessError extends ExtendableError {}
 class InputTypeError extends ExtendableError {}
+class InvalidFrameError extends ExtendableError {}
 class CannotFindGopPatternError extends ExtendableError {}
 class GopPatternUnstableError extends ExtendableError {}
 class BadGopDataError extends ExtendableError {}
@@ -24,6 +25,7 @@ module.exports = {
     StreamsInfoError,
     ProcessError,
     InputTypeError,
+    InvalidFrameError,
     CannotFindGopPatternError,
     GopPatternUnstableError,
     BadGopDataError,
