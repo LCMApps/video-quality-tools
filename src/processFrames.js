@@ -10,79 +10,90 @@ function processFrames(frames) {
     }
 
     if (!_.every(frames, _.isPlainObject)) {
-        throw new TypeError('process method is supposed to accept an array of plain object(frames).');
+        throw new TypeError('process method is supposed to accept an array of plain objects(frames).');
     }
 
     const videoFrames = processFrames.filterVideoFrames(frames);
-    const gops        = processFrames.identifyGops(videoFrames);
+    let gops          = processFrames.identifyGops(videoFrames);
 
     if (_.isEmpty(gops)) {
-        return null;
+        throw new Errors.GopNotFoundError('Can not find any gop for these frames', {frames});
     }
 
-    const bitrate = processFrames.calculateBitrate(gops);
-    const fps     = processFrames.calculateFps(gops);
+    const areAllGopsIdentical = processFrames.areAllGopsIdentical(gops);
+    const bitrate             = processFrames.calculateBitrate(gops);
+    const fps                 = processFrames.calculateFps(gops);
 
     return {
+        areAllGopsIdentical,
         bitrate,
         fps
     };
 }
 
-processFrames.identifyGops           = identifyGops;
-processFrames.splitInputByGopPattern = splitInputByGopPattern;
-processFrames.calculateBitrate       = calculateBitrate;
-processFrames.gopBitrate             = gopBitrate;
-processFrames.calculateFps           = calculateFps;
-processFrames.gopFps                 = gopFps;
-processFrames.filterVideoFrames      = filterVideoFrames;
+processFrames.identifyGops        = identifyGops;
+processFrames.calculateBitrate    = calculateBitrate;
+processFrames.calculateFps        = calculateFps;
+processFrames.filterVideoFrames   = filterVideoFrames;
+processFrames.gopDurationInSec    = gopDurationInSec;
+processFrames.toKbs               = toKbs;
+processFrames.gopPktSize          = gopPktSize;
+processFrames.areAllGopsIdentical = areAllGopsIdentical;
 
 module.exports = processFrames;
 
 function identifyGops(frames) {
+    let GOP_TEMPLATE = {
+        frames: []
+    };
+
     const setOfGops = [];
-    let gop         = [];
+    let newGop      = _.cloneDeep(GOP_TEMPLATE);
 
     for (let i = 0; i < frames.length; i++) {
-        if (frames[i].key_frame === 1) {
-            if (gop.length === 0) {
-                gop.push(frames[i]);
-            } else {
-                setOfGops.push(gop);
-                gop = [];
+        const currentFrame = frames[i];
+
+        if (!_.isNumber(currentFrame.key_frame)) {
+            throw new Errors.FrameInvalidData(
+                `frame's key_frame field has invalid type: ${Object.prototype.toString.call(currentFrame.key_frame)}`,
+                {frame: currentFrame}
+            );
+        }
+
+        if (currentFrame.key_frame === 1) {
+            if ('startTime' in newGop) {
+                newGop.endTime = currentFrame.pkt_pts_time;
+                setOfGops.push(newGop);
+                newGop = _.cloneDeep(GOP_TEMPLATE);
                 i -= 1;
+            } else {
+                newGop.frames.push(_.cloneDeep(currentFrame));
+
+                newGop.startTime = currentFrame.pkt_pts_time;
+            }
+        } else if (currentFrame.key_frame === 0) {
+            if (newGop.frames.length > 0) {
+                newGop.frames.push(_.cloneDeep(frames[i]));
             }
         } else {
-            if (gop.length > 0) {
-                gop.push(frames[i]);
-            }
+            throw new Errors.FrameInvalidData(
+                `frame's key_frame field has invalid value: ${currentFrame.key_frame}. Must be 1 or 0.`,
+                {frame: currentFrame}
+            );
         }
     }
 
     return setOfGops;
 }
 
-function splitInputByGopPattern(frames, pictTypes, gopPattern) {
-    let gopChunks = [];
-
-    const sPictTypes  = pictTypes.join('');
-    const sGopPattern = gopPattern.join('');
-
-    let foundIndex = sPictTypes.indexOf(sGopPattern);
-    while (foundIndex !== -1) {
-        gopChunks.push(frames.slice(foundIndex, foundIndex + sGopPattern.length));
-
-        foundIndex = sPictTypes.indexOf(sGopPattern, foundIndex + sGopPattern.length);
-    }
-
-    return gopChunks;
-}
-
 function calculateBitrate(gops) {
     let bitrates = [];
 
     gops.forEach(gop => {
-        const gopBitrate = processFrames.gopBitrate(gop);
+        const accumulatedPktSize = processFrames.gopPktSize(gop);
+        const gopDurationInSec   = processFrames.gopDurationInSec(gop);
+
+        const gopBitrate = processFrames.toKbs(accumulatedPktSize / gopDurationInSec);
 
         bitrates.push(gopBitrate);
     });
@@ -94,8 +105,8 @@ function calculateBitrate(gops) {
     };
 }
 
-function gopBitrate(gop) {
-    const accumulatedPktSize = gop.reduce((accumulator, frame) => {
+function gopPktSize(gop) {
+    const accumulatedPktSize = gop.frames.reduce((accumulator, frame) => {
         if (!_.isNumber(frame.pkt_size)) {
             throw new Errors.FrameInvalidData(
                 `frame's pkt_size field has invalid type ${Object.prototype.toString.call(frame.pkt_size)}`,
@@ -106,36 +117,58 @@ function gopBitrate(gop) {
         return accumulator + frame.pkt_size;
     }, 0);
 
-    const accumulatedPktDuration = gop.reduce((accumulator, frame) => {
+    return accumulatedPktSize;
+}
 
-        // TODO: remove this line after proper investigation when pkt_duration_time can equals to N/A (eduard.bondarenko)
-        frame.pkt_duration_time = !_.isNumber(frame.pkt_duration_time) ? 0 : frame.pkt_duration_time;
-
-        if (!_.isNumber(frame.pkt_duration_time)) {
-            throw new Errors.FrameInvalidData(
-                `frame's pkt_duration_time field has invalid type ${Object.prototype.toString.call(frame.pkt_duration_time)}`, // eslint-disable-line
-                {frame}
-            );
-        }
-
-        return accumulator + frame.pkt_duration_time;
-    }, 0);
-
-    if (accumulatedPktDuration === 0) {
-        throw new Errors.FrameInvalidData(
-            "the sum of pkt_duration_time fields === 0, so we can't devide by 0, thus can't calculate gop bitrate",
+function gopDurationInSec(gop) {
+    if (!_.isNumber(gop.startTime)) {
+        throw new Errors.GopInvalidData(
+            `gops's start time has invalid type ${Object.prototype.toString.call(gop.startTime)}`,
             {gop}
         );
     }
 
-    return (accumulatedPktSize / accumulatedPktDuration) * 8 / 1024;
+    if (!_.isNumber(gop.endTime)) {
+        throw new Errors.GopInvalidData(
+            `gops's end time has invalid type ${Object.prototype.toString.call(gop.endTime)}`,
+            {gop}
+        );
+    }
+
+    // start time may be 0
+    if (gop.startTime < 0) {
+        throw new Errors.GopInvalidData(
+            `gop's start time has invalid value ${gop.startTime}`,
+            {gop}
+        );
+    }
+
+    // end time must be positive
+    if (gop.endTime <= 0) {
+        throw new Errors.GopInvalidData(
+            `gop's end time has invalid value ${gop.endTime}`,
+            {gop}
+        );
+    }
+
+    const diff = gop.endTime - gop.startTime;
+
+    if (diff <= 0) {
+        throw new Errors.GopInvalidData(
+            `invalid difference between gop start and end time: ${diff}`,
+            {gop}
+        );
+    }
+
+    return diff;
 }
 
 function calculateFps(gops) {
     let fps = [];
 
     gops.forEach(gop => {
-        const gopFps = processFrames.gopFps(gop);
+        const gopDurationInSec = processFrames.gopDurationInSec(gop);
+        const gopFps           = gop.frames.length / gopDurationInSec;
 
         fps.push(gopFps);
     });
@@ -147,32 +180,14 @@ function calculateFps(gops) {
     };
 }
 
-function gopFps(gop) {
-    const accumulatedPktDuration = gop.reduce((accumulator, frame) => {
-
-        // TODO: remove this line after proper investigation when pkt_duration_time can equals to N/A (eduard.bondarenko)
-        frame.pkt_duration_time = !_.isNumber(frame.pkt_duration_time) ? 0 : frame.pkt_duration_time;
-
-        if (!_.isNumber(frame.pkt_duration_time)) {
-            throw new Errors.FrameInvalidData(
-                `frame's pkt_duration_time field has invalid type ${Object.prototype.toString.call(frame.pkt_duration_time)}`, // eslint-disable-line
-                {frame}
-            );
-        }
-
-        return accumulator + frame.pkt_duration_time;
-    }, 0);
-
-    if (accumulatedPktDuration === 0) {
-        throw new Errors.FrameInvalidData(
-            "the sum of pkt_ducation_time fields === 0, so we can't devide by 0, thus can't calculate gop bitrate",
-            {gop}
-        );
-    }
-
-    return gop.length / accumulatedPktDuration;
+function areAllGopsIdentical(gops) {
+    return gops.every(gop => _.isEqual(gops[0].frames.length, gop.frames.length));
 }
 
 function filterVideoFrames(frames) {
     return frames.filter(frame => frame.media_type === 'video');
+}
+
+function toKbs(val) {
+    return val * 8 / 1024;
 }

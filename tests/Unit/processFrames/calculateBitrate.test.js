@@ -4,52 +4,36 @@ const {assert} = require('chai');
 
 const processFrames = require('src/processFrames');
 
-const Errors = require('src/Errors');
-
 describe('processFrames.calculateBitrate', () => {
 
     it('must correct calculate min, max and average bitrate for gops', () => {
         const expectedBitrate = {
-            min : 1 * 8 / 1024,
-            max : 2 * 8 / 1024,
-            mean: 1.5 * 8 / 1024
+            min : ((1 + 2) / (5 - 2)) * 8 / 1024,
+            max : (1 / (2 - 1)) * 8 / 1024,
+            mean: (((1 + 2) / (5 - 2)) + (1 / (2 - 1))) / 2 * 8 / 1024
         };
 
         const gops = [
-            [
-                {pkt_size: 1, pkt_duration_time: 1},
-                {pkt_size: 1, pkt_duration_time: 1},
-            ],
-            [
-                {pkt_size: 2, pkt_duration_time: 1},
-                {pkt_size: 2, pkt_duration_time: 1},
-            ]
+            {
+                frames   : [
+                    {key_frame: 1, pkt_size: 1, pkt_pts_time: 1},
+                ],
+                startTime: 1,
+                endTime  : 2,
+            },
+            {
+                frames   : [
+                    {key_frame: 1, pkt_size: 1, pkt_pts_time: 2},
+                    {key_frame: 0, pkt_size: 2, pkt_pts_time: 4},
+                ],
+                startTime: 2,
+                endTime  : 5
+            }
         ];
 
         const bitrate = processFrames.calculateBitrate(gops);
 
         assert.deepEqual(bitrate, expectedBitrate);
-    });
-
-    it.skip('max throw an exception for invalid data', () => {
-        const gops = [
-            [
-                {pkt_size: undefined, pkt_duration_time: undefined},
-            ]
-        ];
-
-        try {
-            processFrames.calculateBitrate(gops);
-        } catch (error) {
-            assert.instanceOf(error, Errors.FrameInvalidData);
-
-            assert.strictEqual(
-                error.message,
-                "frame's pkt_size field has invalid type [object Undefined]"
-            );
-
-            assert.deepEqual(error.extra, {frame: {pkt_size: undefined, pkt_duration_time: undefined}});
-        }
     });
 
 });
