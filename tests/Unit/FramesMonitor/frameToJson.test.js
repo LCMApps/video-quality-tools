@@ -36,12 +36,13 @@ describe('FramesMonitor::frameToJson', () => {
             pkt_pts_time     : 9.967900,
             pkt_duration_time: 0.03300,
             pkt_size         : 4253,
-            pict_type        : 'P'
+            pict_type        : 'P',
+            key_frame        : 0
         };
 
         const result = FramesMonitor.frameToJson(
             '[FRAME]\nmedia_type=video\npkt_pts_time=9.9679000\n' +
-            'pkt_duration_time=0.033000\npkt_size=4253\npict_type=P\n'
+            'pkt_duration_time=0.033000\npkt_size=4253\npict_type=P\nkey_frame=0'
         );
 
         assert.deepEqual(result, expectedResult);

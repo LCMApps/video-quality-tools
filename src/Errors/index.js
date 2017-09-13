@@ -10,10 +10,10 @@ class StopListenError extends ExtendableError {}
 class ProcessError extends ExtendableError {}
 class InputTypeError extends ExtendableError {}
 class InvalidFrameError extends ExtendableError {}
-class CannotFindGopPatternError extends ExtendableError {}
-class GopPatternUnstableError extends ExtendableError {}
-class BadGopDataError extends ExtendableError {}
 class ExecutablePathError extends ExtendableError {}
+class FrameInvalidData extends ExtendableError {}
+class GopInvalidData extends ExtendableError {}
+class GopNotFoundError extends ExtendableError {}
 
 module.exports = {
     AlreadyListeningError,
@@ -26,8 +26,8 @@ module.exports = {
     ProcessError,
     InputTypeError,
     InvalidFrameError,
-    CannotFindGopPatternError,
-    GopPatternUnstableError,
-    BadGopDataError,
-    ExecutablePathError
+    ExecutablePathError,
+    FrameInvalidData,
+    GopInvalidData,
+    GopNotFoundError
 };

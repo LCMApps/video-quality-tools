@@ -142,7 +142,7 @@ class FramesMonitor extends EventEmitter {
                 'v:0',
                 '-show_frames',
                 '-show_entries',
-                'frame=pkt_size,pkt_pts_time,pkt_duration_time,media_type,pict_type,key_frame',
+                'frame=pkt_size,pkt_pts_time,media_type,pict_type,key_frame',
                 '-i',
                 `${this._url} timeout=${timeoutInSec}`
             ]
@@ -216,7 +216,7 @@ class FramesMonitor extends EventEmitter {
             let [key, value] = frameLine.split('=').map(item => item.trim());
 
             if (key && value) {
-                value      = Number(value) ? Number(value) : value;
+                value      = _.isNaN(Number(value)) ? value : Number(value);
                 frame[key] = value;
             }
         });
