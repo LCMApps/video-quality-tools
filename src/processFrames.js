@@ -9,12 +9,8 @@ function processFrames(frames) {
         throw new TypeError('process method is supposed to accept an array of frames.');
     }
 
-    if (!_.every(frames, _.isPlainObject)) {
-        throw new TypeError('process method is supposed to accept an array of plain objects(frames).');
-    }
-
     const videoFrames = processFrames.filterVideoFrames(frames);
-    let gops          = processFrames.identifyGops(videoFrames);
+    const gops        = processFrames.identifyGops(videoFrames);
 
     if (_.isEmpty(gops)) {
         throw new Errors.GopNotFoundError('Can not find any gop for these frames', {frames});
@@ -37,13 +33,13 @@ processFrames.calculateFps        = calculateFps;
 processFrames.filterVideoFrames   = filterVideoFrames;
 processFrames.gopDurationInSec    = gopDurationInSec;
 processFrames.toKbs               = toKbs;
-processFrames.gopPktSize          = gopPktSize;
+processFrames.accumulatePktSize   = accumulatePktSize;
 processFrames.areAllGopsIdentical = areAllGopsIdentical;
 
 module.exports = processFrames;
 
 function identifyGops(frames) {
-    let GOP_TEMPLATE = {
+    const GOP_TEMPLATE = {
         frames: []
     };
 
@@ -90,7 +86,7 @@ function calculateBitrate(gops) {
     let bitrates = [];
 
     gops.forEach(gop => {
-        const accumulatedPktSize = processFrames.gopPktSize(gop);
+        const accumulatedPktSize = processFrames.accumulatePktSize(gop);
         const gopDurationInSec   = processFrames.gopDurationInSec(gop);
 
         const gopBitrate = processFrames.toKbs(accumulatedPktSize / gopDurationInSec);
@@ -105,7 +101,7 @@ function calculateBitrate(gops) {
     };
 }
 
-function gopPktSize(gop) {
+function accumulatePktSize(gop) {
     const accumulatedPktSize = gop.frames.reduce((accumulator, frame) => {
         if (!_.isNumber(frame.pkt_size)) {
             throw new Errors.FrameInvalidData(
