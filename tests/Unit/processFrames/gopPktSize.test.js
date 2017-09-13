@@ -11,7 +11,7 @@ function typeOf(item) {
     return Object.prototype.toString.call(item);
 }
 
-describe('processFrames.gopPktSize', () => {
+describe('processFrames.accumulatePktSize', () => {
 
     const invalidData = [
         undefined,
@@ -36,7 +36,7 @@ describe('processFrames.gopPktSize', () => {
                 };
 
                 try {
-                    processFrames.gopPktSize(invalidInput);
+                    processFrames.accumulatePktSize(invalidInput);
                     assert.isFalse(true, 'should not be here');
                 } catch (error) {
                     assert.instanceOf(error, Errors.FrameInvalidData);
@@ -58,7 +58,7 @@ describe('processFrames.gopPktSize', () => {
 
         const expectedRes = frames.reduce((sum, frame) => sum + frame.pkt_size, 0);
 
-        const res = processFrames.gopPktSize({frames});
+        const res = processFrames.accumulatePktSize({frames});
 
         assert.strictEqual(res, expectedRes);
     });

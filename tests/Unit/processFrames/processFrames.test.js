@@ -36,29 +36,6 @@ describe('processFrames', () => {
         }
     );
 
-    const invalidFrames = [
-        [undefined],
-        [null],
-        [true],
-        [1],
-        ['1'],
-        [[]],
-        [() => {}],
-        [Symbol()],
-        [Buffer.alloc(0)]
-    ];
-
-    dataDriven(
-        invalidFrames.map(frames => ({type: typeOf(frames[0]), frames: frames})),
-        () => {
-            it('must throw an exception cuz array contains elements of invalid type: [{type}]', ctx => {
-                assert.throws(() => {
-                    processFrames(ctx.frames);
-                }, TypeError, 'process method is supposed to accept an array of plain objects(frames).');
-            });
-        }
-    );
-
     it('must throw an exception cuz method cannot find gop', () => {
         const frames = [
             {pkt_size: 3, pkt_pts_time: 15, media_type: 'video', key_frame: 1},
