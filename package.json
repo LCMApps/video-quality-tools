@@ -33,7 +33,6 @@
   },
   "dependencies": {
     "app-module-path": "^2.2.0",
-    "lodash": "^4.17.4",
-    "longest-repeating-and-non-overlapping-pattern": "^1.0.4"
+    "lodash": "^4.17.4"
   }
 }
