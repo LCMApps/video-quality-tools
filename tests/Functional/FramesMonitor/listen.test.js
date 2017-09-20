@@ -149,7 +149,7 @@ describe('FramesMonitor::listen, stop ffprobe process', () => {
     let streamUrl;
     let framesMonitor;
 
-    before(async () => {
+    beforeEach(async () => {
         const port = await getPort();
 
         streamUrl = `http://localhost:${port}`;
@@ -165,7 +165,7 @@ describe('FramesMonitor::listen, stop ffprobe process', () => {
         ffmpeg = spawn(command[0], command.slice(1));
     });
 
-    after(() => {
+    afterEach(() => {
         // kill with SIGKILL for sure
         ffmpeg.kill('SIGKILL');
     });
@@ -189,7 +189,27 @@ describe('FramesMonitor::listen, stop ffprobe process', () => {
                 done();
             });
         });
+    });
 
+    it('must exit with correct specified signal after kill', done => {
+        const expectedReturnCode = null;
+        const expectedSignal     = 'SIGKILL';
+
+        ffmpeg.stderr.once('data', () => {
+
+            framesMonitor.listen();
+
+            framesMonitor.once('frame', () => {
+                framesMonitor.stopListen(expectedSignal);
+            });
+
+            framesMonitor.on('exit', (code, signal) => {
+                assert.strictEqual(code, expectedReturnCode);
+                assert.strictEqual(signal, expectedSignal);
+
+                done();
+            });
+        });
     });
 });
 
