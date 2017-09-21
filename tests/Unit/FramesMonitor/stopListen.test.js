@@ -48,13 +48,27 @@ describe('FramesMonitor::stopListen', () => {
     });
 
     it('must stop listen just fine', () => {
+        const expectedSignal = 'SIGTERM';
         const expectedIsListening = false;
 
         framesMonitor.listen();
         framesMonitor.stopListen();
 
         assert.isTrue(spyOnKill.calledOnce);
-        assert.isTrue(spyOnKill.alwaysCalledWithExactly());
+        assert.isTrue(spyOnKill.alwaysCalledWithExactly(expectedSignal));
+
+        assert.strictEqual(expectedIsListening, framesMonitor.isListening());
+    });
+
+    it('must stop listen with custom signal just fine', () => {
+        const expectedSignal = 'SIGKILL';
+        const expectedIsListening = false;
+
+        framesMonitor.listen();
+        framesMonitor.stopListen(expectedSignal);
+
+        assert.isTrue(spyOnKill.calledOnce);
+        assert.isTrue(spyOnKill.alwaysCalledWithExactly(expectedSignal));
 
         assert.strictEqual(expectedIsListening, framesMonitor.isListening());
     });
