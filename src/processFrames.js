@@ -9,8 +9,8 @@ function processFrames(frames) {
         throw new TypeError('process method is supposed to accept an array of frames.');
     }
 
-    const videoFrames = processFrames.filterVideoFrames(frames);
-    const gops        = processFrames.identifyGops(videoFrames);
+    const videoFrames            = processFrames.filterVideoFrames(frames);
+    const {gops, remainedFrames} = processFrames.identifyGops(videoFrames);
 
     if (_.isEmpty(gops)) {
         throw new Errors.GopNotFoundError('Can not find any gop for these frames', {frames});
@@ -21,9 +21,12 @@ function processFrames(frames) {
     const fps                 = processFrames.calculateFps(gops);
 
     return {
-        areAllGopsIdentical,
-        bitrate,
-        fps
+        payload       : {
+            areAllGopsIdentical,
+            bitrate,
+            fps
+        },
+        remainedFrames: remainedFrames
     };
 }
 
@@ -79,7 +82,13 @@ function identifyGops(frames) {
         }
     }
 
-    return setOfGops;
+    // remainder is a set of frames for which we didn't find gop
+    // for example for this array of frames [1 0 0 0 1 0 0] the remainder should be last three frames [1 0 0]
+    // this is done in order not to lost part of the next gop and as a direct consequence - entire gop
+    return {
+        gops          : setOfGops,
+        remainedFrames: newGop.frames
+    };
 }
 
 function calculateBitrate(gops) {

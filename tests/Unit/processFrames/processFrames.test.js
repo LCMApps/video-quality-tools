@@ -90,24 +90,43 @@ describe('processFrames', () => {
             mean: processFrames.toKbs(((1 + 3) / (15 - 11) + (5 + 7) / (19 - 15)) / 2)
         };
 
+        const expectedRemainedFrames1 = [
+            {pkt_size: 9, pkt_pts_time: 19, media_type: 'video', key_frame: 1}
+        ];
+
         const expectedBitrate2 = {
             min : processFrames.toKbs((3 + 4 + 5) / (21 - 15)),
             max : processFrames.toKbs((6 + 7 + 8) / (27 - 21)),
             mean: processFrames.toKbs(((3 + 4 + 5) / (21 - 15) + (6 + 7 + 8) / (27 - 21)) / 2)
         };
 
+        const expectedRemainedFrames2 = [
+            {pkt_size: 9, pkt_pts_time: 27, media_type: 'video', key_frame: 1},
+            {pkt_size: 10, pkt_pts_time: 29, media_type: 'video', key_frame: 0}
+        ];
+
         const expectedFps1 = {min: 0.5, max: 0.5, mean: 0.5};
         const expectedFps2 = {min: 0.5, max: 0.5, mean: 0.5};
 
         let res1 = processFrames(frames1);
 
-        assert.deepEqual(res1.bitrate, expectedBitrate1);
-        assert.deepEqual(res1.fps, expectedFps1);
+        assert.deepEqual(res1.payload, {
+            areAllGopsIdentical: true,
+            bitrate            : expectedBitrate1,
+            fps                : expectedFps1
+        });
+
+        assert.deepEqual(res1.remainedFrames, expectedRemainedFrames1);
 
         let res2 = processFrames(frames2);
 
-        assert.deepEqual(res2.bitrate, expectedBitrate2);
-        assert.deepEqual(res2.fps, expectedFps2);
+        assert.deepEqual(res2.payload, {
+            areAllGopsIdentical: true,
+            bitrate            : expectedBitrate2,
+            fps                : expectedFps2
+        });
+
+        assert.deepEqual(res2.remainedFrames, expectedRemainedFrames2);
     });
 
 });
