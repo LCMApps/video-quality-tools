@@ -14,7 +14,7 @@
     "tests": "yarn run unit-tests && yarn run func-tests",
     "test:coverage": "NODE_ENV=test ./node_modules/.bin/istanbul cover ./node_modules/.bin/_mocha  --print both -- --opts test/mocha.opts -R spec",
     "unit-tests": "NODE_ENV=test ./node_modules/.bin/mocha --opts tests/mocha.opts -R spec './tests/Unit/**/*.js'",
-    "func-tests": "NODE_ENV=test ./node_modules/.bin/mocha --opts tests/mocha.opts -R spec './tests/Functional/**/*.js'"
+    "func-tests": "NODE_ENV=test ./node_modules/.bin/mocha --opts tests/mocha.opts --timeout 30000 -R spec './tests/Functional/**/*.js'"
   },
   "repository": {
     "type": "git",
