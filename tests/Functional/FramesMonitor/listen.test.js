@@ -1,20 +1,16 @@
 'use strict';
 
-const path    = require('path');
-const {spawn} = require('child_process');
+const path = require('path');
 
 const {assert} = require('chai');
 const sinon    = require('sinon');
-
-const getPort = require('get-port');
+const getPort  = require('get-port');
 
 const FramesMonitor = require('src/FramesMonitor');
 
-assert(process.env.FFPROBE, 'Specify path for ffprobe via FFPROBE env var');
-assert(process.env.FFMPEG, 'Specify path for ffmpeg via FFMPEG env var');
+const {startStream, stopStream} = require('../Helpers');
 
-const {FFPROBE, FFMPEG} = process.env;
-const testFile          = path.join(__dirname, '../../inputs/test_IPPPP.mp4');
+const testFile = path.join(__dirname, '../../inputs/test_IPPPP.mp4');
 
 const bufferMaxLengthInBytes = 2 ** 20;
 
@@ -25,13 +21,13 @@ describe('FramesMonitor::listen, fetch frames from inactive stream', () => {
     let spyOnFrame;
     let spyOnStderr;
 
-    before(async () => {
+    beforeEach(async () => {
         const port = await getPort();
 
         streamUrl = `http://localhost:${port}`;
 
         framesMonitor = new FramesMonitor({
-            ffprobePath           : FFPROBE,
+            ffprobePath           : process.env.FFPROBE,
             timeoutInSec          : 1,
             bufferMaxLengthInBytes: bufferMaxLengthInBytes
         }, streamUrl);
@@ -40,7 +36,7 @@ describe('FramesMonitor::listen, fetch frames from inactive stream', () => {
         spyOnStderr = sinon.spy();
     });
 
-    after(() => {
+    afterEach(() => {
         spyOnFrame.reset();
         spyOnStderr.reset();
     });
@@ -68,7 +64,6 @@ describe('FramesMonitor::listen, fetch frames from inactive stream', () => {
 });
 
 describe('FramesMonitor::listen, fetch frames from active stream', () => {
-    let ffmpeg;
     let streamUrl;
     let framesMonitor;
 
@@ -76,13 +71,13 @@ describe('FramesMonitor::listen, fetch frames from active stream', () => {
     let spyOnPFrame;
     let spyOnAudioFrame;
 
-    before(async () => {
+    beforeEach(async () => {
         const port = await getPort();
 
         streamUrl = `http://localhost:${port}`;
 
         framesMonitor = new FramesMonitor({
-            ffprobePath           : FFPROBE,
+            ffprobePath           : process.env.FFPROBE,
             timeoutInSec          : 1,
             bufferMaxLengthInBytes: bufferMaxLengthInBytes
         }, streamUrl);
@@ -91,24 +86,16 @@ describe('FramesMonitor::listen, fetch frames from active stream', () => {
         spyOnPFrame     = sinon.spy();
         spyOnAudioFrame = sinon.spy();
 
-        let command = `${FFMPEG} -re -i ${testFile} -vcodec copy -acodec copy -listen 1 -f flv ${streamUrl}`.split(' ');
-
-        ffmpeg = spawn(command[0], command.slice(1));
+        await startStream(testFile, streamUrl);
     });
 
-    after(() => {
+    afterEach(() => {
         spyOnPFrame.reset();
         spyOnIFrame.reset();
         spyOnAudioFrame.reset();
-
-        // at this stage ffmpeg process should be stopped
-        // but for sure let's kill it
-        ffmpeg.kill('SIGKILL');
     });
 
-    it('must receive all stream frames', function (done) {
-        this.timeout(20 * 1000);
-
+    it('must receive all stream frames', done => {
         const expectedReturnCode       = 0;
         const expectedSignal           = null;
         const expectedIFramesCount     = 60;
@@ -117,35 +104,32 @@ describe('FramesMonitor::listen, fetch frames from active stream', () => {
 
         const onFrame = {I: spyOnIFrame, P: spyOnPFrame};
 
-        ffmpeg.stderr.once('data', () => {
+        framesMonitor.listen();
 
-            framesMonitor.listen();
+        framesMonitor.on('frame', frame => {
+            if (frame.media_type === 'audio') {
+                spyOnAudioFrame();
+            } else {
+                onFrame[frame.pict_type]();
+            }
+        });
 
-            framesMonitor.on('frame', frame => {
-                if (frame.media_type === 'audio') {
-                    spyOnAudioFrame();
-                } else {
-                    onFrame[frame.pict_type]();
-                }
-            });
+        framesMonitor.on('exit', (code, signal) => {
+            assert.strictEqual(code, expectedReturnCode);
+            assert.strictEqual(signal, expectedSignal);
 
-            framesMonitor.on('exit', (code, signal) => {
-                assert.strictEqual(code, expectedReturnCode);
-                assert.strictEqual(signal, expectedSignal);
+            assert.strictEqual(spyOnAudioFrame.callCount, expectedAudioFramesCount);
 
-                assert.strictEqual(spyOnAudioFrame.callCount, expectedAudioFramesCount);
+            assert.strictEqual(spyOnIFrame.callCount, expectedIFramesCount);
+            assert.strictEqual(spyOnPFrame.callCount, expectedPFramesCount);
 
-                assert.strictEqual(spyOnIFrame.callCount, expectedIFramesCount);
-                assert.strictEqual(spyOnPFrame.callCount, expectedPFramesCount);
-
-                done();
-            });
+            done();
         });
     });
 });
 
 describe('FramesMonitor::listen, stop ffprobe process', () => {
-    let ffmpeg;
+    let stream;
     let streamUrl;
     let framesMonitor;
 
@@ -155,114 +139,91 @@ describe('FramesMonitor::listen, stop ffprobe process', () => {
         streamUrl = `http://localhost:${port}`;
 
         framesMonitor = new FramesMonitor({
-            ffprobePath           : FFPROBE,
+            ffprobePath           : process.env.FFPROBE,
             timeoutInSec          : 1,
             bufferMaxLengthInBytes: bufferMaxLengthInBytes
         }, streamUrl);
 
-        let command = `${FFMPEG} -re -i ${testFile} -vcodec copy -acodec copy -listen 1 -f flv ${streamUrl}`.split(' ');
-
-        ffmpeg = spawn(command[0], command.slice(1));
+        stream = await startStream(testFile, streamUrl);
     });
 
-    afterEach(() => {
-        // kill with SIGKILL for sure
-        ffmpeg.kill('SIGKILL');
+    afterEach(async () => {
+        await stopStream(stream);
     });
 
-    it('must exit with correct signal after kill', function (done) {
+    it('must exit with correct signal after kill', done => {
         const expectedReturnCode = null;
         const expectedSignal     = 'SIGTERM';
 
-        ffmpeg.stderr.once('data', () => {
+        framesMonitor.listen();
 
-            framesMonitor.listen();
+        framesMonitor.once('frame', () => {
+            framesMonitor.stopListen();
+        });
 
-            framesMonitor.once('frame', () => {
-                framesMonitor.stopListen();
-            });
+        framesMonitor.on('exit', (code, signal) => {
+            assert.strictEqual(code, expectedReturnCode);
+            assert.strictEqual(signal, expectedSignal);
 
-            framesMonitor.on('exit', (code, signal) => {
-                assert.strictEqual(code, expectedReturnCode);
-                assert.strictEqual(signal, expectedSignal);
-
-                done();
-            });
+            done();
         });
     });
 
-    it('must exit with correct specified signal after kill', done => {
+    it('must exit with correct specified signal', done => {
         const expectedReturnCode = null;
         const expectedSignal     = 'SIGKILL';
 
-        ffmpeg.stderr.once('data', () => {
+        framesMonitor.listen();
 
-            framesMonitor.listen();
+        framesMonitor.once('frame', () => {
+            framesMonitor.stopListen(expectedSignal);
+        });
 
-            framesMonitor.once('frame', () => {
-                framesMonitor.stopListen(expectedSignal);
-            });
+        framesMonitor.on('exit', (code, signal) => {
+            assert.strictEqual(code, expectedReturnCode);
+            assert.strictEqual(signal, expectedSignal);
 
-            framesMonitor.on('exit', (code, signal) => {
-                assert.strictEqual(code, expectedReturnCode);
-                assert.strictEqual(signal, expectedSignal);
-
-                done();
-            });
+            done();
         });
     });
 });
 
 describe('FramesMonitor::listen, exit with correct code after stream has been finished', () => {
-    let ffmpeg;
+    let stream;
     let streamUrl;
     let framesMonitor;
 
-    before(async () => {
+    beforeEach(async () => {
         const port = await getPort();
 
         streamUrl = `http://localhost:${port}`;
 
         framesMonitor = new FramesMonitor({
-            ffprobePath           : FFPROBE,
+            ffprobePath           : process.env.FFPROBE,
             timeoutInSec          : 1,
             bufferMaxLengthInBytes: bufferMaxLengthInBytes
         }, streamUrl);
 
-        let command = `${FFMPEG} -re -i ${testFile} -vcodec copy -acodec copy -listen 1 -f flv ${streamUrl}`.split(' ');
-
-        ffmpeg = spawn(command[0], command.slice(1));
+        stream = await startStream(testFile, streamUrl);
     });
 
-    after(() => {
-        // at this stage ffmpeg process should be stopped
-        // but for sure let's kill it
-        ffmpeg.kill('SIGKILL');
-    });
-
-    it('must exit with correct zero code after stream has been finished', function (done) {
-        this.timeout(5 * 1000);
-
+    it('must exit with correct zero code after stream has been finished', done => {
         const expectedReturnCode = 0;
         const expectedSignal     = null;
 
-        ffmpeg.stderr.once('data', () => {
+        framesMonitor.listen();
 
-            framesMonitor.listen();
-
-            framesMonitor.once('frame', () => {
-                setTimeout(() => {
-                    ffmpeg.kill();
-                }, 1000);
-            });
-
-            framesMonitor.on('exit', (code, signal) => {
-                assert.strictEqual(code, expectedReturnCode);
-                assert.strictEqual(signal, expectedSignal);
-
-                done();
-            });
+        framesMonitor.once('frame', () => {
+            setTimeout(async () => {
+                await stopStream(stream);
+            }, 1000);
         });
 
+        framesMonitor.on('exit', (code, signal) => {
+            assert.strictEqual(code, expectedReturnCode);
+            assert.strictEqual(signal, expectedSignal);
+
+            done();
+        });
     });
 });
