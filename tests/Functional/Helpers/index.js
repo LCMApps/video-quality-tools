@@ -7,7 +7,8 @@ assert(process.env.FFPROBE, 'Specify path for ffprobe via FFPROBE env var');
 assert(process.env.FFMPEG, 'Specify path for ffmpeg via FFMPEG env var');
 
 function startStream(testFile, streamUrl) {
-    let command = `${process.env.FFMPEG} -re -i ${testFile} -vcodec copy -acodec copy -listen 1 -f flv ${streamUrl}`.split(' '); // eslint-disable-line
+    const command = `${process.env.FFMPEG} -re -i ${testFile} -vcodec copy -acodec copy -listen 1 -f flv ${streamUrl}`
+        .split(' ');
 
     const ffmpeg = spawn(command[0], command.slice(1));
 

@@ -82,8 +82,8 @@ function identifyGops(frames) {
         }
     }
 
-    // remainder is a set of frames for which we didn't find gop
-    // for example for this array of frames [1 0 0 0 1 0 0] the remainder should be last three frames [1 0 0]
+    // remainedFrames is a set of frames for which we didn't find gop
+    // for example for this array of frames [1 0 0 0 1 0 0] the remainedFrames should be last three frames [1 0 0]
     // this is done in order not to lost part of the next gop and as a direct consequence - entire gop
     return {
         gops          : setOfGops,
