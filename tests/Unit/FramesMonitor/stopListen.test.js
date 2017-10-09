@@ -47,33 +47,41 @@ describe('FramesMonitor::stopListen', () => {
         }
     });
 
-    it('must stop listen just fine', () => {
-        const expectedSignal = 'SIGTERM';
+    it('must stop listen just fine', done => {
+        const expectedSignal      = 'SIGTERM';
         const expectedIsListening = false;
 
         framesMonitor.listen();
         framesMonitor.stopListen();
 
-        assert.isTrue(spyOnKill.calledOnce);
-        assert.isTrue(spyOnKill.alwaysCalledWithExactly(expectedSignal));
+        framesMonitor.on('exit', () => {
+            assert.isTrue(spyOnKill.calledOnce);
+            assert.isTrue(spyOnKill.alwaysCalledWithExactly(expectedSignal));
 
-        assert.strictEqual(expectedIsListening, framesMonitor.isListening());
+            assert.strictEqual(expectedIsListening, framesMonitor.isListening());
+
+            done();
+        });
     });
 
-    it('must stop listen with custom signal just fine', () => {
-        const expectedSignal = 'SIGKILL';
+    it('must stop listen with custom signal just fine', done => {
+        const expectedSignal      = 'SIGKILL';
         const expectedIsListening = false;
 
         framesMonitor.listen();
         framesMonitor.stopListen(expectedSignal);
 
-        assert.isTrue(spyOnKill.calledOnce);
-        assert.isTrue(spyOnKill.alwaysCalledWithExactly(expectedSignal));
+        framesMonitor.on('exit', () => {
+            assert.isTrue(spyOnKill.calledOnce);
+            assert.isTrue(spyOnKill.alwaysCalledWithExactly(expectedSignal));
 
-        assert.strictEqual(expectedIsListening, framesMonitor.isListening());
+            assert.strictEqual(expectedIsListening, framesMonitor.isListening());
+
+            done();
+        });
     });
 
-    it('must throw an exception when try to stop listen several times in a row', () => {
+    it('must throw an exception when try to stop listen several times in a row', done => {
         const expectedIsListening  = false;
         const expectedErrorType    = Errors.AlreadyStoppedListenError;
         const expectedErrorMessage = 'This service is already stopped.';
@@ -81,18 +89,22 @@ describe('FramesMonitor::stopListen', () => {
         framesMonitor.listen();
         framesMonitor.stopListen();
 
-        try {
-            framesMonitor.stopListen();
-            assert.isTrue(false, 'Should not be here');
-        } catch (err) {
-            assert.instanceOf(err, expectedErrorType);
+        framesMonitor.on('exit', () => {
+            try {
+                framesMonitor.stopListen();
+                assert.isTrue(false, 'Should not be here');
+            } catch (err) {
+                assert.instanceOf(err, expectedErrorType);
 
-            assert.strictEqual(err.message, expectedErrorMessage);
+                assert.strictEqual(err.message, expectedErrorMessage);
 
-            assert.isTrue(spyOnKill.calledOnce);
+                assert.isTrue(spyOnKill.calledOnce);
 
-            assert.strictEqual(expectedIsListening, framesMonitor.isListening());
-        }
+                assert.strictEqual(expectedIsListening, framesMonitor.isListening());
+
+                done();
+            }
+        });
     });
 
 });
