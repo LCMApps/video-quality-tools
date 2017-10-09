@@ -38,13 +38,16 @@ describe('FramesMonitor::isListening', () => {
         assert.strictEqual(expectedIsListening, framesMonitor.isListening());
     });
 
-    it('must return false, cuz we stopped listen', () => {
+    it('must return false, cuz we stopped listen', done => {
         const expectedIsListening = false;
 
         framesMonitor.listen();
         framesMonitor.stopListen();
 
-        assert.strictEqual(expectedIsListening, framesMonitor.isListening());
+        framesMonitor.on('exit', () => {
+            assert.strictEqual(expectedIsListening, framesMonitor.isListening());
+            done();
+        });
     });
 
 });

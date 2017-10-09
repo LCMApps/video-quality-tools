@@ -13,6 +13,7 @@ const {startStream, stopStream} = require('../Helpers');
 const testFile = path.join(__dirname, '../../inputs/test_IPPPP.mp4');
 
 const bufferMaxLengthInBytes = 2 ** 20;
+const errorLevel             = 'error';
 
 describe('FramesMonitor::listen, fetch frames from inactive stream', () => {
     let streamUrl;
@@ -29,7 +30,8 @@ describe('FramesMonitor::listen, fetch frames from inactive stream', () => {
         framesMonitor = new FramesMonitor({
             ffprobePath           : process.env.FFPROBE,
             timeoutInSec          : 1,
-            bufferMaxLengthInBytes: bufferMaxLengthInBytes
+            bufferMaxLengthInBytes: bufferMaxLengthInBytes,
+            errorLevel            : errorLevel
         }, streamUrl);
 
         spyOnFrame  = sinon.spy();
@@ -79,7 +81,8 @@ describe('FramesMonitor::listen, fetch frames from active stream', () => {
         framesMonitor = new FramesMonitor({
             ffprobePath           : process.env.FFPROBE,
             timeoutInSec          : 1,
-            bufferMaxLengthInBytes: bufferMaxLengthInBytes
+            bufferMaxLengthInBytes: bufferMaxLengthInBytes,
+            errorLevel            : errorLevel
         }, streamUrl);
 
         spyOnIFrame     = sinon.spy();
@@ -141,7 +144,8 @@ describe('FramesMonitor::listen, stop ffprobe process', () => {
         framesMonitor = new FramesMonitor({
             ffprobePath           : process.env.FFPROBE,
             timeoutInSec          : 1,
-            bufferMaxLengthInBytes: bufferMaxLengthInBytes
+            bufferMaxLengthInBytes: bufferMaxLengthInBytes,
+            errorLevel            : errorLevel
         }, streamUrl);
 
         stream = await startStream(testFile, streamUrl);
@@ -201,7 +205,8 @@ describe('FramesMonitor::listen, exit with correct code after stream has been fi
         framesMonitor = new FramesMonitor({
             ffprobePath           : process.env.FFPROBE,
             timeoutInSec          : 1,
-            bufferMaxLengthInBytes: bufferMaxLengthInBytes
+            bufferMaxLengthInBytes: bufferMaxLengthInBytes,
+            errorLevel            : errorLevel
         }, streamUrl);
 
         stream = await startStream(testFile, streamUrl);

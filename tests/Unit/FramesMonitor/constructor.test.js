@@ -54,7 +54,8 @@ describe('FramesMonitor::constructor', () => {
             new FramesMonitor({
                 ffprobePath           : `/incorrect/path/${config.ffprobePath}`,
                 timeoutInSec          : config.timeoutInSec,
-                bufferMaxLengthInBytes: config.bufferMaxLengthInBytes
+                bufferMaxLengthInBytes: config.bufferMaxLengthInBytes,
+                errorLevel            : config.errorLevel
             }, url);
         }, Errors.ExecutablePathError);
     });

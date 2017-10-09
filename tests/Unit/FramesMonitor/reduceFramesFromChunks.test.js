@@ -7,7 +7,7 @@ const {FramesMonitor} = require('./Helpers');
 
 const Errors = require('src/Errors');
 
-describe('FramesMonitor::reduceFramesFromChunks', () => {
+describe('FramesMonitor::_reduceFramesFromChunks', () => {
 
     const data = [
         {
@@ -46,7 +46,7 @@ describe('FramesMonitor::reduceFramesFromChunks', () => {
             let frames;
 
             assert.doesNotThrow(() => {
-                ({chunkRemainder, frames} = FramesMonitor.reduceFramesFromChunks(ctx.inputChunkRemainder + ctx.input));
+                ({chunkRemainder, frames} = FramesMonitor._reduceFramesFromChunks(ctx.inputChunkRemainder + ctx.input));
             });
 
             assert.deepStrictEqual(frames, ctx.expectedFrames);
@@ -62,7 +62,7 @@ describe('FramesMonitor::reduceFramesFromChunks', () => {
         const newChunk       = '[FRAME]\na=b\nc=d\n[/FRAME]';
 
         try {
-            FramesMonitor.reduceFramesFromChunks(chunkRemainder + newChunk);
+            FramesMonitor._reduceFramesFromChunks(chunkRemainder + newChunk);
             assert.isFalse(true, 'Should not be here');
         } catch (err) {
             assert.instanceOf(err, expectedErrorType);
@@ -84,7 +84,7 @@ describe('FramesMonitor::reduceFramesFromChunks', () => {
         const newChunk       = 'a=b\nc=d\n[/FRAME]';
 
         try {
-            FramesMonitor.reduceFramesFromChunks(chunkRemainder + newChunk);
+            FramesMonitor._reduceFramesFromChunks(chunkRemainder + newChunk);
             assert.isFalse(true, 'Should not be here');
         } catch (err) {
             assert.instanceOf(err, expectedErrorType);

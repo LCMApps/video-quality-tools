@@ -1,7 +1,7 @@
 'use strict';
 
-const _       = require('lodash');
-const path    = require('path');
+const _    = require('lodash');
+const path = require('path');
 
 const {assert} = require('chai');
 const getPort  = require('get-port');
@@ -15,11 +15,13 @@ const testFileWithFixedGop = path.join(__dirname, '../inputs/test_IPPPP.mp4');
 const testFileWithOpenGop  = path.join(__dirname, '../inputs/test_open_gop.mp4');
 
 const bufferMaxLengthInBytes = 2 ** 20;
+const errorLevel             = 'fatal';
 
 const config = {
     ffprobePath           : process.env.FFPROBE,
     timeoutInSec          : 1,
-    bufferMaxLengthInBytes: bufferMaxLengthInBytes
+    bufferMaxLengthInBytes: bufferMaxLengthInBytes,
+    errorLevel            : errorLevel
 };
 
 describe('processFrames functional tests', () => {
