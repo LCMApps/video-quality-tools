@@ -13,6 +13,18 @@ const STDERR = 'STDERR';
 const startFrameTag = '[FRAME]';
 const endFrameTag   = '[/FRAME]';
 
+const validErrorLevels = [
+    'trace',
+    'debug',
+    'verbose',
+    'info',
+    'warning',
+    'error',
+    'fatal',
+    'panic',
+    'quiet'
+];
+
 class FramesMonitor extends EventEmitter {
     constructor(config, url) {
         super();
@@ -25,7 +37,7 @@ class FramesMonitor extends EventEmitter {
             throw new TypeError('You should provide a correct url, bastard.');
         }
 
-        const {ffprobePath, timeoutInSec, bufferMaxLengthInBytes} = config;
+        const {ffprobePath, timeoutInSec, bufferMaxLengthInBytes, errorLevel} = config;
 
         if (!_.isString(ffprobePath) || _.isEmpty(ffprobePath)) {
             throw new Errors.ConfigError('You should provide a correct path to ffprobe, bastard.');
@@ -37,6 +49,12 @@ class FramesMonitor extends EventEmitter {
 
         if (!_.isInteger(bufferMaxLengthInBytes) || bufferMaxLengthInBytes <= 0) {
             throw new Errors.ConfigError('bufferMaxLengthInBytes param should be a positive integer.');
+        }
+
+        if (!_.isString(errorLevel) || !FramesMonitor._isValidErrorLevel(errorLevel)) {
+            throw new Errors.ConfigError(
+                'You should provide correct error level, bastard. Check ffprobe documentation.'
+            );
         }
 
         this._assertExecutable(ffprobePath);
@@ -79,7 +97,6 @@ class FramesMonitor extends EventEmitter {
         this._chunkRemainder = '';
 
         this._cp.kill(signal);
-        this._cp = null;
     }
 
     _assertExecutable(path) {
@@ -92,6 +109,8 @@ class FramesMonitor extends EventEmitter {
 
     _onProcessError(err) {
         const {ffprobePath} = this._config;
+
+        this._cp = null;
 
         this.emit('error', new Errors.ProcessError(
             `${ffprobePath} process could not be spawned or just got an error.`, {
@@ -130,14 +149,14 @@ class FramesMonitor extends EventEmitter {
     }
 
     _runShowFramesProcess() {
-        const {ffprobePath, timeoutInSec} = this._config;
+        const {ffprobePath, timeoutInSec, errorLevel} = this._config;
 
         const exec = spawn(
             ffprobePath,
             [
                 '-hide_banner',
                 '-v',
-                'error',
+                errorLevel,
                 '-select_streams',
                 'v:0',
                 '-show_frames',
@@ -168,7 +187,7 @@ class FramesMonitor extends EventEmitter {
             let frames;
 
             try {
-                const res = FramesMonitor.reduceFramesFromChunks(data);
+                const res = FramesMonitor._reduceFramesFromChunks(data);
 
                 this._chunkRemainder = res.chunkRemainder;
                 frames               = res.frames;
@@ -177,12 +196,12 @@ class FramesMonitor extends EventEmitter {
             }
 
             for (const frame of frames) {
-                this.emit('frame', FramesMonitor.frameToJson(frame));
+                this.emit('frame', FramesMonitor._frameToJson(frame));
             }
         });
     }
 
-    static reduceFramesFromChunks(data) {
+    static _reduceFramesFromChunks(data) {
         let chunkRemainder = '';
         let frames         = data.split(endFrameTag);
 
@@ -208,7 +227,7 @@ class FramesMonitor extends EventEmitter {
         return {chunkRemainder, frames};
     }
 
-    static frameToJson(rawFrame) {
+    static _frameToJson(rawFrame) {
         const frame      = {};
         const frameLines = rawFrame.split('\n');
 
@@ -222,6 +241,10 @@ class FramesMonitor extends EventEmitter {
         });
 
         return frame;
+    }
+
+    static _isValidErrorLevel(level) {
+        return _.includes(validErrorLevels, level);
     }
 }
 
