@@ -177,10 +177,20 @@ class FramesMonitor extends EventEmitter {
         // a little brother of stopListen
         // used for inner purposes in order to blindly shutdown child process
 
+        this._cp.removeAllListeners();
+        this._cp.stderr.removeAllListeners();
+        this._cp.stdout.removeAllListeners();
+
+        this._cp.once('exit', this._onExit.bind(this));
+
+        let isError = false;
+
         return new Promise(resolve => {
             this._cp.once('error', () => {
                 this._cp.removeAllListeners();
                 this._cp = null;
+
+                isError = true;
 
                 return resolve();
             });
@@ -188,6 +198,10 @@ class FramesMonitor extends EventEmitter {
             try {
                 // ChildProcess kill method for some corner cases can throw an exception
                 this._cp.kill('SIGTERM');
+
+                if (isError) {
+                    return;
+                }
 
                 // if kill() call returns okay, it does not mean that the process will exit
                 // it's just means that signal was received, but child process can ignore it, so we will set guard
