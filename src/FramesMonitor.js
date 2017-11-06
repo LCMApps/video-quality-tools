@@ -78,8 +78,7 @@ class FramesMonitor extends EventEmitter {
         this._cp             = null;
         this._chunkRemainder = '';
 
-        this._processingError = null;
-        this._stderrOutputs   = [];
+        this._stderrOutputs = [];
     }
 
     listen() {
@@ -171,60 +170,14 @@ class FramesMonitor extends EventEmitter {
         });
     }
 
-    _handleProcessingError(error) {
-        let isError          = false;
-        let exitProcessGuard = null;
-
-        this._cp.removeAllListeners();
-        this._cp.stderr.removeAllListeners();
-        this._cp.stdout.removeAllListeners();
-
-        return new Promise(resolve => {
-            this._cp.once('exit', () => {
-                this._cp.removeAllListeners();
-                this._cp = null;
-
-                clearTimeout(exitProcessGuard);
-
-                this.emit('exit', new ExitReasons.ProcessingError({error}));
-
-                return resolve();
-            });
-
-            this._cp.once('error', error => {
-                this._cp.removeAllListeners();
-                this._cp = null;
-
-                isError = true;
-
-                this.emit('stop-process-error', error);
-
-                return resolve();
-            });
-
-            try {
-                // ChildProcess kill method for some corner cases can throw an exception
-                this._cp.kill('SIGTERM');
-
-                if (isError) {
-                    return;
-                }
-
-                // if kill() call returns okay, it does not mean that the process will exit
-                // it's just means that signal was received, but child process can ignore it, so we will set guard
-                // and clean it in the exit event handler.
-                exitProcessGuard = setTimeout(() => {
-                    this._cp.kill('SIGKILL');
-                }, this._config.exitProcessGuardTimeoutInMs);
-            } catch (err) {
-                // platform does not support SIGTERM (probably SIGKILL also)
-
-                this._cp.removeAllListeners();
-                this._cp = null;
-
-                return resolve();
-            }
-        });
+    async _handleProcessingError(error) {
+        try {
+            await this.stopListen();
+        } catch (err) {
+            this.emit('error', err);
+        } finally {
+            this.emit('exit', new ExitReasons.ProcessingError({error}));
+        }
     }
 
     _assertExecutable(path) {
@@ -342,10 +295,6 @@ class FramesMonitor extends EventEmitter {
     }
 
     async _onStdoutChunk(newChunk) {
-        if (this._processingError) {
-            return;
-        }
-
         const data = this._chunkRemainder + newChunk.toString();
 
         if (data.length > this._config.bufferMaxLengthInBytes) {
