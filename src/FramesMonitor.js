@@ -329,36 +329,36 @@ class FramesMonitor extends EventEmitter {
             return;
         }
 
-        setImmediate(async () => {
-            const data = this._chunkRemainder + newChunk.toString();
+        const data = this._chunkRemainder + newChunk.toString();
 
-            if (data.length > this._config.bufferMaxLengthInBytes) {
-                const error = new Errors.InvalidFrameError(
-                    'Too long (probably infinite) frame.' +
-                    `The frame length is ${data.length}.` +
-                    `The max frame length must be ${this._config.bufferMaxLengthInBytes}`, {
-                        url: this._url
-                    }
-                );
+        if (data.length > this._config.bufferMaxLengthInBytes) {
+            const error = new Errors.InvalidFrameError(
+                'Too long (probably infinite) frame.' +
+                `The frame length is ${data.length}.` +
+                `The max frame length must be ${this._config.bufferMaxLengthInBytes}`, {
+                    url: this._url
+                }
+            );
 
-                return await this._handleProcessingError(error);
-            }
+            return await this._handleProcessingError(error);
+        }
 
-            let frames;
+        let frames;
 
-            try {
-                const res = FramesMonitor._reduceFramesFromChunks(data);
+        try {
+            const res = FramesMonitor._reduceFramesFromChunks(data);
 
-                this._chunkRemainder = res.chunkRemainder;
-                frames               = res.frames;
-            } catch (error) {
-                return await this._handleProcessingError(error);
-            }
+            this._chunkRemainder = res.chunkRemainder;
+            frames               = res.frames;
+        } catch (error) {
+            return await this._handleProcessingError(error);
+        }
 
-            for (const frame of frames) {
+        for (const frame of frames) {
+            setImmediate(() => {
                 this.emit('frame', FramesMonitor._frameToJson(frame));
-            }
-        });
+            });
+        }
     }
 
     async _handleProcessingError(error) {
