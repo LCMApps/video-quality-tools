@@ -108,7 +108,8 @@ class FramesMonitor extends EventEmitter {
     }
 
     stopListen() {
-        let exitProcessGuard;
+        let exitProcessGuard = null;
+        let isError          = false;
 
         return new Promise((resolve, reject) => {
             if (!this._cp) {
@@ -122,6 +123,9 @@ class FramesMonitor extends EventEmitter {
             this._cp.once('exit', (code, signal) => {
                 clearTimeout(exitProcessGuard);
 
+                this._cp.removeAllListeners();
+                this._cp = null;
+
                 return resolve({code, signal});
             });
 
@@ -131,12 +135,21 @@ class FramesMonitor extends EventEmitter {
                     error: err
                 });
 
+                this._cp.removeAllListeners();
+                this._cp = null;
+
+                isError = true;
+
                 return reject(error);
             });
 
             try {
                 // ChildProcess kill method for some corner cases can throw an exception
                 this._cp.kill('SIGTERM');
+
+                if (isError) {
+                    return;
+                }
 
                 // if kill() call returns okay, it does not mean that the process will exit
                 // it's just means that signal was received, but child process can ignore it, so we will set guard
@@ -152,6 +165,9 @@ class FramesMonitor extends EventEmitter {
                     error: err
                 });
 
+                this._cp.removeAllListeners();
+                this._cp = null;
+
                 return reject(error);
             }
         });
@@ -163,6 +179,9 @@ class FramesMonitor extends EventEmitter {
 
         return new Promise(resolve => {
             this._cp.once('error', () => {
+                this._cp.removeAllListeners();
+                this._cp = null;
+
                 return resolve();
             });
 
@@ -178,6 +197,9 @@ class FramesMonitor extends EventEmitter {
                 }, this._config.exitProcessGuardTimeoutInMs);
             } catch (err) {
                 // platform does not support SIGTERM (probably SIGKILL also)
+
+                this._cp.removeAllListeners();
+                this._cp = null;
 
                 return resolve();
             }
@@ -204,12 +226,14 @@ class FramesMonitor extends EventEmitter {
             this._cp = null;
         }
 
-        const reason = new ExitReasons.ProcessStartError(
+        const error = new Errors.ProcessStartError(
             `${ffprobePath} process could not be started.`, {
                 url  : this._url,
                 error: err
             }
         );
+
+        const reason = new ExitReasons.StartError({error});
 
         this.emit('exit', reason);
     }
@@ -245,20 +269,22 @@ class FramesMonitor extends EventEmitter {
     }
 
     _onExit(code, signal) {
+        this._cp.removeAllListeners();
         this._cp = null;
 
         clearTimeout(this._exitProcessGuard);
 
         let reason;
 
-        if (signal) {
-            reason = new ExitReasons.ExternalSignal(signal);
+        if (this._processingError) {
+            reason = new ExitReasons.ProcessingError({error: this._processingError});
+        } else if (signal) {
+            reason = new ExitReasons.ExternalSignal({signal});
         } else if (code === 0) {
-            reason = new ExitReasons.NormalExit(code);
+            reason = new ExitReasons.NormalExit({code});
         } else if (code > 0) {
-            reason = new ExitReasons.AbnormalExit(code);
-        } else if (this._processingError) {
-            reason = new ExitReasons.ProcessingError(this._processingError);
+            const stderrOutput = this._stderrOutputs.join('\n');
+            reason             = new ExitReasons.AbnormalExit({code, stderrOutput});
         }
 
         return this.emit('exit', reason);
