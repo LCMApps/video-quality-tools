@@ -80,8 +80,6 @@ class FramesMonitor extends EventEmitter {
 
         this._processingError = null;
         this._stderrOutputs   = [];
-
-        this._exitProcessGuard = null;
     }
 
     listen() {
@@ -173,24 +171,33 @@ class FramesMonitor extends EventEmitter {
         });
     }
 
-    _innerStopListen() {
-        // a little brother of stopListen
-        // used for inner purposes in order to blindly shutdown child process
+    _handleProcessingError(error) {
+        let isError          = false;
+        let exitProcessGuard = null;
 
         this._cp.removeAllListeners();
         this._cp.stderr.removeAllListeners();
         this._cp.stdout.removeAllListeners();
 
-        this._cp.once('exit', this._onExit.bind(this));
-
-        let isError = false;
-
         return new Promise(resolve => {
-            this._cp.once('error', () => {
+            this._cp.once('exit', () => {
+                this._cp.removeAllListeners();
+                this._cp = null;
+
+                clearTimeout(exitProcessGuard);
+
+                this.emit('exit', new ExitReasons.ProcessingError({error}));
+
+                return resolve();
+            });
+
+            this._cp.once('error', error => {
                 this._cp.removeAllListeners();
                 this._cp = null;
 
                 isError = true;
+
+                this.emit('stop-process-error', error);
 
                 return resolve();
             });
@@ -206,7 +213,7 @@ class FramesMonitor extends EventEmitter {
                 // if kill() call returns okay, it does not mean that the process will exit
                 // it's just means that signal was received, but child process can ignore it, so we will set guard
                 // and clean it in the exit event handler.
-                this._exitProcessGuard = setTimeout(() => {
+                exitProcessGuard = setTimeout(() => {
                     this._cp.kill('SIGKILL');
                 }, this._config.exitProcessGuardTimeoutInMs);
             } catch (err) {
@@ -286,13 +293,9 @@ class FramesMonitor extends EventEmitter {
         this._cp.removeAllListeners();
         this._cp = null;
 
-        clearTimeout(this._exitProcessGuard);
-
         let reason;
 
-        if (this._processingError) {
-            reason = new ExitReasons.ProcessingError({error: this._processingError});
-        } else if (signal) {
+        if (signal) {
             reason = new ExitReasons.ExternalSignal({signal});
         } else if (code === 0) {
             reason = new ExitReasons.NormalExit({code});
@@ -373,12 +376,6 @@ class FramesMonitor extends EventEmitter {
                 this.emit('frame', FramesMonitor._frameToJson(frame));
             });
         }
-    }
-
-    async _handleProcessingError(error) {
-        this._processingError = error;
-
-        return await this._innerStopListen();
     }
 
     static _reduceFramesFromChunks(data) {
