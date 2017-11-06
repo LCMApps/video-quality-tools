@@ -10,6 +10,7 @@ class ExecutablePathError extends ExtendableError {}
 class FrameInvalidData extends ExtendableError {}
 class GopInvalidData extends ExtendableError {}
 class GopNotFoundError extends ExtendableError {}
+class ProcessStartError extends ExtendableError {}
 class ProcessExitError extends ExtendableError {}
 
 module.exports = {
@@ -23,5 +24,6 @@ module.exports = {
     FrameInvalidData,
     GopInvalidData,
     GopNotFoundError,
+    ProcessStartError,
     ProcessExitError
 };

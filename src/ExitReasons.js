@@ -6,14 +6,14 @@ class Reason {
     }
 }
 
-class ProcessStartError extends Reason {}
+class StartError extends Reason {}
 class ExternalSignal extends Reason {}
 class NormalExit extends Reason {}
 class AbnormalExit extends Reason {}
 class ProcessingError extends Reason {}
 
 module.exports = {
-    ProcessStartError,
+    StartError,
     ExternalSignal,
     NormalExit,
     AbnormalExit,
