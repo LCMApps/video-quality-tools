@@ -3,7 +3,7 @@
 const {assert} = require('chai');
 const sinon    = require('sinon');
 
-const {config, url, FramesMonitor} = require('./Helpers');
+const {config, url, FramesMonitor, makeChildProcess} = require('./Helpers');
 
 const Errors = require('src/Errors');
 
@@ -12,15 +12,31 @@ describe('FramesMonitor::_onStdoutChunk', () => {
     let framesMonitor;
 
     let spyOnCompleteFrame;
+    let stubRunShowFramesProcess;
+    let stubHandleProcessingError;
+    let spyFrameToJson;
+    let spyReduceFramesFromChunks;
 
     beforeEach(() => {
         framesMonitor = new FramesMonitor(config, url);
 
-        spyOnCompleteFrame = sinon.spy();
+        const childProcess = makeChildProcess();
+
+        stubRunShowFramesProcess  = sinon.stub(framesMonitor, '_runShowFramesProcess').returns(childProcess);
+        stubHandleProcessingError = sinon.stub(framesMonitor, '_handleProcessingError').resolves();
+        spyFrameToJson            = sinon.spy(FramesMonitor, '_frameToJson');
+        spyReduceFramesFromChunks = sinon.spy(FramesMonitor, '_reduceFramesFromChunks');
+        spyOnCompleteFrame        = sinon.spy();
+
+        framesMonitor.listen();
     });
 
     afterEach(() => {
         spyOnCompleteFrame.reset();
+        stubRunShowFramesProcess.restore();
+        stubHandleProcessingError.restore();
+        spyFrameToJson.restore();
+        spyReduceFramesFromChunks.restore();
     });
 
     const data = [
@@ -55,17 +71,18 @@ describe('FramesMonitor::_onStdoutChunk', () => {
 
             framesMonitor.on('frame', spyOnCompleteFrame);
 
-            framesMonitor._onStdoutChunk(input);
+            framesMonitor._onStdoutChunk(input)
+                .then(() => {
+                    setImmediate(() => {
+                        assert.isTrue(spyOnCompleteFrame.calledOnce);
 
-            setImmediate(() => {
-                assert(spyOnCompleteFrame.calledOnce);
+                        assert.isTrue(stubHandleProcessingError.notCalled);
+                        assert.isTrue(spyFrameToJson.calledOnce);
+                        assert.isTrue(spyReduceFramesFromChunks.calledOnce);
 
-                assert(spyOnCompleteFrame.firstCall.calledWithExactly(test.output));
-
-                assert.strictEqual(framesMonitor._chunkRemainder, test.newChundRemainder);
-
-                done();
-            });
+                        done();
+                    });
+                });
         });
     });
 
@@ -74,13 +91,18 @@ describe('FramesMonitor::_onStdoutChunk', () => {
 
         framesMonitor.on('frame', spyOnCompleteFrame);
 
-        framesMonitor._onStdoutChunk(input);
+        framesMonitor._onStdoutChunk(input)
+            .then(() => {
+                setImmediate(() => {
+                    assert(spyOnCompleteFrame.notCalled);
 
-        setImmediate(() => {
-            assert(spyOnCompleteFrame.notCalled);
+                    assert.isTrue(stubHandleProcessingError.notCalled);
+                    assert.isTrue(spyFrameToJson.notCalled);
+                    assert.isTrue(spyReduceFramesFromChunks.calledOnce);
 
-            done();
-        });
+                    done();
+                });
+            });
     });
 
     it('must not emit uncomplete frame', done => {
@@ -88,13 +110,18 @@ describe('FramesMonitor::_onStdoutChunk', () => {
 
         framesMonitor.on('frame', spyOnCompleteFrame);
 
-        framesMonitor._onStdoutChunk(input);
+        framesMonitor._onStdoutChunk(input)
+            .then(() => {
+                setImmediate(() => {
+                    assert(spyOnCompleteFrame.notCalled);
 
-        setImmediate(() => {
-            assert(spyOnCompleteFrame.notCalled);
+                    assert.isTrue(stubHandleProcessingError.notCalled);
+                    assert.isTrue(spyFrameToJson.notCalled);
+                    assert.isTrue(spyReduceFramesFromChunks.calledOnce);
 
-            done();
-        });
+                    done();
+                });
+            });
     });
 
     it('must emit complete raw frames in json format, which has been accumulated by several chunks', done => {
@@ -118,42 +145,54 @@ describe('FramesMonitor::_onStdoutChunk', () => {
 
         framesMonitor.on('frame', spyOnCompleteFrame);
 
-        tests.forEach(test => {
-            framesMonitor._onStdoutChunk(test);
-        });
+        // we cannot use done with async func identifier, so will use then method
+        Promise.all(
+            tests.map(async test => {
+                await framesMonitor._onStdoutChunk(test);
+            })
+        )
+            .then(() => {
+                // _onStdoutChunk uses setImmediate under the hood, so we use it here too
+                setImmediate(() => {
+                    assert(spyOnCompleteFrame.calledTwice);
 
-        setImmediate(() => {
-            assert(spyOnCompleteFrame.calledTwice);
+                    assert.isTrue(spyOnCompleteFrame.firstCall.calledWithExactly(expectedResult1));
+                    assert.isTrue(spyOnCompleteFrame.secondCall.calledWithExactly(expectedResult2));
 
-            assert.isTrue(spyOnCompleteFrame.firstCall.calledWithExactly(expectedResult1));
-            assert.isTrue(spyOnCompleteFrame.secondCall.calledWithExactly(expectedResult2));
+                    assert.isTrue(stubHandleProcessingError.notCalled);
+                    assert.isTrue(spyFrameToJson.calledTwice);
+                    assert.strictEqual(spyReduceFramesFromChunks.callCount, tests.length);
 
-            done();
-        });
+                    done();
+                });
+            });
     });
 
-    it('must emit error, invalid data input (too big frame, probably infinite)', done => {
+    it('must emit error, invalid data input (too big frame, probably infinite)', async () => {
         const smallInput = '\na=b\n'.repeat(10);
         const largeInput = '\na=b\n'.repeat(config.bufferMaxLengthInBytes - 10);
 
-        framesMonitor.on('error', error => {
-            assert.instanceOf(error, Errors.InvalidFrameError);
+        await framesMonitor._onStdoutChunk(smallInput);
+        await framesMonitor._onStdoutChunk(largeInput);
 
-            assert.strictEqual(
-                error.message,
-                'Too long (probably infinite) frame.' +
-                `The frame length is ${smallInput.length + largeInput.length}.` +
-                `The max frame length must be ${config.bufferMaxLengthInBytes}`
-            );
+        assert.isTrue(stubHandleProcessingError.calledOnce);
 
-            done();
-        });
+        const error = stubHandleProcessingError.getCall(0).args[0];
 
-        framesMonitor._onStdoutChunk(smallInput);
-        framesMonitor._onStdoutChunk(largeInput);
+        assert.instanceOf(error, Errors.InvalidFrameError);
+
+        assert.strictEqual(
+            error.message,
+            'Too long (probably infinite) frame.' +
+            `The frame length is ${smallInput.length + largeInput.length}.` +
+            `The max frame length must be ${config.bufferMaxLengthInBytes}`
+        );
+
+        assert.isTrue(spyFrameToJson.notCalled);
+        assert.isTrue(spyReduceFramesFromChunks.calledOnce); // during the first call on smallInput
     });
 
-    it('must throw an exception, invalid data input (unclosed frame)', done => {
+    it('must throw an exception, invalid data input (unclosed frame)', async () => {
         const expectedErrorType    = Errors.InvalidFrameError;
         const expectedErrorMessage = 'Can not process frame with invalid structure.';
 
@@ -162,42 +201,47 @@ describe('FramesMonitor::_onStdoutChunk', () => {
 
         framesMonitor._chunkRemainder = chunkRemainder;
 
-        framesMonitor.on('error', error => {
-            assert.instanceOf(error, expectedErrorType);
+        await framesMonitor._onStdoutChunk(newChunk);
 
-            assert.strictEqual(error.message, expectedErrorMessage);
+        assert.isTrue(stubHandleProcessingError.calledOnce);
 
-            assert.deepEqual(error.extra, {
-                data : chunkRemainder + newChunk,
-                frame: '[FRAME]\na=b\n[FRAME]\na=b\nc=d\n'
-            });
+        const error = stubHandleProcessingError.getCall(0).args[0];
 
-            done();
+        assert.instanceOf(error, expectedErrorType);
+
+        assert.strictEqual(error.message, expectedErrorMessage);
+
+        assert.deepEqual(error.extra, {
+            data : chunkRemainder + newChunk,
+            frame: '[FRAME]\na=b\n[FRAME]\na=b\nc=d\n'
         });
 
-        framesMonitor._onStdoutChunk(newChunk);
+        assert.isTrue(spyFrameToJson.notCalled);
+        assert.isTrue(spyReduceFramesFromChunks.calledOnce);
     });
 
-    it('must throw an exception, invalid data input (end block without starting one)', done => {
+    it('must throw an exception, invalid data input (end block without starting one)', async () => {
         const expectedErrorType    = Errors.InvalidFrameError;
         const expectedErrorMessage = 'Can not process frame with invalid structure.';
 
         const newChunk = 'a=b\nc=d\n[/FRAME]';
 
-        framesMonitor.on('error', error => {
-            assert.instanceOf(error, expectedErrorType);
+        await framesMonitor._onStdoutChunk(newChunk);
 
-            assert.strictEqual(error.message, expectedErrorMessage);
+        assert.isTrue(stubHandleProcessingError.calledOnce);
 
-            assert.deepEqual(error.extra, {
-                data : newChunk,
-                frame: 'a=b\nc=d\n'
-            });
+        const error = stubHandleProcessingError.getCall(0).args[0];
 
-            done();
+        assert.instanceOf(error, expectedErrorType);
+
+        assert.strictEqual(error.message, expectedErrorMessage);
+
+        assert.deepEqual(error.extra, {
+            data : newChunk,
+            frame: 'a=b\nc=d\n'
         });
 
-        framesMonitor._onStdoutChunk(newChunk);
+        assert.isTrue(spyFrameToJson.notCalled);
+        assert.isTrue(spyReduceFramesFromChunks.calledOnce);
     });
-
 });
