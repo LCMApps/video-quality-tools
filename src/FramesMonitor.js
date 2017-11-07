@@ -70,7 +70,7 @@ class FramesMonitor extends EventEmitter {
             throw new Errors.ConfigError('exitProcessGuardTimeoutInMs param should be a positive integer.');
         }
 
-        this._assertExecutable(ffprobePath);
+        FramesMonitor._assertExecutable(ffprobePath);
 
         this._config = _.cloneDeep(config);
         this._url    = url;
@@ -79,6 +79,13 @@ class FramesMonitor extends EventEmitter {
         this._chunkRemainder = '';
 
         this._stderrOutputs = [];
+
+        this._onExit                     = this._onExit.bind(this);
+        this._onProcessStartError        = this._onProcessStartError.bind(this);
+        this._onProcessStdoutStreamError = this._onProcessStreamsError.bind(this, STDOUT);
+        this._onProcessStderrStreamError = this._onProcessStreamsError.bind(this, STDERR);
+        this._onStderrData               = this._onStderrData.bind(this);
+        this._onStdoutChunk              = this._onStdoutChunk.bind(this);
     }
 
     listen() {
@@ -88,16 +95,16 @@ class FramesMonitor extends EventEmitter {
 
         this._cp = this._runShowFramesProcess();
 
-        this._cp.once('exit', this._onExit.bind(this));
+        this._cp.once('exit', this._onExit);
 
-        this._cp.on('error', this._onProcessStartError.bind(this));
+        this._cp.on('error', this._onProcessStartError);
 
-        this._cp.stdout.on('error', this._onProcessStreamsError.bind(this, STDOUT));
-        this._cp.stderr.on('error', this._onProcessStreamsError.bind(this, STDERR));
+        this._cp.stdout.on('error', this._onProcessStdoutStreamError);
+        this._cp.stderr.on('error', this._onProcessStderrStreamError);
 
-        this._cp.stderr.on('data', this._onStderrData.bind(this));
+        this._cp.stderr.on('data', this._onStderrData);
 
-        this._cp.stdout.on('data', this._onStdoutChunk.bind(this));
+        this._cp.stdout.on('data', this._onStdoutChunk);
     }
 
     isListening() {
@@ -177,14 +184,6 @@ class FramesMonitor extends EventEmitter {
             this.emit('error', err);
         } finally {
             this.emit('exit', new ExitReasons.ProcessingError({error}));
-        }
-    }
-
-    _assertExecutable(path) {
-        try {
-            fs.accessSync(path, fs.constants.X_OK);
-        } catch (e) {
-            throw new Errors.ExecutablePathError(e.message, {path});
         }
     }
 
@@ -324,6 +323,14 @@ class FramesMonitor extends EventEmitter {
             setImmediate(() => {
                 this.emit('frame', FramesMonitor._frameToJson(frame));
             });
+        }
+    }
+
+    static _assertExecutable(path) {
+        try {
+            fs.accessSync(path, fs.constants.X_OK);
+        } catch (e) {
+            throw new Errors.ExecutablePathError(e.message, {path});
         }
     }
 
