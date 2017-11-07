@@ -8,20 +8,23 @@ const getPort  = require('get-port');
 
 const FramesMonitor = require('src/FramesMonitor');
 const processFrames = require('src/processFrames');
+const ExitReasons   = require('src/ExitReasons');
 
 const {startStream} = require('./Helpers');
 
 const testFileWithFixedGop = path.join(__dirname, '../inputs/test_IPPPP.mp4');
 const testFileWithOpenGop  = path.join(__dirname, '../inputs/test_open_gop.mp4');
 
-const bufferMaxLengthInBytes = 2 ** 20;
-const errorLevel             = 'fatal';
+const bufferMaxLengthInBytes      = 2 ** 20;
+const errorLevel                  = 'fatal';
+const exitProcessGuardTimeoutInMs = 2000;
 
 const config = {
-    ffprobePath           : process.env.FFPROBE,
-    timeoutInSec          : 1,
-    bufferMaxLengthInBytes: bufferMaxLengthInBytes,
-    errorLevel            : errorLevel
+    ffprobePath                : process.env.FFPROBE,
+    timeoutInSec               : 1,
+    bufferMaxLengthInBytes     : bufferMaxLengthInBytes,
+    errorLevel                 : errorLevel,
+    exitProcessGuardTimeoutInMs: exitProcessGuardTimeoutInMs
 };
 
 describe('processFrames functional tests', () => {
@@ -38,11 +41,9 @@ describe('processFrames functional tests', () => {
     });
 
     it('must return correct frames info for the stream with fixed gop', async () => {
-        const frames = [];
+        const expectedReturnCode = 0;
 
-        framesMonitor.on('stderr', chunk => {
-            assert.isFalse(true, chunk);
-        });
+        const frames = [];
 
         framesMonitor.on('error', error => {
             assert.ifError(error);
@@ -57,9 +58,9 @@ describe('processFrames functional tests', () => {
         framesMonitor.listen();
 
         return new Promise(resolve => {
-            framesMonitor.on('exit', (code, signal) => {
-                const expectedExitCode = 0;
-                const expectedSignal   = null;
+            framesMonitor.on('exit', reason => {
+                assert.instanceOf(reason, ExitReasons.NormalExit);
+                assert.strictEqual(reason.payload.code, expectedReturnCode);
 
                 const expectedMinFps  = 29.940119760479035;
                 const expectedMaxFps  = 30.120481927710856;
@@ -76,9 +77,6 @@ describe('processFrames functional tests', () => {
                     {key_frame: 0, pict_type: 'P'},
                     {key_frame: 0, pict_type: 'P'}
                 ];
-
-                assert.strictEqual(code, expectedExitCode);
-                assert.strictEqual(signal, expectedSignal);
 
                 const {payload, remainedFrames} = processFrames(frames);
 
@@ -99,11 +97,9 @@ describe('processFrames functional tests', () => {
     });
 
     it('must return correct frames info for the stream with open gop', async () => {
-        const frames = [];
+        const expectedReturnCode = 0;
 
-        framesMonitor.on('stderr', chunk => {
-            assert.isFalse(true, chunk);
-        });
+        const frames = [];
 
         framesMonitor.on('error', error => {
             assert.ifError(error);
@@ -118,9 +114,9 @@ describe('processFrames functional tests', () => {
         framesMonitor.listen();
 
         return new Promise(resolve => {
-            framesMonitor.on('exit', (code, signal) => {
-                const expectedExitCode = 0;
-                const expectedSignal   = null;
+            framesMonitor.on('exit', reason => {
+                assert.instanceOf(reason, ExitReasons.NormalExit);
+                assert.strictEqual(reason.payload.code, expectedReturnCode);
 
                 const expectedMinFps  = 29.98696219035202;
                 const expectedMaxFps  = 30.000000000000004;
@@ -143,9 +139,6 @@ describe('processFrames functional tests', () => {
                     {key_frame: 0, pict_type: 'P'},
                     {key_frame: 0, pict_type: 'P'}
                 ];
-
-                assert.strictEqual(code, expectedExitCode);
-                assert.strictEqual(signal, expectedSignal);
 
                 const {payload, remainedFrames} = processFrames(frames);
 

@@ -14,8 +14,6 @@ describe('FramesMonitor::_onProcessStreamsError', () => {
     let childProcess;
 
     let stubRunShowFramesProcess;
-    let spyOnProcessStreamsError;
-    let spyOnStreamErrorEvent;
 
     beforeEach(() => {
         framesMonitor = new FramesMonitor(config, url);
@@ -23,14 +21,10 @@ describe('FramesMonitor::_onProcessStreamsError', () => {
         childProcess = makeChildProcess();
 
         stubRunShowFramesProcess = sinon.stub(framesMonitor, '_runShowFramesProcess').returns(childProcess);
-        spyOnProcessStreamsError = sinon.spy(framesMonitor, '_onProcessStreamsError');
-        spyOnStreamErrorEvent    = sinon.spy();
     });
 
     afterEach(() => {
         stubRunShowFramesProcess.restore();
-        spyOnProcessStreamsError.restore();
-        spyOnStreamErrorEvent.reset();
     });
 
     const data = [
@@ -39,38 +33,71 @@ describe('FramesMonitor::_onProcessStreamsError', () => {
     ];
 
     dataDriven(data, () => {
-        it('must wrap and re-emit each error emitted by the child process {type} object', ctx => {
+        it('must wrap and handle each error emitted by the child process {type} stream object', async ctx => {
             const expectedErrorType = Errors.ProcessStreamError;
-            const expectedErrorMsg  = `got an error from a ${config.ffprobePath} ${ctx.type.toUpperCase()} process stream.`; // eslint-disable-line
 
-            const expectedError1 = new Error('test error 1');
-            const expectedError2 = new Error('test error 2');
+            const stubHandleProcessingError = sinon.stub(framesMonitor, '_handleProcessingError').resolves();
 
-            framesMonitor.listen();
+            const originalError = new Error('test error');
+            const expectedError = new Errors.ProcessStreamError(
+                `got an error from a ${config.ffprobePath} ${ctx.type} process stream.`, {
+                    url  : url,
+                    error: originalError
+                }
+            );
 
-            framesMonitor.on('error', spyOnStreamErrorEvent);
+            await framesMonitor._onProcessStreamsError(ctx.type, originalError);
 
-            childProcess[ctx.type].emit('error', expectedError1);
-            childProcess[ctx.type].emit('error', expectedError2);
+            assert.isTrue(stubHandleProcessingError.calledOnce);
 
-            assert.isTrue(spyOnProcessStreamsError.calledTwice);
+            assert.lengthOf(stubHandleProcessingError.getCall(0).args, 1);
 
-            assert.isTrue(spyOnStreamErrorEvent.calledTwice);
+            const error = stubHandleProcessingError.getCall(0).args[0];
 
-            const firstCallErrorData  = spyOnStreamErrorEvent.firstCall.args[0];
-            const secondCallErrorData = spyOnStreamErrorEvent.secondCall.args[0];
+            assert.instanceOf(error, expectedErrorType);
+            assert.strictEqual(error.message, expectedError.message);
+            assert.strictEqual(error.extra.url, expectedError.extra.url);
+            assert.strictEqual(error.extra.error, originalError);
 
-            assert.instanceOf(firstCallErrorData, expectedErrorType);
-            assert.instanceOf(secondCallErrorData, expectedErrorType);
+            stubHandleProcessingError.restore();
+        });
+    });
 
-            assert.strictEqual(firstCallErrorData.message, expectedErrorMsg);
-            assert.strictEqual(secondCallErrorData.message, expectedErrorMsg);
+    dataDriven(data, () => {
+        it('handle error emitted by the child process {type} stream object and reject promise if the error has occurred during the processing', async ctx => { // eslint-disable-line
+            const innerError        = new Error('some badass error');
+            const expectedErrorType = Errors.ProcessStreamError;
 
-            assert.strictEqual(firstCallErrorData.extra.url, url);
-            assert.strictEqual(secondCallErrorData.extra.url, url);
+            const stubHandleProcessingError = sinon.stub(framesMonitor, '_handleProcessingError').rejects(innerError);
 
-            assert.strictEqual(firstCallErrorData.extra.error.message, expectedError1.message);
-            assert.strictEqual(secondCallErrorData.extra.error.message, expectedError2.message);
+            const originalError = new Error('test error');
+            const expectedError = new Errors.ProcessStreamError(
+                `got an error from a ${config.ffprobePath} ${ctx.type} process stream.`, {
+                    url  : url,
+                    error: originalError
+                }
+            );
+
+            try {
+                await framesMonitor._onProcessStreamsError(ctx.type, originalError);
+                assert.isTrue(false, 'should not be here, cuz _onProcessStreamsError rejected promise');
+            } catch (err) {
+                assert.instanceOf(err, innerError.constructor);
+                assert.strictEqual(err.message, innerError.message);
+
+                assert.isTrue(stubHandleProcessingError.calledOnce);
+
+                assert.lengthOf(stubHandleProcessingError.getCall(0).args, 1);
+
+                const error = stubHandleProcessingError.getCall(0).args[0];
+
+                assert.instanceOf(error, expectedErrorType);
+                assert.strictEqual(error.message, expectedError.message);
+                assert.strictEqual(error.extra.url, expectedError.extra.url);
+                assert.strictEqual(error.extra.error, originalError);
+            } finally {
+                stubHandleProcessingError.restore();
+            }
         });
     });
 

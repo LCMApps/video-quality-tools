@@ -1,73 +1,126 @@
 'use strict';
 
-const sinon      = require('sinon');
-const {assert}   = require('chai');
-const dataDriven = require('data-driven');
+const sinon    = require('sinon');
+const {assert} = require('chai');
+
+const ExitReasons = require('src/ExitReasons');
 
 const {config, url, FramesMonitor, makeChildProcess} = require('./Helpers');
 
 describe('FramesMonitor::_onExit', () => {
-
     let framesMonitor;
     let childProcess;
 
     let stubRunShowFramesProcess;
-    let spyOnExit;
-    let spyOnExitEvent;
+    let spyOnRemoveAllListeners;
 
     beforeEach(() => {
-
         framesMonitor = new FramesMonitor(config, url);
 
         childProcess = makeChildProcess();
 
         stubRunShowFramesProcess = sinon.stub(framesMonitor, '_runShowFramesProcess').returns(childProcess);
-        spyOnExit                = sinon.spy(framesMonitor, '_onExit');
-        spyOnExitEvent           = sinon.spy();
 
         framesMonitor.listen();
+
+        spyOnRemoveAllListeners = sinon.spy(framesMonitor._cp, 'removeAllListeners');
     });
 
     afterEach(() => {
         stubRunShowFramesProcess.restore();
-        spyOnExit.restore();
-        spyOnExitEvent.reset();
+        spyOnRemoveAllListeners.restore();
     });
 
-    const data = [
-        {type: 'zero code', exitCode: 0, signal: undefined},
-        {type: 'non-zero error code', exitCode: 1, signal: undefined},
-        {type: 'negative error code', exitCode: -1, signal: undefined},
-        {type: 'signal', exitCode: undefined, signal: 'SIGINT'}
-    ];
+    it('must emit exit event with correct reason type ExternalSignal', done => {
+        const exitCode   = null;
+        const exitSignal = 'SIGTERM';
 
-    dataDriven(data, () => {
-        it('must handle exit event that could be emitter by the child process with {type}', ctx => {
-            const expectedIsListening = false;
-            const expectedExitCode    = ctx.exitCode;
-            const expectedExitSignal  = ctx.signal;
+        framesMonitor.on('exit', reason => {
+            assert.instanceOf(reason, ExitReasons.ExternalSignal);
 
-            framesMonitor.on('exit', spyOnExitEvent);
+            assert.strictEqual(reason.payload.signal, exitSignal);
 
-            childProcess.emit('exit', ctx.exitCode, ctx.signal);
+            assert.isTrue(spyOnRemoveAllListeners.calledOnce);
+            assert.isTrue(spyOnRemoveAllListeners.calledWithExactly());
 
-            assert.isTrue(spyOnExit.calledOnce);
-            assert.isTrue(spyOnExitEvent.calledOnce);
+            assert.isNull(framesMonitor._cp);
 
-            assert.isTrue(spyOnExitEvent.alwaysCalledWithExactly(expectedExitCode, expectedExitSignal));
-
-            assert.strictEqual(expectedIsListening, framesMonitor.isListening());
+            // done is used in order to check that exactly exit event has been emitted
+            done();
         });
+
+        framesMonitor._onExit(exitCode, exitSignal);
     });
 
-    it('must call _onExit callback just once', () => {
-        framesMonitor.on('exit', spyOnExitEvent);
+    it('must emit exit event with correct reason type NormalExit', done => {
+        const exitCode   = 0;
+        const exitSignal = null;
 
-        childProcess.emit('exit');
-        childProcess.emit('exit');
+        framesMonitor.on('exit', reason => {
+            assert.instanceOf(reason, ExitReasons.NormalExit);
 
-        assert.isTrue(spyOnExit.calledOnce);
-        assert.isTrue(spyOnExitEvent.calledOnce);
+            assert.strictEqual(reason.payload.code, exitCode);
+
+            assert.isTrue(spyOnRemoveAllListeners.calledOnce);
+            assert.isTrue(spyOnRemoveAllListeners.calledWithExactly());
+
+            assert.isNull(framesMonitor._cp);
+
+            done();
+        });
+
+        framesMonitor._onExit(exitCode, exitSignal);
     });
 
+    it('must emit exit event with correct reason type AbnormalExit (and no stderr output)', done => {
+        const exitCode   = 1;
+        const exitSignal = null;
+
+        const expectedStderrOutput = '';
+
+        framesMonitor.on('exit', reason => {
+            assert.instanceOf(reason, ExitReasons.AbnormalExit);
+
+            assert.strictEqual(reason.payload.code, exitCode);
+            assert.strictEqual(reason.payload.stderrOutput, expectedStderrOutput);
+
+            assert.isTrue(spyOnRemoveAllListeners.calledOnce);
+            assert.isTrue(spyOnRemoveAllListeners.calledWithExactly());
+
+            assert.isNull(framesMonitor._cp);
+
+            done();
+        });
+
+        framesMonitor._onExit(exitCode, exitSignal);
+    });
+
+    it('must emit exit event with correct reason type AbnormalExit (with stderr output)', done => {
+        const exitCode   = 1;
+        const exitSignal = null;
+
+        framesMonitor._stderrOutputs = [
+            'error1',
+            'error2',
+            'error3'
+        ];
+
+        const expectedStderrOutput = 'error1\nerror2\nerror3';
+
+        framesMonitor.on('exit', reason => {
+            assert.instanceOf(reason, ExitReasons.AbnormalExit);
+
+            assert.strictEqual(reason.payload.code, exitCode);
+            assert.strictEqual(reason.payload.stderrOutput, expectedStderrOutput);
+
+            assert.isTrue(spyOnRemoveAllListeners.calledOnce);
+            assert.isTrue(spyOnRemoveAllListeners.calledWithExactly());
+
+            assert.isNull(framesMonitor._cp);
+
+            done();
+        });
+
+        framesMonitor._onExit(exitCode, exitSignal);
+    });
 });
