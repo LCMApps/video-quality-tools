@@ -7,12 +7,11 @@ Execute ``yarn install``.
 ## Example
 
 ```javascript
+const {FramesMonitor, StreamsInfo, processFrames, ExitReasons} = require('video-quality-tools');
+
 const framesMonitor = new FramesMonitor(config, url);
 const streamsInfo = new StreamsInfo(config, url);
-const framesInfo = new FramesInfo(url);
-```
 
-```javascript
 framesMonitor.once('frame', async () => {
     try {
         const streams = await streamsInfo.fetch();
@@ -21,9 +20,7 @@ framesMonitor.once('frame', async () => {
         // proccess error
     }
 });
-```
 
-```javascript
 let frames = [];
 
 framesMonitor.on('frame', frame => {
@@ -34,9 +31,9 @@ framesMonitor.on('frame', frame => {
     }
 
     try {
-        const info = framesInfo.process(frames);
+        const info = processFrames(frames);
     
-        this.emit('framesInfo', info);
+        this.emit('statistic', info);
     } catch(e) {
         // process error
     }
@@ -45,15 +42,41 @@ framesMonitor.on('frame', frame => {
 });
 
 framesMonitor.on('error', err => {
-  // process error
-  framesMonitor.stopListen();
+    // indicates error during the kill process
+    // when ProcessingError occurs we may encounter that can not kill process
+    // in this case this error event would be emitted
+    
+    assert.instanceOf(err, Error);
 });
 
-framesMonitor.on('exit', (code, signal) => {
-   // check return code or signal 
+framesMonitor.on('exit', reason => {
+    switch(reason.constructor) {
+        case ExitReasons.AbnormalExit:
+            assert(reason.payload.code);
+            assert(reason.payload.stderrOutput); // stderrOutput may be empty
+            break;
+        case ExitReasons.NormalExit:
+            assert(reason.payload.code);
+            break;
+        case ExitReasons.ExternalSignal:
+            assert(reason.payload.signal);
+            break;
+        case ExitReasons.StartError:
+            assert.instanceOf(reason.payload.error, Error);
+            break;
+        case ExitReasons.ProcessingError:
+            assert.instanceOf(reason.payload.error, Error);
+            break;
+    }
 });
 
 framesMonitor.listen();
+framesMonitor.stopListen()
+    .then(res => {
+         // res {code, signal}
+    })
+    .catch(err => {
+    });
 ```
 
 ## Tests
