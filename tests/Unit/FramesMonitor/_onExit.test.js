@@ -31,96 +31,57 @@ describe('FramesMonitor::_onExit', () => {
         spyOnRemoveAllListeners.restore();
     });
 
-    it('must emit exit event with correct reason type ExternalSignal', done => {
-        const exitCode   = null;
-        const exitSignal = 'SIGTERM';
+    const data = [
+        {
+            exitCode      : undefined,
+            exitSignal    : 'SIGTERM',
+            stderrOutput  : [],
+            expectedReason: new ExitReasons.ExternalSignal({signal: 'SIGTERM'})
+        },
+        {
+            exitCode      : 0,
+            exitSignal    : undefined,
+            stderrOutput  : [],
+            expectedReason: new ExitReasons.NormalExit({code: 0})
+        },
+        {
+            exitCode      : 1,
+            exitSignal    : null,
+            stderrOutput  : [],
+            expectedReason: new ExitReasons.AbnormalExit({code: 1, stderrOutput: ''})
+        },
+        {
+            exitCode      : 1,
+            exitSignal    : null,
+            stderrOutput  : [
+                'error1',
+                'error2',
+                'error3'
+            ],
+            expectedReason: new ExitReasons.AbnormalExit({code: 1, stderrOutput: 'error1\nerror2\nerror3'})
+        }
+    ];
 
-        framesMonitor.on('exit', reason => {
-            assert.instanceOf(reason, ExitReasons.ExternalSignal);
+    data.forEach(testCase => {
+        it('must emit exit event with correct reason type ExternalSignal', done => {
+            const {exitCode, exitSignal} = testCase;
 
-            assert.strictEqual(reason.payload.signal, exitSignal);
+            framesMonitor.on('exit', reason => {
+                assert.instanceOf(reason, testCase.expectedReason.constructor);
+                assert.deepEqual(reason, testCase.expectedReason);
 
-            assert.isTrue(spyOnRemoveAllListeners.calledOnce);
-            assert.isTrue(spyOnRemoveAllListeners.calledWithExactly());
+                assert.isTrue(spyOnRemoveAllListeners.calledOnce);
+                assert.isTrue(spyOnRemoveAllListeners.calledWithExactly());
 
-            assert.isNull(framesMonitor._cp);
+                assert.isNull(framesMonitor._cp);
 
-            // done is used in order to check that exactly exit event has been emitted
-            done();
+                // done is used in order to check that exactly exit event has been emitted
+                done();
+            });
+
+            framesMonitor._stderrOutputs = testCase.stderrOutput;
+
+            framesMonitor._onExit(exitCode, exitSignal);
         });
-
-        framesMonitor._onExit(exitCode, exitSignal);
-    });
-
-    it('must emit exit event with correct reason type NormalExit', done => {
-        const exitCode   = 0;
-        const exitSignal = null;
-
-        framesMonitor.on('exit', reason => {
-            assert.instanceOf(reason, ExitReasons.NormalExit);
-
-            assert.strictEqual(reason.payload.code, exitCode);
-
-            assert.isTrue(spyOnRemoveAllListeners.calledOnce);
-            assert.isTrue(spyOnRemoveAllListeners.calledWithExactly());
-
-            assert.isNull(framesMonitor._cp);
-
-            done();
-        });
-
-        framesMonitor._onExit(exitCode, exitSignal);
-    });
-
-    it('must emit exit event with correct reason type AbnormalExit (and no stderr output)', done => {
-        const exitCode   = 1;
-        const exitSignal = null;
-
-        const expectedStderrOutput = '';
-
-        framesMonitor.on('exit', reason => {
-            assert.instanceOf(reason, ExitReasons.AbnormalExit);
-
-            assert.strictEqual(reason.payload.code, exitCode);
-            assert.strictEqual(reason.payload.stderrOutput, expectedStderrOutput);
-
-            assert.isTrue(spyOnRemoveAllListeners.calledOnce);
-            assert.isTrue(spyOnRemoveAllListeners.calledWithExactly());
-
-            assert.isNull(framesMonitor._cp);
-
-            done();
-        });
-
-        framesMonitor._onExit(exitCode, exitSignal);
-    });
-
-    it('must emit exit event with correct reason type AbnormalExit (with stderr output)', done => {
-        const exitCode   = 1;
-        const exitSignal = null;
-
-        framesMonitor._stderrOutputs = [
-            'error1',
-            'error2',
-            'error3'
-        ];
-
-        const expectedStderrOutput = 'error1\nerror2\nerror3';
-
-        framesMonitor.on('exit', reason => {
-            assert.instanceOf(reason, ExitReasons.AbnormalExit);
-
-            assert.strictEqual(reason.payload.code, exitCode);
-            assert.strictEqual(reason.payload.stderrOutput, expectedStderrOutput);
-
-            assert.isTrue(spyOnRemoveAllListeners.calledOnce);
-            assert.isTrue(spyOnRemoveAllListeners.calledWithExactly());
-
-            assert.isNull(framesMonitor._cp);
-
-            done();
-        });
-
-        framesMonitor._onExit(exitCode, exitSignal);
     });
 });

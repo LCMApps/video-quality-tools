@@ -67,8 +67,7 @@ describe('FramesMonitor::stopListen', () => {
     it('must stop listen just fine', async () => {
         const expectedResult = {code: null, signal: 'SIGTERM'};
 
-        const expectedSignal      = 'SIGTERM';
-        const expectedIsListening = false;
+        const expectedSignal = 'SIGTERM';
 
         const spyOnKill = sinon.spy(childProcess, 'kill');
 
@@ -88,7 +87,7 @@ describe('FramesMonitor::stopListen', () => {
         assert.isTrue(spySetTimeout.calledOnce);
         assert.isTrue(spyCleanTimeout.calledOnce);
 
-        assert.strictEqual(framesMonitor.isListening(), expectedIsListening);
+        assert.isNull(framesMonitor._cp);
 
         spyOnKill.restore();
     });
@@ -97,7 +96,6 @@ describe('FramesMonitor::stopListen', () => {
         const expectedError        = new EvalError('SIGTERM is not supported');
         const expectedErrorMessage = 'process exit error';
         const expectedSignal       = 'SIGTERM';
-        const expectedIsListening  = false;
 
         const stubOnKill = sinon.stub(childProcess, 'kill').callsFake(() => {
             childProcess.emit('error', expectedError);
@@ -124,7 +122,7 @@ describe('FramesMonitor::stopListen', () => {
             assert.isTrue(spySetTimeout.notCalled);
             assert.isTrue(spyCleanTimeout.notCalled);
 
-            assert.strictEqual(framesMonitor.isListening(), expectedIsListening);
+            assert.isNull(framesMonitor._cp);
 
             stubOnKill.restore();
         }
@@ -134,7 +132,6 @@ describe('FramesMonitor::stopListen', () => {
         const expectedError        = new EvalError('SIGTERM is not supported');
         const expectedErrorMessage = 'process exit error';
         const expectedSignal       = 'SIGTERM';
-        const expectedIsListening  = false;
 
         const stubOnKill = sinon.stub(childProcess, 'kill').throws(expectedError);
 
@@ -158,7 +155,7 @@ describe('FramesMonitor::stopListen', () => {
             assert.isTrue(spySetTimeout.notCalled);
             assert.isTrue(spyCleanTimeout.notCalled);
 
-            assert.strictEqual(framesMonitor.isListening(), expectedIsListening);
+            assert.isNull(framesMonitor._cp);
 
             stubOnKill.restore();
         }
@@ -167,8 +164,7 @@ describe('FramesMonitor::stopListen', () => {
     it('must try to kill with SIGKILL if process has ignored SIGTERM', async function () {
         this.timeout(config.exitProcessGuardTimeoutInMs + 2000);
 
-        const expectedIsListening = false;
-        const expectedResult      = {code: null, signal: 'SIGKILL'};
+        const expectedResult = {code: null, signal: 'SIGKILL'};
 
         const stubOnKill = sinon.stub(childProcess, 'kill').callsFake(signal => {
             if (signal === 'SIGKILL') {
@@ -193,16 +189,15 @@ describe('FramesMonitor::stopListen', () => {
         assert.isTrue(spySetTimeout.calledOnce);
         assert.isTrue(spyCleanTimeout.calledOnce);
 
-        assert.strictEqual(framesMonitor.isListening(), expectedIsListening);
+        assert.isNull(framesMonitor._cp);
 
         stubOnKill.restore();
     });
 
     it('must resolve just okay during the second stop listen in a row', async () => {
-        const expectedSignal      = 'SIGTERM';
-        const expectedIsListening = false;
-        const expectedResult1     = {code: null, signal: expectedSignal};
-        const expectedResult2     = undefined;
+        const expectedSignal  = 'SIGTERM';
+        const expectedResult1 = {code: null, signal: expectedSignal};
+        const expectedResult2 = undefined;
 
         const spyOnKill = sinon.spy(childProcess, 'kill');
 
@@ -224,7 +219,7 @@ describe('FramesMonitor::stopListen', () => {
         assert.isTrue(spySetTimeout.calledOnce);
         assert.isTrue(spyCleanTimeout.calledOnce);
 
-        assert.strictEqual(framesMonitor.isListening(), expectedIsListening);
+        assert.isNull(framesMonitor._cp);
 
         spyOnKill.restore();
     });
