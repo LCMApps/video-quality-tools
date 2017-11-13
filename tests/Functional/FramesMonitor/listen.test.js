@@ -7,13 +7,15 @@ const sinon    = require('sinon');
 const getPort  = require('get-port');
 
 const FramesMonitor = require('src/FramesMonitor');
+const ExitReasons   = require('src/ExitReasons');
 
 const {startStream, stopStream} = require('../Helpers');
 
 const testFile = path.join(__dirname, '../../inputs/test_IPPPP.mp4');
 
-const bufferMaxLengthInBytes = 2 ** 20;
-const errorLevel             = 'error';
+const bufferMaxLengthInBytes      = 2 ** 20;
+const errorLevel                  = 'error';
+const exitProcessGuardTimeoutInMs = 2000;
 
 describe('FramesMonitor::listen, fetch frames from inactive stream', () => {
     let streamUrl;
@@ -28,10 +30,11 @@ describe('FramesMonitor::listen, fetch frames from inactive stream', () => {
         streamUrl = `http://localhost:${port}`;
 
         framesMonitor = new FramesMonitor({
-            ffprobePath           : process.env.FFPROBE,
-            timeoutInSec          : 1,
-            bufferMaxLengthInBytes: bufferMaxLengthInBytes,
-            errorLevel            : errorLevel
+            ffprobePath                : process.env.FFPROBE,
+            timeoutInSec               : 1,
+            bufferMaxLengthInBytes     : bufferMaxLengthInBytes,
+            errorLevel                 : errorLevel,
+            exitProcessGuardTimeoutInMs: exitProcessGuardTimeoutInMs
         }, streamUrl);
 
         spyOnFrame  = sinon.spy();
@@ -45,20 +48,19 @@ describe('FramesMonitor::listen, fetch frames from inactive stream', () => {
 
     it('must receive error cuz stream is inactive', done => {
         const expectedReturnCode = 1;
-        const expectedSignal     = null;
 
         framesMonitor.listen();
 
         framesMonitor.on('frame', spyOnFrame);
-        framesMonitor.on('stderr', spyOnStderr);
 
-        framesMonitor.on('exit', (code, signal) => {
-            assert.strictEqual(code, expectedReturnCode);
-            assert.strictEqual(signal, expectedSignal);
+        framesMonitor.on('exit', reason => {
+            assert.instanceOf(reason, ExitReasons.AbnormalExit);
+            assert.strictEqual(reason.payload.code, expectedReturnCode);
+
+            assert.isString(reason.payload.stderrOutput);
+            assert.isNotEmpty(reason.payload.stderrOutput);
 
             assert.isTrue(spyOnFrame.notCalled);
-            assert.isTrue(spyOnStderr.calledOnce);
-            assert.isTrue(spyOnStderr.calledWithMatch({name: 'FramesMonitorError', extra: {url: streamUrl}}));
 
             done();
         });
@@ -79,10 +81,11 @@ describe('FramesMonitor::listen, fetch frames from active stream', () => {
         streamUrl = `http://localhost:${port}`;
 
         framesMonitor = new FramesMonitor({
-            ffprobePath           : process.env.FFPROBE,
-            timeoutInSec          : 1,
-            bufferMaxLengthInBytes: bufferMaxLengthInBytes,
-            errorLevel            : errorLevel
+            ffprobePath                : process.env.FFPROBE,
+            timeoutInSec               : 1,
+            bufferMaxLengthInBytes     : bufferMaxLengthInBytes,
+            errorLevel                 : errorLevel,
+            exitProcessGuardTimeoutInMs: exitProcessGuardTimeoutInMs
         }, streamUrl);
 
         spyOnIFrame     = sinon.spy();
@@ -100,7 +103,6 @@ describe('FramesMonitor::listen, fetch frames from active stream', () => {
 
     it('must receive all stream frames', done => {
         const expectedReturnCode       = 0;
-        const expectedSignal           = null;
         const expectedIFramesCount     = 60;
         const expectedPFramesCount     = 240;
         const expectedAudioFramesCount = 0;
@@ -117,9 +119,9 @@ describe('FramesMonitor::listen, fetch frames from active stream', () => {
             }
         });
 
-        framesMonitor.on('exit', (code, signal) => {
-            assert.strictEqual(code, expectedReturnCode);
-            assert.strictEqual(signal, expectedSignal);
+        framesMonitor.on('exit', reason => {
+            assert.instanceOf(reason, ExitReasons.NormalExit);
+            assert.strictEqual(reason.payload.code, expectedReturnCode);
 
             assert.strictEqual(spyOnAudioFrame.callCount, expectedAudioFramesCount);
 
@@ -142,10 +144,11 @@ describe('FramesMonitor::listen, stop ffprobe process', () => {
         streamUrl = `http://localhost:${port}`;
 
         framesMonitor = new FramesMonitor({
-            ffprobePath           : process.env.FFPROBE,
-            timeoutInSec          : 1,
-            bufferMaxLengthInBytes: bufferMaxLengthInBytes,
-            errorLevel            : errorLevel
+            ffprobePath                : process.env.FFPROBE,
+            timeoutInSec               : 1,
+            bufferMaxLengthInBytes     : bufferMaxLengthInBytes,
+            errorLevel                 : errorLevel,
+            exitProcessGuardTimeoutInMs: exitProcessGuardTimeoutInMs
         }, streamUrl);
 
         stream = await startStream(testFile, streamUrl);
@@ -161,29 +164,9 @@ describe('FramesMonitor::listen, stop ffprobe process', () => {
 
         framesMonitor.listen();
 
-        framesMonitor.once('frame', () => {
-            framesMonitor.stopListen();
-        });
+        framesMonitor.once('frame', async () => {
+            const {code, signal} = await framesMonitor.stopListen();
 
-        framesMonitor.on('exit', (code, signal) => {
-            assert.strictEqual(code, expectedReturnCode);
-            assert.strictEqual(signal, expectedSignal);
-
-            done();
-        });
-    });
-
-    it('must exit with correct specified signal', done => {
-        const expectedReturnCode = null;
-        const expectedSignal     = 'SIGKILL';
-
-        framesMonitor.listen();
-
-        framesMonitor.once('frame', () => {
-            framesMonitor.stopListen(expectedSignal);
-        });
-
-        framesMonitor.on('exit', (code, signal) => {
             assert.strictEqual(code, expectedReturnCode);
             assert.strictEqual(signal, expectedSignal);
 
@@ -203,10 +186,11 @@ describe('FramesMonitor::listen, exit with correct code after stream has been fi
         streamUrl = `http://localhost:${port}`;
 
         framesMonitor = new FramesMonitor({
-            ffprobePath           : process.env.FFPROBE,
-            timeoutInSec          : 1,
-            bufferMaxLengthInBytes: bufferMaxLengthInBytes,
-            errorLevel            : errorLevel
+            ffprobePath                : process.env.FFPROBE,
+            timeoutInSec               : 1,
+            bufferMaxLengthInBytes     : bufferMaxLengthInBytes,
+            errorLevel                 : errorLevel,
+            exitProcessGuardTimeoutInMs: exitProcessGuardTimeoutInMs
         }, streamUrl);
 
         stream = await startStream(testFile, streamUrl);
@@ -214,7 +198,6 @@ describe('FramesMonitor::listen, exit with correct code after stream has been fi
 
     it('must exit with correct zero code after stream has been finished', done => {
         const expectedReturnCode = 0;
-        const expectedSignal     = null;
 
         framesMonitor.listen();
 
@@ -224,9 +207,9 @@ describe('FramesMonitor::listen, exit with correct code after stream has been fi
             }, 1000);
         });
 
-        framesMonitor.on('exit', (code, signal) => {
-            assert.strictEqual(code, expectedReturnCode);
-            assert.strictEqual(signal, expectedSignal);
+        framesMonitor.on('exit', reason => {
+            assert.instanceOf(reason, ExitReasons.NormalExit);
+            assert.strictEqual(reason.payload.code, expectedReturnCode);
 
             done();
         });
