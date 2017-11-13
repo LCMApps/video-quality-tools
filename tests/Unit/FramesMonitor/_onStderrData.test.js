@@ -27,16 +27,14 @@ describe('FramesMonitor::_onStderrData', () => {
 
         assert.lengthOf(framesMonitor._stderrOutputs, STDERR_OBJECTS_LIMIT);
 
-        framesMonitor._stderrOutputs.forEach((errObject, index) => {
-            const currentErrorIndex = index + overflowOffset;
-            const expectedString    = stderr + currentErrorIndex.toString();
-
+        framesMonitor._stderrOutputs.forEach(errObject => {
             assert.strictEqual(errObject.message, expectedMessage);
-
-            assert.deepEqual(errObject.extra, {
-                data: expectedString,
-                url : url
-            });
         });
+
+        assert.deepEqual(framesMonitor._stderrOutputs[0].extra, {data: 'some error with id: 2', url: url});
+        assert.deepEqual(framesMonitor._stderrOutputs[1].extra, {data: 'some error with id: 3', url: url});
+        assert.deepEqual(framesMonitor._stderrOutputs[2].extra, {data: 'some error with id: 4', url: url});
+        assert.deepEqual(framesMonitor._stderrOutputs[3].extra, {data: 'some error with id: 5', url: url});
+        assert.deepEqual(framesMonitor._stderrOutputs[4].extra, {data: 'some error with id: 6', url: url});
     });
 });
