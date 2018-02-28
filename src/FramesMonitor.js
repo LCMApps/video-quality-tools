@@ -41,12 +41,12 @@ class FramesMonitor extends EventEmitter {
         }
 
         const {
-                  ffprobePath,
-                  timeoutInSec,
-                  bufferMaxLengthInBytes,
-                  errorLevel,
-                  exitProcessGuardTimeoutInMs
-              } = config;
+            ffprobePath,
+            timeoutInSec,
+            bufferMaxLengthInBytes,
+            errorLevel,
+            exitProcessGuardTimeoutInMs
+        } = config;
 
         if (!_.isString(ffprobePath) || _.isEmpty(ffprobePath)) {
             throw new Errors.ConfigError('You should provide a correct path to ffprobe, bastard.');
