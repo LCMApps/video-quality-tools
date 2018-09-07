@@ -59,10 +59,8 @@ describe('processFrames', () => {
 
     it('must return correct info just fine', () => {
         const frames1 = [
-            {width: 640, height: 480, pkt_size: 1, pkt_pts_time: 1, media_type: 'audio', key_frame: 1},
             {width: 640, height: 480, pkt_size: 1, pkt_pts_time: 11, media_type: 'video', key_frame: 1},
             {width: 640, height: 480, pkt_size: 3, pkt_pts_time: 13, media_type: 'video', key_frame: 0},
-            {width: 640, height: 480, pkt_size: 3, pkt_pts_time: 3, media_type: 'audio', key_frame: 1},
             {width: 640, height: 480, pkt_size: 5, pkt_pts_time: 15, media_type: 'video', key_frame: 1},
             {width: 640, height: 480, pkt_size: 7, pkt_pts_time: 17, media_type: 'video', key_frame: 0},
             {width: 640, height: 480, pkt_size: 9, pkt_pts_time: 19, media_type: 'video', key_frame: 1}
@@ -122,6 +120,12 @@ describe('processFrames', () => {
 
         const expectedAspectRatio1 = '4:3';
         const expectedAspectRatio2 = '16:9';
+        const expectedWidth1 = 640;
+        const expectedHeight1 = 480;
+        const expectedWidth2 = 854;
+        const expectedHeight2 = 480;
+        const expectAudio1 = false;
+        const expectAudio2 = true;
 
         let res1 = processFrames(frames1);
 
@@ -130,7 +134,10 @@ describe('processFrames', () => {
             bitrate            : expectedBitrate1,
             fps                : expectedFps1,
             gopDuration        : expectedGopDuration1,
-            aspectRatio        : expectedAspectRatio1
+            aspectRatio        : expectedAspectRatio1,
+            width              : expectedWidth1,
+            height             : expectedHeight1,
+            hasAudioStream     : expectAudio1
         });
 
         assert.deepEqual(res1.remainedFrames, expectedRemainedFrames1);
@@ -142,7 +149,10 @@ describe('processFrames', () => {
             bitrate            : expectedBitrate2,
             fps                : expectedFps2,
             gopDuration        : expectedGopDuration2,
-            aspectRatio        : expectedAspectRatio2
+            aspectRatio        : expectedAspectRatio2,
+            width              : expectedWidth2,
+            height             : expectedHeight2,
+            hasAudioStream     : expectAudio2
         });
 
         assert.deepEqual(res2.remainedFrames, expectedRemainedFrames2);

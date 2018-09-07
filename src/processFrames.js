@@ -26,6 +26,7 @@ function processFrames(frames) {
         throw new TypeError('process method is supposed to accept an array of frames.');
     }
 
+    const audioFrames            = filterAudioFrames(frames);
     const videoFrames            = filterVideoFrames(frames);
     const {gops, remainedFrames} = identifyGops(videoFrames);
 
@@ -34,6 +35,7 @@ function processFrames(frames) {
     }
 
     let areAllGopsIdentical = true;
+    const hasAudioStream = audioFrames.length > 0;
     const baseGopSize = gops[0].frames.length;
     const bitrates = [];
     const fpsList = [];
@@ -71,7 +73,9 @@ function processFrames(frames) {
         max: Math.max(...gopsDurations)
     };
 
-    const aspectRatio = calculateAspectRatio(gops[0].frames[0].width, gops[0].frames[0].height);
+    const width = gops[0].frames[0].width;
+    const height = gops[0].frames[0].height;
+    const aspectRatio = calculateAspectRatio(width, height);
 
     return {
         payload : {
@@ -80,6 +84,9 @@ function processFrames(frames) {
             fps,
             gopDuration,
             aspectRatio,
+            width,
+            height,
+            hasAudioStream
         },
         remainedFrames: remainedFrames
     };
@@ -91,6 +98,7 @@ processFrames.calculateFps         = calculateFps;
 processFrames.calculateGopDuration = calculateGopDuration;
 processFrames.calculateAspectRatio = calculateAspectRatio;
 processFrames.filterVideoFrames    = filterVideoFrames;
+processFrames.filterAudioFrames    = filterAudioFrames;
 processFrames.gopDurationInSec     = gopDurationInSec;
 processFrames.toKbs                = toKbs;
 processFrames.accumulatePktSize    = accumulatePktSize;
@@ -290,6 +298,10 @@ function areAllGopsIdentical(gops) {
 
 function filterVideoFrames(frames) {
     return frames.filter(frame => frame.media_type === 'video');
+}
+
+function filterAudioFrames(frames) {
+    return frames.filter(frame => frame.media_type === 'audio');
 }
 
 function toKbs(val) {

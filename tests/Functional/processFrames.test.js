@@ -42,7 +42,10 @@ describe('processFrames functional tests', () => {
 
     it('must return correct frames info for the stream with fixed gop', async () => {
         const expectedReturnCode = 0;
+        const expectedWidth = 854;
+        const expectedHeight = 480;
         const expectedAspectRatio = '16:9';
+        const expectAudio = true;
 
         const frames = [];
 
@@ -90,7 +93,10 @@ describe('processFrames functional tests', () => {
                     fps: {mean: expectedMeanFps, min: expectedMinFps, max: expectedMaxFps},
                     bitrate: {mean: expectedMeanBitrate, min: expectedMinBitrate, max: expectedMaxBitrate},
                     gopDuration: {mean: expectedMeanGop, min: expectedMinGop, max: expectedMaxGop},
-                    aspectRatio: expectedAspectRatio
+                    aspectRatio: expectedAspectRatio,
+                    height: expectedHeight,
+                    width: expectedWidth,
+                    hasAudioStream: expectAudio
                 });
 
                 assert.deepEqual(
@@ -105,7 +111,10 @@ describe('processFrames functional tests', () => {
 
     it('must return correct frames info for the stream with open gop', async () => {
         const expectedReturnCode = 0;
+        const expectedWidth = 854;
+        const expectedHeight = 480;
         const expectedAspectRatio = '16:9';
+        const expectAudio = true;
 
         const frames = [];
 
@@ -159,7 +168,10 @@ describe('processFrames functional tests', () => {
                     fps: {mean: expectedMeanFps, min: expectedMinFps, max: expectedMaxFps},
                     bitrate: {mean: expectedMeanBitrate, min: expectedMinBitrate, max: expectedMaxBitrate},
                     gopDuration: {mean: expectedMeanGop, min: expectedMinGop, max: expectedMaxGop},
-                    aspectRatio: expectedAspectRatio
+                    aspectRatio: expectedAspectRatio,
+                    width: expectedWidth,
+                    height: expectedHeight,
+                    hasAudioStream: expectAudio
                 });
 
                 assert.deepEqual(
