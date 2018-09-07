@@ -105,7 +105,7 @@ describe('FramesMonitor::listen, fetch frames from active stream', () => {
         const expectedReturnCode       = 0;
         const expectedIFramesCount     = 60;
         const expectedPFramesCount     = 240;
-        const expectedAudioFramesCount = 0;
+        const expectedAudioFramesCount = 431;
 
         const onFrame = {I: spyOnIFrame, P: spyOnPFrame};
 
@@ -120,15 +120,19 @@ describe('FramesMonitor::listen, fetch frames from active stream', () => {
         });
 
         framesMonitor.on('exit', reason => {
-            assert.instanceOf(reason, ExitReasons.NormalExit);
-            assert.strictEqual(reason.payload.code, expectedReturnCode);
+            try {
+                assert.instanceOf(reason, ExitReasons.NormalExit);
+                assert.strictEqual(reason.payload.code, expectedReturnCode);
 
-            assert.strictEqual(spyOnAudioFrame.callCount, expectedAudioFramesCount);
+                assert.strictEqual(spyOnAudioFrame.callCount, expectedAudioFramesCount);
 
-            assert.strictEqual(spyOnIFrame.callCount, expectedIFramesCount);
-            assert.strictEqual(spyOnPFrame.callCount, expectedPFramesCount);
+                assert.strictEqual(spyOnIFrame.callCount, expectedIFramesCount);
+                assert.strictEqual(spyOnPFrame.callCount, expectedPFramesCount);
 
-            done();
+                done();
+            } catch (err) {
+                done(err);
+            }
         });
     });
 });

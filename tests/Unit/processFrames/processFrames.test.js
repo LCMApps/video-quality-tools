@@ -59,29 +59,27 @@ describe('processFrames', () => {
 
     it('must return correct info just fine', () => {
         const frames1 = [
-            {pkt_size: 1, pkt_pts_time: 1, media_type: 'audio', key_frame: 1},
-            {pkt_size: 1, pkt_pts_time: 11, media_type: 'video', key_frame: 1},
-            {pkt_size: 3, pkt_pts_time: 13, media_type: 'video', key_frame: 0},
-            {pkt_size: 3, pkt_pts_time: 3, media_type: 'audio', key_frame: 1},
-            {pkt_size: 5, pkt_pts_time: 15, media_type: 'video', key_frame: 1},
-            {pkt_size: 7, pkt_pts_time: 17, media_type: 'video', key_frame: 0},
-            {pkt_size: 9, pkt_pts_time: 19, media_type: 'video', key_frame: 1}
+            {width: 640, height: 480, pkt_size: 1, pkt_pts_time: 11, media_type: 'video', key_frame: 1},
+            {width: 640, height: 480, pkt_size: 3, pkt_pts_time: 13, media_type: 'video', key_frame: 0},
+            {width: 640, height: 480, pkt_size: 5, pkt_pts_time: 15, media_type: 'video', key_frame: 1},
+            {width: 640, height: 480, pkt_size: 7, pkt_pts_time: 17, media_type: 'video', key_frame: 0},
+            {width: 640, height: 480, pkt_size: 9, pkt_pts_time: 19, media_type: 'video', key_frame: 1}
         ];
 
         const frames2 = [
-            {pkt_size: 1, pkt_pts_time: 1, media_type: 'audio', key_frame: 1},
-            {pkt_size: 1, pkt_pts_time: 11, media_type: 'video', key_frame: 0},
-            {pkt_size: 2, pkt_pts_time: 13, media_type: 'video', key_frame: 0},
-            {pkt_size: 3, pkt_pts_time: 15, media_type: 'video', key_frame: 1},
-            {pkt_size: 3, pkt_pts_time: 15, media_type: 'audio', key_frame: 1},
-            {pkt_size: 4, pkt_pts_time: 17, media_type: 'video', key_frame: 0},
-            {pkt_size: 5, pkt_pts_time: 19, media_type: 'video', key_frame: 0},
-            {pkt_size: 6, pkt_pts_time: 21, media_type: 'video', key_frame: 1},
-            {pkt_size: 7, pkt_pts_time: 23, media_type: 'video', key_frame: 0},
-            {pkt_size: 3, pkt_pts_time: 15, media_type: 'audio', key_frame: 1},
-            {pkt_size: 8, pkt_pts_time: 25, media_type: 'video', key_frame: 0},
-            {pkt_size: 9, pkt_pts_time: 27, media_type: 'video', key_frame: 1},
-            {pkt_size: 10, pkt_pts_time: 29, media_type: 'video', key_frame: 0}
+            {width: 854, height: 480, pkt_size: 1, pkt_pts_time: 1, media_type: 'audio', key_frame: 1},
+            {width: 854, height: 480, pkt_size: 1, pkt_pts_time: 11, media_type: 'video', key_frame: 0},
+            {width: 854, height: 480, pkt_size: 2, pkt_pts_time: 13, media_type: 'video', key_frame: 0},
+            {width: 854, height: 480, pkt_size: 3, pkt_pts_time: 15, media_type: 'video', key_frame: 1},
+            {width: 854, height: 480, pkt_size: 3, pkt_pts_time: 15, media_type: 'audio', key_frame: 1},
+            {width: 854, height: 480, pkt_size: 4, pkt_pts_time: 17, media_type: 'video', key_frame: 0},
+            {width: 854, height: 480, pkt_size: 5, pkt_pts_time: 19, media_type: 'video', key_frame: 0},
+            {width: 854, height: 480, pkt_size: 6, pkt_pts_time: 21, media_type: 'video', key_frame: 1},
+            {width: 854, height: 480, pkt_size: 7, pkt_pts_time: 23, media_type: 'video', key_frame: 0},
+            {width: 854, height: 480, pkt_size: 3, pkt_pts_time: 15, media_type: 'audio', key_frame: 1},
+            {width: 854, height: 480, pkt_size: 8, pkt_pts_time: 25, media_type: 'video', key_frame: 0},
+            {width: 854, height: 480, pkt_size: 9, pkt_pts_time: 27, media_type: 'video', key_frame: 1},
+            {width: 854, height: 480, pkt_size: 10, pkt_pts_time: 29, media_type: 'video', key_frame: 0}
         ];
 
         const expectedBitrate1 = {
@@ -91,7 +89,7 @@ describe('processFrames', () => {
         };
 
         const expectedRemainedFrames1 = [
-            {pkt_size: 9, pkt_pts_time: 19, media_type: 'video', key_frame: 1}
+            {pkt_size: 9, pkt_pts_time: 19, media_type: 'video', key_frame: 1, width: 640, height: 480}
         ];
 
         const expectedBitrate2 = {
@@ -101,19 +99,45 @@ describe('processFrames', () => {
         };
 
         const expectedRemainedFrames2 = [
-            {pkt_size: 9, pkt_pts_time: 27, media_type: 'video', key_frame: 1},
-            {pkt_size: 10, pkt_pts_time: 29, media_type: 'video', key_frame: 0}
+            {pkt_size: 9, pkt_pts_time: 27, media_type: 'video', key_frame: 1, width: 854, height: 480},
+            {pkt_size: 10, pkt_pts_time: 29, media_type: 'video', key_frame: 0, width: 854, height: 480}
         ];
 
         const expectedFps1 = {min: 0.5, max: 0.5, mean: 0.5};
         const expectedFps2 = {min: 0.5, max: 0.5, mean: 0.5};
+
+        const expectedGopDuration1 = {
+            min: 15 - 11,
+            max: 19 - 15,
+            mean: (15 - 11 + 19 - 15) / 2
+        };
+
+        const expectedGopDuration2 = {
+            min: 21 - 15,
+            max: 27 - 21,
+            mean: (21 - 15 + 27 - 21) / 2
+        };
+
+        const expectedAspectRatio1 = '4:3';
+        const expectedAspectRatio2 = '16:9';
+        const expectedWidth1 = 640;
+        const expectedHeight1 = 480;
+        const expectedWidth2 = 854;
+        const expectedHeight2 = 480;
+        const expectAudio1 = false;
+        const expectAudio2 = true;
 
         let res1 = processFrames(frames1);
 
         assert.deepEqual(res1.payload, {
             areAllGopsIdentical: true,
             bitrate            : expectedBitrate1,
-            fps                : expectedFps1
+            fps                : expectedFps1,
+            gopDuration        : expectedGopDuration1,
+            aspectRatio        : expectedAspectRatio1,
+            width              : expectedWidth1,
+            height             : expectedHeight1,
+            hasAudioStream     : expectAudio1
         });
 
         assert.deepEqual(res1.remainedFrames, expectedRemainedFrames1);
@@ -123,7 +147,12 @@ describe('processFrames', () => {
         assert.deepEqual(res2.payload, {
             areAllGopsIdentical: true,
             bitrate            : expectedBitrate2,
-            fps                : expectedFps2
+            fps                : expectedFps2,
+            gopDuration        : expectedGopDuration2,
+            aspectRatio        : expectedAspectRatio2,
+            width              : expectedWidth2,
+            height             : expectedHeight2,
+            hasAudioStream     : expectAudio2
         });
 
         assert.deepEqual(res2.remainedFrames, expectedRemainedFrames2);
