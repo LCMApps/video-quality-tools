@@ -92,7 +92,7 @@ describe('StreamsInfo::fetch, fetch streams info from active stream', () => {
             profile        : 'LC',
             channels       : 6,
             channel_layout : '5.1',
-            bit_rate       : '64775'
+            sample_rate    : '44100'
         });
 
         return Promise.resolve();
