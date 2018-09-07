@@ -42,6 +42,7 @@ describe('processFrames functional tests', () => {
 
     it('must return correct frames info for the stream with fixed gop', async () => {
         const expectedReturnCode = 0;
+        const expectedAspectRatio = '16:9';
 
         const frames = [];
 
@@ -70,6 +71,10 @@ describe('processFrames functional tests', () => {
                 const expectedMaxBitrate  = 3691.1709337349394;
                 const expectedMeanBitrate = 1018.2511085012945;
 
+                const expectedMinGop  = 0.16599999999999993;
+                const expectedMaxGop  = 0.16700000000000004;
+                const expectedMeanGop = 0.16666101694915256;
+
                 const expectedRemainedFrames = [
                     {key_frame: 1, pict_type: 'I'},
                     {key_frame: 0, pict_type: 'P'},
@@ -82,8 +87,10 @@ describe('processFrames functional tests', () => {
 
                 assert.deepEqual(payload, {
                     areAllGopsIdentical: true,
-                    fps                : {mean: expectedMeanFps, min: expectedMinFps, max: expectedMaxFps},
-                    bitrate            : {mean: expectedMeanBitrate, min: expectedMinBitrate, max: expectedMaxBitrate}
+                    fps: {mean: expectedMeanFps, min: expectedMinFps, max: expectedMaxFps},
+                    bitrate: {mean: expectedMeanBitrate, min: expectedMinBitrate, max: expectedMaxBitrate},
+                    gopDuration: {mean: expectedMeanGop, min: expectedMinGop, max: expectedMaxGop},
+                    aspectRatio: expectedAspectRatio
                 });
 
                 assert.deepEqual(
@@ -98,6 +105,7 @@ describe('processFrames functional tests', () => {
 
     it('must return correct frames info for the stream with open gop', async () => {
         const expectedReturnCode = 0;
+        const expectedAspectRatio = '16:9';
 
         const frames = [];
 
@@ -126,6 +134,10 @@ describe('processFrames functional tests', () => {
                 const expectedMaxBitrate  = 1435.5312499999998;
                 const expectedMeanBitrate = 1066.2038272718032;
 
+                const expectedMinGop  = 1.534;
+                const expectedMaxGop  = 5.000000000000001;
+                const expectedMeanGop = 3.2113333333333336;
+
                 const expectedRemainedFrames = [
                     {key_frame: 1, pict_type: 'I'},
                     {key_frame: 0, pict_type: 'P'},
@@ -144,8 +156,10 @@ describe('processFrames functional tests', () => {
 
                 assert.deepEqual(payload, {
                     areAllGopsIdentical: false,
-                    fps                : {mean: expectedMeanFps, min: expectedMinFps, max: expectedMaxFps},
-                    bitrate            : {mean: expectedMeanBitrate, min: expectedMinBitrate, max: expectedMaxBitrate}
+                    fps: {mean: expectedMeanFps, min: expectedMinFps, max: expectedMaxFps},
+                    bitrate: {mean: expectedMeanBitrate, min: expectedMinBitrate, max: expectedMaxBitrate},
+                    gopDuration: {mean: expectedMeanGop, min: expectedMinGop, max: expectedMaxGop},
+                    aspectRatio: expectedAspectRatio
                 });
 
                 assert.deepEqual(

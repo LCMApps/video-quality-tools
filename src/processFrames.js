@@ -4,40 +4,97 @@ const _ = require('lodash');
 
 const Errors = require('./Errors');
 
+const AR_CALCULATION_PRECISION = 0.01;
+
+const SQUARE_AR_COEFFICIENT = 1;
+const SQUARE_AR = '1:1';
+
+const TRADITIONAL_TV_AR_COEFFICIENT = 1.333;
+const TRADITIONAL_TV_AR = '4:3';
+
+const HD_VIDEO_AR_COEFFICIENT = 1.777;
+const HD_VIDEO_AR = '16:9';
+
+const UNIVISIUM_AR_COEFFICIENT = 2;
+const UNIVISIUM_AR = '18:9';
+
+const WIDESCREEN_AR_COEFFICIENT = 2.37;
+const WIDESCREEN_AR = '21:9';
+
 function processFrames(frames) {
     if (!Array.isArray(frames)) {
         throw new TypeError('process method is supposed to accept an array of frames.');
     }
 
-    const videoFrames            = processFrames.filterVideoFrames(frames);
-    const {gops, remainedFrames} = processFrames.identifyGops(videoFrames);
+    const videoFrames            = filterVideoFrames(frames);
+    const {gops, remainedFrames} = identifyGops(videoFrames);
 
     if (_.isEmpty(gops)) {
         throw new Errors.GopNotFoundError('Can not find any gop for these frames', {frames});
     }
 
-    const areAllGopsIdentical = processFrames.areAllGopsIdentical(gops);
-    const bitrate             = processFrames.calculateBitrate(gops);
-    const fps                 = processFrames.calculateFps(gops);
+    let areAllGopsIdentical = true;
+    const baseGopSize = gops[0].frames.length;
+    const bitrates = [];
+    const fpsList = [];
+    const gopsDurations = [];
+
+    gops.forEach(gop => {
+        areAllGopsIdentical = areAllGopsIdentical ? baseGopSize === gop.frames.length : false;
+        const accumulatedPktSize = accumulatePktSize(gop);
+        const gopDuration        = gopDurationInSec(gop);
+
+        const gopBitrate = toKbs(accumulatedPktSize / gopDuration);
+        bitrates.push(gopBitrate);
+
+        const gopFps = gop.frames.length / gopDuration;
+        fpsList.push(gopFps);
+
+        gopsDurations.push(gopDuration);
+    });
+
+    const bitrate = {
+        mean: _.mean(bitrates),
+        min : Math.min(...bitrates),
+        max : Math.max(...bitrates)
+    };
+
+    const fps = {
+        mean: _.mean(fpsList),
+        min : Math.min(...fpsList),
+        max : Math.max(...fpsList)
+    };
+
+    const gopDuration = {
+        mean: _.mean(gopsDurations),
+        min: Math.min(...gopsDurations),
+        max: Math.max(...gopsDurations)
+    };
+
+    const aspectRatio = calculateAspectRatio(gops[0].frames[0].width, gops[0].frames[0].height);
 
     return {
-        payload       : {
+        payload : {
             areAllGopsIdentical,
             bitrate,
-            fps
+            fps,
+            gopDuration,
+            aspectRatio,
         },
         remainedFrames: remainedFrames
     };
 }
 
-processFrames.identifyGops        = identifyGops;
-processFrames.calculateBitrate    = calculateBitrate;
-processFrames.calculateFps        = calculateFps;
-processFrames.filterVideoFrames   = filterVideoFrames;
-processFrames.gopDurationInSec    = gopDurationInSec;
-processFrames.toKbs               = toKbs;
-processFrames.accumulatePktSize   = accumulatePktSize;
-processFrames.areAllGopsIdentical = areAllGopsIdentical;
+processFrames.identifyGops         = identifyGops;
+processFrames.calculateBitrate     = calculateBitrate;
+processFrames.calculateFps         = calculateFps;
+processFrames.calculateGopDuration = calculateGopDuration;
+processFrames.calculateAspectRatio = calculateAspectRatio;
+processFrames.filterVideoFrames    = filterVideoFrames;
+processFrames.gopDurationInSec     = gopDurationInSec;
+processFrames.toKbs                = toKbs;
+processFrames.accumulatePktSize    = accumulatePktSize;
+processFrames.areAllGopsIdentical  = areAllGopsIdentical;
 
 module.exports = processFrames;
 
@@ -183,6 +240,48 @@ function calculateFps(gops) {
         min : Math.min.apply(null, fps),
         max : Math.max.apply(null, fps)
     };
+}
+
+function calculateGopDuration(gops) {
+    const gopsDurations = [];
+
+    gops.forEach(gop => {
+        const gopDurationInSec = processFrames.gopDurationInSec(gop);
+
+        gopsDurations.push(gopDurationInSec);
+    });
+
+    return {
+        mean: _.mean(gopsDurations),
+        min: Math.min(...gopsDurations),
+        max: Math.max(...gopsDurations)
+    };
+}
+
+function calculateAspectRatio(width, height) {
+    const arCoefficient = width / height;
+
+    if (Math.abs(arCoefficient - SQUARE_AR_COEFFICIENT) <= AR_CALCULATION_PRECISION) {
+        return SQUARE_AR;
+    }
+
+    if (Math.abs(arCoefficient - TRADITIONAL_TV_AR_COEFFICIENT) <= AR_CALCULATION_PRECISION) {
+        return TRADITIONAL_TV_AR;
+    }
+
+    if (Math.abs(arCoefficient - HD_VIDEO_AR_COEFFICIENT) <= AR_CALCULATION_PRECISION) {
+        return HD_VIDEO_AR;
+    }
+
+    if (Math.abs(arCoefficient - UNIVISIUM_AR_COEFFICIENT) <= AR_CALCULATION_PRECISION) {
+        return UNIVISIUM_AR;
+    }
+
+    if (Math.abs(arCoefficient - WIDESCREEN_AR_COEFFICIENT) <= AR_CALCULATION_PRECISION) {
+        return WIDESCREEN_AR;
+    }
+
+    return `${width}:${height}`;
 }
 
 function areAllGopsIdentical(gops) {
