@@ -117,7 +117,7 @@ structure as the `ffprobe -show_streams` output has. You may find a typical outp
 
 `videos` and `audios` may be an empty array if there are no appropriate streams in the live stream. 
 
-```json
+```
 { videos:
    [ { index: 1,
        codec_name: 'h264',
@@ -214,7 +214,7 @@ do it pretty often). If ffprobe doesn't exit after `exitProcessGuardTimeoutInMs`
 
 After creation of the `FramesMonitor` instance, you may start listening live stream data. To do so, just
 run `framesMonitor.listen()` method. After that `framesMonitor` starts emitting `frame` event as soon as ffprobe
-decodes frame from the stream. It emits only video frames at now.
+decodes frame from the stream. It emits video and audio frames.
 
 ```javascript
 const {FramesMonitor, processFrames, ExitReasons} = require('video-quality-tools');
@@ -250,16 +250,25 @@ try {
 
 ## `frame` event
 
-This event is generated on each video frame decoded by ffprobe. The structure of the frame object is the following:
+This event is generated on each video and audio frame decoded by ffprobe. 
+The structure of the frame object is the following:
 
 ```
 { media_type: 'video',
   key_frame: 0,
   pkt_pts_time: 3530.279,
   pkt_size: 3332,
+  width: 640,
+  height: 480,
   pict_type: 'P' }
 ```
-
+or
+```
+{ media_type: 'audio',
+  key_frame: 1,
+  pkt_pts_time: 'N/A',
+  pkt_size: 20 }
+```
 
 ## `exit` event
 
@@ -357,7 +366,19 @@ There is an output for the example above:
    { mean: 1494.9075520833333,
      min: 1440.27734375,
      max: 1525.95703125 },
-  fps: { mean: 30, min: 30, max: 30 } }
+  fps: { 
+     mean: 30,
+     min: 30, 
+     max: 30 },
+  gopDuration: {
+     mean: 2,
+     min: 1.9, 
+     max: 2.1 },
+  aspectRatio: '16:9',
+  width: 1280,
+  height: 720,
+  hasAudioStream: true
+}
 ```
 
 In given example the frames are collected in `frames` array and than use `processFrames` function for sets of 300 frames
@@ -372,9 +393,10 @@ If there are more than 2 key frames, `processFrames` uses full GOPs to track fps
 in the last GOP that was not finished. It's important to remember the `remainedFrames` output and push a new frame to
 the `remainedFrames` array when it arrives.
 
-For the full GOPs `processFrames` calculates min/max/mean values of bitrates (in kbit/s) and framerates and returns
-them in `payload` field. The result of the check for the similarity of GOP structures for the collected GOPs is returned in
-`areAllGopsIdentical` field.
+For the full GOPs `processFrames` calculates min/max/mean values of bitrates (in kbit/s), framerates and GOP duration 
+(in seconds) and returns them in `payload` field. The result of the check for the similarity of GOP structures for 
+the collected GOPs is returned in `areAllGopsIdentical` field. Fields `width`, `height` and `aspectRatio` adjust on 
+data from first frame of the first collected GOP. Value of `hasAudioStream` reflects a presence of audio frames.
 
 `processFrames` may throw `Errors.GopNotFoundError`.
 
