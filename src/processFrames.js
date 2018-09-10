@@ -18,7 +18,7 @@ const HD_VIDEO_AR = '16:9';
 const UNIVISIUM_AR_COEFFICIENT = 2;
 const UNIVISIUM_AR = '18:9';
 
-const WIDESCREEN_AR_COEFFICIENT = 2.37;
+const WIDESCREEN_AR_COEFFICIENT = 2.33;
 const WIDESCREEN_AR = '21:9';
 
 function processFrames(frames) {
