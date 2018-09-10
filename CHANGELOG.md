@@ -9,6 +9,6 @@
     
 * **FramesMonitor**
 
-    FramesMonitor fetch video and audio frames from the stream now.
+    FramesMonitor fetches video and audio frames from the stream now.
     
     Added `width` and `height` info to video frames.
