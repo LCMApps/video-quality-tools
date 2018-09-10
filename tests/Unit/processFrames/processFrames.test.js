@@ -158,4 +158,55 @@ describe('processFrames', () => {
         assert.deepEqual(res2.remainedFrames, expectedRemainedFrames2);
     });
 
+    it('must detect that GOPs is not identical ', () => {
+        const frames = [
+            {width: 640, height: 480, pkt_size: 1, pkt_pts_time: 11, media_type: 'video', key_frame: 1},
+            {width: 640, height: 480, pkt_size: 3, pkt_pts_time: 13, media_type: 'video', key_frame: 0},
+            {width: 640, height: 480, pkt_size: 5, pkt_pts_time: 15, media_type: 'video', key_frame: 1},
+            {width: 640, height: 480, pkt_size: 6, pkt_pts_time: 17, media_type: 'video', key_frame: 0},
+            {width: 640, height: 480, pkt_size: 9, pkt_pts_time: 19, media_type: 'video', key_frame: 0},
+            {width: 640, height: 480, pkt_size: 11, pkt_pts_time: 21, media_type: 'video', key_frame: 1}
+        ];
+
+        const expectedBitrate = {
+            min: processFrames.toKbs((1 + 3) / (15 - 11)),
+            max: processFrames.toKbs((5 + 6 + 9) / (21 - 15)),
+            mean: processFrames.toKbs(((1 + 3) / (15 - 11) + (5 + 6 + 9) / (21 - 15)) / 2)
+        };
+
+        const expectedRemainedFrames = [
+            {pkt_size: 11, pkt_pts_time: 21, media_type: 'video', key_frame: 1, width: 640, height: 480}
+        ];
+
+
+        const expectedFps = {min: 0.5, max: 0.5, mean: 0.5};
+
+        const expectedGopDuration = {
+            min: 15 - 11,
+            max: 21 - 15,
+            mean: (15 - 11 + 21 - 15) / 2
+        };
+
+        const expectedAspectRatio = '4:3';
+        const expectedWidth = 640;
+        const expectedHeight = 480;
+        const expectAudio = false;
+        const expectAreAllGopsIdentical = false;
+
+        let res = processFrames(frames);
+
+        assert.deepEqual(res.payload, {
+            areAllGopsIdentical: expectAreAllGopsIdentical,
+            bitrate: expectedBitrate,
+            fps: expectedFps,
+            gopDuration: expectedGopDuration,
+            aspectRatio: expectedAspectRatio,
+            width: expectedWidth,
+            height: expectedHeight,
+            hasAudioStream: expectAudio
+        });
+
+        assert.deepEqual(res.remainedFrames, expectedRemainedFrames);
+    });
+
 });

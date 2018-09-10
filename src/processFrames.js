@@ -42,7 +42,7 @@ function processFrames(frames) {
     const gopsDurations = [];
 
     gops.forEach(gop => {
-        areAllGopsIdentical = areAllGopsIdentical ? baseGopSize === gop.frames.length : false;
+        areAllGopsIdentical      = areAllGopsIdentical ? baseGopSize === gop.frames.length : false;
         const accumulatedPktSize = processFrames.accumulatePktSize(gop);
         const gopDuration        = processFrames.gopDurationInSec(gop);
 
