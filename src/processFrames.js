@@ -26,7 +26,6 @@ function processFrames(frames) {
         throw new TypeError('process method is supposed to accept an array of frames.');
     }
 
-    const audioFrames            = processFrames.filterAudioFrames(frames);
     const videoFrames            = processFrames.filterVideoFrames(frames);
     const {gops, remainedFrames} = processFrames.identifyGops(videoFrames);
 
@@ -35,14 +34,14 @@ function processFrames(frames) {
     }
 
     let areAllGopsIdentical = true;
-    const hasAudioStream = audioFrames.length > 0;
+    const hasAudioStream = processFrames.hasAudioFrames(frames);
     const baseGopSize = gops[0].frames.length;
     const bitrates = [];
     const fpsList = [];
-    const gopsDurations = [];
+    const gopDurations = [];
 
     gops.forEach(gop => {
-        areAllGopsIdentical      = areAllGopsIdentical ? baseGopSize === gop.frames.length : false;
+        areAllGopsIdentical      = areAllGopsIdentical && baseGopSize === gop.frames.length;
         const accumulatedPktSize = processFrames.accumulatePktSize(gop);
         const gopDuration        = processFrames.gopDurationInSec(gop);
 
@@ -52,7 +51,7 @@ function processFrames(frames) {
         const gopFps = gop.frames.length / gopDuration;
         fpsList.push(gopFps);
 
-        gopsDurations.push(gopDuration);
+        gopDurations.push(gopDuration);
     });
 
     const bitrate = {
@@ -68,14 +67,14 @@ function processFrames(frames) {
     };
 
     const gopDuration = {
-        mean: _.mean(gopsDurations),
-        min: Math.min(...gopsDurations),
-        max: Math.max(...gopsDurations)
+        mean: _.mean(gopDurations),
+        min: Math.min(...gopDurations),
+        max: Math.max(...gopDurations)
     };
 
     const width = gops[0].frames[0].width;
     const height = gops[0].frames[0].height;
-    const aspectRatio = calculateAspectRatio(width, height);
+    const aspectRatio = calculateDisplayAspectRatio(width, height);
 
     return {
         payload       : {
@@ -92,17 +91,18 @@ function processFrames(frames) {
     };
 }
 
-processFrames.identifyGops         = identifyGops;
-processFrames.calculateBitrate     = calculateBitrate;
-processFrames.calculateFps         = calculateFps;
-processFrames.calculateGopDuration = calculateGopDuration;
-processFrames.calculateAspectRatio = calculateAspectRatio;
-processFrames.filterVideoFrames    = filterVideoFrames;
-processFrames.filterAudioFrames    = filterAudioFrames;
-processFrames.gopDurationInSec     = gopDurationInSec;
-processFrames.toKbs                = toKbs;
-processFrames.accumulatePktSize    = accumulatePktSize;
-processFrames.areAllGopsIdentical  = areAllGopsIdentical;
+processFrames.identifyGops                = identifyGops;
+processFrames.calculateBitrate            = calculateBitrate;
+processFrames.calculateFps                = calculateFps;
+processFrames.calculateGopDuration        = calculateGopDuration;
+processFrames.filterVideoFrames           = filterVideoFrames;
+processFrames.hasAudioFrames              = hasAudioFrames;
+processFrames.gopDurationInSec            = gopDurationInSec;
+processFrames.toKbs                       = toKbs;
+processFrames.accumulatePktSize           = accumulatePktSize;
+processFrames.areAllGopsIdentical         = areAllGopsIdentical;
+processFrames.findGcd                     = findGcd;
+processFrames.calculateDisplayAspectRatio = calculateDisplayAspectRatio;
 
 module.exports = processFrames;
 
@@ -266,7 +266,15 @@ function calculateGopDuration(gops) {
     };
 }
 
-function calculateAspectRatio(width, height) {
+function calculateDisplayAspectRatio(width, height) {
+    if (!_.isInteger(width) || width <= 0) {
+        throw new TypeError('"width" must be a positive integer');
+    }
+
+    if (!_.isInteger(height) || height <= 0) {
+        throw new TypeError('"height" must be a positive integer');
+    }
+
     const arCoefficient = width / height;
 
     if (Math.abs(arCoefficient - SQUARE_AR_COEFFICIENT) <= AR_CALCULATION_PRECISION) {
@@ -289,7 +297,9 @@ function calculateAspectRatio(width, height) {
         return WIDESCREEN_AR;
     }
 
-    return `${width}:${height}`;
+    const gcd = findGcd(width, height);
+
+    return `${width / gcd}:${height / gcd}`;
 }
 
 function areAllGopsIdentical(gops) {
@@ -300,10 +310,22 @@ function filterVideoFrames(frames) {
     return frames.filter(frame => frame.media_type === 'video');
 }
 
-function filterAudioFrames(frames) {
-    return frames.filter(frame => frame.media_type === 'audio');
+function hasAudioFrames(frames) {
+    return frames.some(frame => frame.media_type === 'audio');
 }
 
 function toKbs(val) {
     return val * 8 / 1024;
+}
+
+function findGcd(a, b) {
+    if (a === 0 && b === 0) {
+        return 0;
+    }
+
+    if (b === 0) {
+        return a;
+    }
+
+    return findGcd(b, a % b);
 }

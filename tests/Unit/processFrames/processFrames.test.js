@@ -178,7 +178,6 @@ describe('processFrames', () => {
             {pkt_size: 11, pkt_pts_time: 21, media_type: 'video', key_frame: 1, width: 640, height: 480}
         ];
 
-
         const expectedFps = {min: 0.5, max: 0.5, mean: 0.5};
 
         const expectedGopDuration = {
