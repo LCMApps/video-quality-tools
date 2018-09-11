@@ -74,7 +74,7 @@ function processFrames(frames) {
 
     const width = gops[0].frames[0].width;
     const height = gops[0].frames[0].height;
-    const aspectRatio = calculateDisplayAspectRatio(width, height);
+    const displayAspectRatio = calculateDisplayAspectRatio(width, height);
 
     return {
         payload       : {
@@ -82,7 +82,7 @@ function processFrames(frames) {
             bitrate,
             fps,
             gopDuration,
-            aspectRatio,
+            displayAspectRatio,
             width,
             height,
             hasAudioStream

@@ -134,7 +134,7 @@ describe('processFrames', () => {
             bitrate            : expectedBitrate1,
             fps                : expectedFps1,
             gopDuration        : expectedGopDuration1,
-            aspectRatio        : expectedAspectRatio1,
+            displayAspectRatio : expectedAspectRatio1,
             width              : expectedWidth1,
             height             : expectedHeight1,
             hasAudioStream     : expectAudio1
@@ -149,7 +149,7 @@ describe('processFrames', () => {
             bitrate            : expectedBitrate2,
             fps                : expectedFps2,
             gopDuration        : expectedGopDuration2,
-            aspectRatio        : expectedAspectRatio2,
+            displayAspectRatio : expectedAspectRatio2,
             width              : expectedWidth2,
             height             : expectedHeight2,
             hasAudioStream     : expectAudio2
@@ -199,7 +199,7 @@ describe('processFrames', () => {
             bitrate: expectedBitrate,
             fps: expectedFps,
             gopDuration: expectedGopDuration,
-            aspectRatio: expectedAspectRatio,
+            displayAspectRatio: expectedAspectRatio,
             width: expectedWidth,
             height: expectedHeight,
             hasAudioStream: expectAudio

@@ -2,10 +2,10 @@
 
 * **processFrames**:
     
-    Added new fields `gopDuration`, `aspectRatio`, `width`, `height`, `hasAudioStream` to the result of 
+    Added new fields `gopDuration`, `displayAspectRatio`, `width`, `height`, `hasAudioStream` to the result of 
     _processFrames_ execution .
     
-    Add new methods to _processFrames_: `calculateGopDuration`, `calculateAspectRatio`, `filterAudioFrames`.
+    Add new methods to _processFrames_: `calculateGopDuration`, `calculateDisplayAspectRatio`, `hasAudioFrames`.
     
 * **FramesMonitor**
 

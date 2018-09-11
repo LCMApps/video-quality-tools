@@ -374,7 +374,7 @@ There is an output for the example above:
      mean: 2,
      min: 1.9, 
      max: 2.1 },
-  aspectRatio: '16:9',
+  displayAspectRatio: '16:9',
   width: 1280,
   height: 720,
   hasAudioStream: true
@@ -395,8 +395,14 @@ the `remainedFrames` array when it arrives.
 
 For the full GOPs `processFrames` calculates min/max/mean values of bitrates (in kbit/s), framerates and GOP duration 
 (in seconds) and returns them in `payload` field. The result of the check for the similarity of GOP structures for 
-the collected GOPs is returned in `areAllGopsIdentical` field. Fields `width`, `height` and `aspectRatio` adjust on 
-data from first frame of the first collected GOP. Value of `hasAudioStream` reflects a presence of audio frames.
+the collected GOPs is returned in `areAllGopsIdentical` field. Fields `width`, `height` and `displayAspectRatio` 
+are taken from data from first frame of the first collected GOP. Value of `hasAudioStream` reflects presence of 
+audio frames.
+
+For display aspect ratio calculation method `processFrames::calculateDisplayAspectRatio` use list of 
+[current video aspect ratio standards](https://en.wikipedia.org/wiki/Aspect_ratio_(image)) 
+with approximation error of frames width and height ratio. If ratio hasn't a reflection in aspect ratio standards then 
+[GCD algorithm](https://en.wikipedia.org/wiki/Greatest_common_divisor) is used.
 
 `processFrames` may throw `Errors.GopNotFoundError`.
 
