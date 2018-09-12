@@ -18,7 +18,7 @@ describe('StreamsInfo::_adjustAspectRatio', () => {
     }, correctUrl);
 
     dataDriven(invalidParams, function () {
-        const expectedErrorMessage = 'Can not calculate aspect rate due to invalid video resolution';
+        const expectedErrorMessage = 'Can not calculate aspect ratio due to invalid video resolution';
         const expectedErrorClass   = StreamsInfoError;
 
         it('{description}', function (ctx) {

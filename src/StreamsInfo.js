@@ -6,6 +6,7 @@ const {exec}      = require('child_process');
 const {promisify} = require('util');
 
 const Errors = require('./Errors/');
+const processFrames = require('./processFrames');
 
 const DAR_OR_SAR_NA = 'N/A';
 const DAR_OR_SAR_01 = '0:1';
@@ -129,35 +130,18 @@ class StreamsInfo {
                 video.display_aspect_ratio === DAR_OR_SAR_NA
             ) {
                 video.sample_aspect_ratio  = '1:1';
-                video.display_aspect_ratio = this._calculateDisplayAspectRatio(video.width, video.height);
+                try {
+                    video.display_aspect_ratio = processFrames.calculateDisplayAspectRatio(video.width, video.height);
+                } catch (err) {
+                    throw new Errors.StreamsInfoError(
+                        'Can not calculate aspect ratio due to invalid video resolution',
+                        {width: video.width, height: video.height, url: this._url}
+                    );
+                }
             }
 
             return video;
         });
-    }
-
-    _calculateDisplayAspectRatio(width, height) {
-        if (!_.isInteger(width) || !_.isInteger(height) || width <= 0 || height <= 0) {
-            throw new Errors.StreamsInfoError(
-                'Can not calculate aspect rate due to invalid video resolution',
-                {width, height, url: this._url}
-            );
-        }
-
-        const gcd = this._findGcd(width, height);
-
-        return `${width / gcd}:${height / gcd}`;
-    }
-
-    _findGcd(a, b) {
-        if (a === 0 && b === 0) {
-            return 0;
-        }
-
-        if (b === 0) {
-            return a;
-        }
-        return this._findGcd(b, a % b);
     }
 }
 
