@@ -329,7 +329,7 @@ framesMonitor.on('error', err => {
 collected from `FramesMonitor`. It relies on
 [GOP structure](https://en.wikipedia.org/wiki/Group_of_pictures) of the stream.
 
-The following example shows how to gather frames and pass them to the function that analyzes 
+The following example shows how to gather frames and pass them to the function that analyzes encoder statistic
 
 ```javascript
 const {processFrames} = require('video-quality-tools');
@@ -346,7 +346,7 @@ framesMonitor.on('frame', frame => {
     }
 
     try {
-        const info = processFrames(frames);
+        const info = processFrames.encoderStats(frames);
         frames = info.remainedFrames;
     
         console.log(info.payload);
@@ -381,29 +381,30 @@ There is an output for the example above:
 }
 ```
 
-In given example the frames are collected in `frames` array and than use `processFrames` function for sets of 300 frames
-(`AMOUNT_OF_FRAMES_TO_GATHER`). The function searches the
+In given example the frames are collected in `frames` array and than use `processFrames.encoderStats` function for
+sets of 300 frames (`AMOUNT_OF_FRAMES_TO_GATHER`). The function searches the
 [key frames](https://en.wikipedia.org/wiki/Video_compression_picture_types#Intra-coded_(I)_frames/slices_(key_frames))
 and measures the distance between them.
 
-It's impossible to detect GOP structure for a set of frames with only one key frame, so `processFrames` returns
-back all passed frames as an array in `remainedFrames` field.
+It's impossible to detect GOP structure for a set of frames with only one key frame, so `processFrames.encoderStats`
+returns back all passed frames as an array in `remainedFrames` field.
 
-If there are more than 2 key frames, `processFrames` uses full GOPs to track fps and bitrate and returns all frames back
-in the last GOP that was not finished. It's important to remember the `remainedFrames` output and push a new frame to
-the `remainedFrames` array when it arrives.
+If there are more than 2 key frames, `processFrames.encoderStats` uses full GOPs to track fps and bitrate and returns
+all frames back in the last GOP that was not finished. It's important to remember the `remainedFrames` output
+and push a new frame to the `remainedFrames` array when it arrives.
 
-For the full GOPs `processFrames` calculates min/max/mean values of bitrates (in kbit/s), framerates and GOP duration 
-(in seconds) and returns them in `payload` field. The result of the check for the similarity of GOP structures for 
-the collected GOPs is returned in `areAllGopsIdentical` field. Fields `width`, `height` and `displayAspectRatio` 
-are taken from data from first frame of the first collected GOP. Value of `hasAudioStream` reflects presence of 
-audio frames.
+For the full GOPs `processFrames.encoderStats` calculates min/max/mean values of bitrates (in kbit/s), framerates
+and GOP duration (in seconds) and returns them in `payload` field. The result of the check for the similarity
+of GOP structures for the collected GOPs is returned in `areAllGopsIdentical` field. Fields `width`, `height`
+and `displayAspectRatio` are taken from data from first frame of the first collected GOP. Value of `hasAudioStream`
+reflects presence of audio frames.
 
-For display aspect ratio calculation method `processFrames::calculateDisplayAspectRatio` use list of 
-[current video aspect ratio standards](https://en.wikipedia.org/wiki/Aspect_ratio_(image)) 
-with approximation error of frames width and height ratio. If ratio hasn't a reflection in aspect ratio standards then 
-[GCD algorithm](https://en.wikipedia.org/wiki/Greatest_common_divisor) is used.
+To calculate display aspect ratio method `processFrames::calculateDisplayAspectRatio` uses list of 
+[video aspect ratio standards](https://en.wikipedia.org/wiki/Aspect_ratio_(image)) 
+with approximation of frames width and height ratio. If ratio can't be found in list of known standards, even in delta
+neighbourhood, then 
+[GCD algorithm](https://en.wikipedia.org/wiki/Greatest_common_divisor) is used to simplify returned value.
 
-`processFrames` may throw `Errors.GopNotFoundError`.
+`processFrames.encoderStats` may throw `Errors.GopNotFoundError`.
 
 Also, you may extend the metrics. Check `src/processFrames.js` to find common functions.

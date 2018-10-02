@@ -86,14 +86,14 @@ describe('processFrames functional tests', () => {
                     {key_frame: 0, pict_type: 'P'}
                 ];
 
-                const {payload, remainedFrames} = processFrames(frames);
+                const {payload, remainedFrames} = processFrames.encoderStats(frames);
 
                 assert.deepEqual(payload, {
                     areAllGopsIdentical: true,
                     fps: {mean: expectedMeanFps, min: expectedMinFps, max: expectedMaxFps},
                     bitrate: {mean: expectedMeanBitrate, min: expectedMinBitrate, max: expectedMaxBitrate},
                     gopDuration: {mean: expectedMeanGop, min: expectedMinGop, max: expectedMaxGop},
-                    aspectRatio: expectedAspectRatio,
+                    displayAspectRatio: expectedAspectRatio,
                     height: expectedHeight,
                     width: expectedWidth,
                     hasAudioStream: expectAudio
@@ -161,14 +161,14 @@ describe('processFrames functional tests', () => {
                     {key_frame: 0, pict_type: 'P'}
                 ];
 
-                const {payload, remainedFrames} = processFrames(frames);
+                const {payload, remainedFrames} = processFrames.encoderStats(frames);
 
                 assert.deepEqual(payload, {
                     areAllGopsIdentical: false,
                     fps: {mean: expectedMeanFps, min: expectedMinFps, max: expectedMaxFps},
                     bitrate: {mean: expectedMeanBitrate, min: expectedMinBitrate, max: expectedMaxBitrate},
                     gopDuration: {mean: expectedMeanGop, min: expectedMinGop, max: expectedMaxGop},
-                    aspectRatio: expectedAspectRatio,
+                    displayAspectRatio: expectedAspectRatio,
                     width: expectedWidth,
                     height: expectedHeight,
                     hasAudioStream: expectAudio

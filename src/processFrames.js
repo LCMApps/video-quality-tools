@@ -21,20 +21,20 @@ const UNIVISIUM_AR = '18:9';
 const WIDESCREEN_AR_COEFFICIENT = 2.33;
 const WIDESCREEN_AR = '21:9';
 
-function processFrames(frames) {
+function encoderStats(frames) {
     if (!Array.isArray(frames)) {
         throw new TypeError('process method is supposed to accept an array of frames.');
     }
 
-    const videoFrames            = processFrames.filterVideoFrames(frames);
-    const {gops, remainedFrames} = processFrames.identifyGops(videoFrames);
+    const videoFrames            = filterVideoFrames(frames);
+    const {gops, remainedFrames} = identifyGops(videoFrames);
 
     if (_.isEmpty(gops)) {
         throw new Errors.GopNotFoundError('Can not find any gop for these frames', {frames});
     }
 
     let areAllGopsIdentical = true;
-    const hasAudioStream = processFrames.hasAudioFrames(frames);
+    const hasAudioStream = hasAudioFrames(frames);
     const baseGopSize = gops[0].frames.length;
     const bitrates = [];
     const fpsList = [];
@@ -42,10 +42,10 @@ function processFrames(frames) {
 
     gops.forEach(gop => {
         areAllGopsIdentical      = areAllGopsIdentical && baseGopSize === gop.frames.length;
-        const accumulatedPktSize = processFrames.accumulatePktSize(gop);
-        const gopDuration        = processFrames.gopDurationInSec(gop);
+        const accumulatedPktSize = accumulatePktSize(gop);
+        const gopDuration        = gopDurationInSec(gop);
 
-        const gopBitrate = processFrames.toKbs(accumulatedPktSize / gopDuration);
+        const gopBitrate = toKbs(accumulatedPktSize / gopDuration);
         bitrates.push(gopBitrate);
 
         const gopFps = gop.frames.length / gopDuration;
@@ -90,21 +90,6 @@ function processFrames(frames) {
         remainedFrames: remainedFrames
     };
 }
-
-processFrames.identifyGops                = identifyGops;
-processFrames.calculateBitrate            = calculateBitrate;
-processFrames.calculateFps                = calculateFps;
-processFrames.calculateGopDuration        = calculateGopDuration;
-processFrames.filterVideoFrames           = filterVideoFrames;
-processFrames.hasAudioFrames              = hasAudioFrames;
-processFrames.gopDurationInSec            = gopDurationInSec;
-processFrames.toKbs                       = toKbs;
-processFrames.accumulatePktSize           = accumulatePktSize;
-processFrames.areAllGopsIdentical         = areAllGopsIdentical;
-processFrames.findGcd                     = findGcd;
-processFrames.calculateDisplayAspectRatio = calculateDisplayAspectRatio;
-
-module.exports = processFrames;
 
 function identifyGops(frames) {
     const GOP_TEMPLATE = {
@@ -160,10 +145,10 @@ function calculateBitrate(gops) {
     let bitrates = [];
 
     gops.forEach(gop => {
-        const accumulatedPktSize = processFrames.accumulatePktSize(gop);
-        const gopDurationInSec   = processFrames.gopDurationInSec(gop);
+        const accumulatedPktSize = accumulatePktSize(gop);
+        const durationInSec   = gopDurationInSec(gop);
 
-        const gopBitrate = processFrames.toKbs(accumulatedPktSize / gopDurationInSec);
+        const gopBitrate = toKbs(accumulatedPktSize / durationInSec);
 
         bitrates.push(gopBitrate);
     });
@@ -237,8 +222,8 @@ function calculateFps(gops) {
     let fps = [];
 
     gops.forEach(gop => {
-        const gopDurationInSec = processFrames.gopDurationInSec(gop);
-        const gopFps           = gop.frames.length / gopDurationInSec;
+        const durationInSec    = gopDurationInSec(gop);
+        const gopFps           = gop.frames.length / durationInSec;
 
         fps.push(gopFps);
     });
@@ -254,9 +239,9 @@ function calculateGopDuration(gops) {
     const gopsDurations = [];
 
     gops.forEach(gop => {
-        const gopDurationInSec = processFrames.gopDurationInSec(gop);
+        const durationInSec = gopDurationInSec(gop);
 
-        gopsDurations.push(gopDurationInSec);
+        gopsDurations.push(durationInSec);
     });
 
     return {
@@ -329,3 +314,19 @@ function findGcd(a, b) {
 
     return findGcd(b, a % b);
 }
+
+module.exports = {
+    encoderStats,
+    identifyGops,
+    calculateBitrate,
+    calculateFps,
+    calculateGopDuration,
+    filterVideoFrames,
+    hasAudioFrames,
+    gopDurationInSec,
+    toKbs,
+    accumulatePktSize,
+    areAllGopsIdentical,
+    findGcd,
+    calculateDisplayAspectRatio
+};
