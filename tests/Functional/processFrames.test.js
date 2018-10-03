@@ -93,7 +93,7 @@ describe('processFrames functional tests', () => {
                     fps: {mean: expectedMeanFps, min: expectedMinFps, max: expectedMaxFps},
                     bitrate: {mean: expectedMeanBitrate, min: expectedMinBitrate, max: expectedMaxBitrate},
                     gopDuration: {mean: expectedMeanGop, min: expectedMinGop, max: expectedMaxGop},
-                    aspectRatio: expectedAspectRatio,
+                    displayAspectRatio: expectedAspectRatio,
                     height: expectedHeight,
                     width: expectedWidth,
                     hasAudioStream: expectAudio
@@ -168,7 +168,7 @@ describe('processFrames functional tests', () => {
                     fps: {mean: expectedMeanFps, min: expectedMinFps, max: expectedMaxFps},
                     bitrate: {mean: expectedMeanBitrate, min: expectedMinBitrate, max: expectedMaxBitrate},
                     gopDuration: {mean: expectedMeanGop, min: expectedMinGop, max: expectedMaxGop},
-                    aspectRatio: expectedAspectRatio,
+                    displayAspectRatio: expectedAspectRatio,
                     width: expectedWidth,
                     height: expectedHeight,
                     hasAudioStream: expectAudio
