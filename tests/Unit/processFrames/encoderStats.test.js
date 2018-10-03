@@ -31,7 +31,7 @@ describe('processFrames.encoderStats', () => {
             it('must throw an exception for invalid input {type} type', ctx => {
                 assert.throws(() => {
                     processFrames.encoderStats(ctx.item);
-                }, TypeError, 'process method is supposed to accept an array of frames.');
+                }, TypeError, 'Method accepts only an array of frames');
             });
         }
     );

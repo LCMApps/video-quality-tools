@@ -36,7 +36,7 @@ describe('processFrames.accumulatePktSize', () => {
                 };
 
                 try {
-                    processFrames.accumulatePktSize(invalidInput);
+                    processFrames.calculatePktSize(invalidInput.frames);
                     assert.isFalse(true, 'should not be here');
                 } catch (error) {
                     assert.instanceOf(error, Errors.FrameInvalidData);
@@ -58,7 +58,7 @@ describe('processFrames.accumulatePktSize', () => {
 
         const expectedRes = frames.reduce((sum, frame) => sum + frame.pkt_size, 0);
 
-        const res = processFrames.accumulatePktSize({frames});
+        const res = processFrames.calculatePktSize(frames);
 
         assert.strictEqual(res, expectedRes);
     });
