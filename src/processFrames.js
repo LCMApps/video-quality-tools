@@ -102,7 +102,7 @@ function networkStats(frames, durationInMsec) {
         throw new TypeError('Method accepts only a positive integer as duration');
     }
 
-    const videoFrames = filterVideoFrames(frames);console.log(videoFrames.length);
+    const videoFrames = filterVideoFrames(frames);
     const audioFrames = filterAudioFrames(frames);
 
     const durationInSec = durationInMsec / MSECS_IN_SEC;
