@@ -4,6 +4,23 @@ const _ = require('lodash');
 
 const Errors = require('./Errors');
 
+const AR_CALCULATION_PRECISION = 0.01;
+
+const SQUARE_AR_COEFFICIENT = 1;
+const SQUARE_AR = '1:1';
+
+const TRADITIONAL_TV_AR_COEFFICIENT = 1.333;
+const TRADITIONAL_TV_AR = '4:3';
+
+const HD_VIDEO_AR_COEFFICIENT = 1.777;
+const HD_VIDEO_AR = '16:9';
+
+const UNIVISIUM_AR_COEFFICIENT = 2;
+const UNIVISIUM_AR = '18:9';
+
+const WIDESCREEN_AR_COEFFICIENT = 2.33;
+const WIDESCREEN_AR = '21:9';
+
 function processFrames(frames) {
     if (!Array.isArray(frames)) {
         throw new TypeError('process method is supposed to accept an array of frames.');
@@ -16,28 +33,76 @@ function processFrames(frames) {
         throw new Errors.GopNotFoundError('Can not find any gop for these frames', {frames});
     }
 
-    const areAllGopsIdentical = processFrames.areAllGopsIdentical(gops);
-    const bitrate             = processFrames.calculateBitrate(gops);
-    const fps                 = processFrames.calculateFps(gops);
+    let areAllGopsIdentical = true;
+    const hasAudioStream = processFrames.hasAudioFrames(frames);
+    const baseGopSize = gops[0].frames.length;
+    const bitrates = [];
+    const fpsList = [];
+    const gopDurations = [];
+
+    gops.forEach(gop => {
+        areAllGopsIdentical      = areAllGopsIdentical && baseGopSize === gop.frames.length;
+        const accumulatedPktSize = processFrames.accumulatePktSize(gop);
+        const gopDuration        = processFrames.gopDurationInSec(gop);
+
+        const gopBitrate = processFrames.toKbs(accumulatedPktSize / gopDuration);
+        bitrates.push(gopBitrate);
+
+        const gopFps = gop.frames.length / gopDuration;
+        fpsList.push(gopFps);
+
+        gopDurations.push(gopDuration);
+    });
+
+    const bitrate = {
+        mean: _.mean(bitrates),
+        min : Math.min(...bitrates),
+        max : Math.max(...bitrates)
+    };
+
+    const fps = {
+        mean: _.mean(fpsList),
+        min : Math.min(...fpsList),
+        max : Math.max(...fpsList)
+    };
+
+    const gopDuration = {
+        mean: _.mean(gopDurations),
+        min: Math.min(...gopDurations),
+        max: Math.max(...gopDurations)
+    };
+
+    const width = gops[0].frames[0].width;
+    const height = gops[0].frames[0].height;
+    const displayAspectRatio = calculateDisplayAspectRatio(width, height);
 
     return {
         payload       : {
             areAllGopsIdentical,
             bitrate,
-            fps
+            fps,
+            gopDuration,
+            displayAspectRatio,
+            width,
+            height,
+            hasAudioStream
         },
         remainedFrames: remainedFrames
     };
 }
 
-processFrames.identifyGops        = identifyGops;
-processFrames.calculateBitrate    = calculateBitrate;
-processFrames.calculateFps        = calculateFps;
-processFrames.filterVideoFrames   = filterVideoFrames;
-processFrames.gopDurationInSec    = gopDurationInSec;
-processFrames.toKbs               = toKbs;
-processFrames.accumulatePktSize   = accumulatePktSize;
-processFrames.areAllGopsIdentical = areAllGopsIdentical;
+processFrames.identifyGops                = identifyGops;
+processFrames.calculateBitrate            = calculateBitrate;
+processFrames.calculateFps                = calculateFps;
+processFrames.calculateGopDuration        = calculateGopDuration;
+processFrames.filterVideoFrames           = filterVideoFrames;
+processFrames.hasAudioFrames              = hasAudioFrames;
+processFrames.gopDurationInSec            = gopDurationInSec;
+processFrames.toKbs                       = toKbs;
+processFrames.accumulatePktSize           = accumulatePktSize;
+processFrames.areAllGopsIdentical         = areAllGopsIdentical;
+processFrames.findGcd                     = findGcd;
+processFrames.calculateDisplayAspectRatio = calculateDisplayAspectRatio;
 
 module.exports = processFrames;
 
@@ -185,6 +250,58 @@ function calculateFps(gops) {
     };
 }
 
+function calculateGopDuration(gops) {
+    const gopsDurations = [];
+
+    gops.forEach(gop => {
+        const gopDurationInSec = processFrames.gopDurationInSec(gop);
+
+        gopsDurations.push(gopDurationInSec);
+    });
+
+    return {
+        mean: _.mean(gopsDurations),
+        min: Math.min(...gopsDurations),
+        max: Math.max(...gopsDurations)
+    };
+}
+
+function calculateDisplayAspectRatio(width, height) {
+    if (!_.isInteger(width) || width <= 0) {
+        throw new TypeError('"width" must be a positive integer');
+    }
+
+    if (!_.isInteger(height) || height <= 0) {
+        throw new TypeError('"height" must be a positive integer');
+    }
+
+    const arCoefficient = width / height;
+
+    if (Math.abs(arCoefficient - SQUARE_AR_COEFFICIENT) <= AR_CALCULATION_PRECISION) {
+        return SQUARE_AR;
+    }
+
+    if (Math.abs(arCoefficient - TRADITIONAL_TV_AR_COEFFICIENT) <= AR_CALCULATION_PRECISION) {
+        return TRADITIONAL_TV_AR;
+    }
+
+    if (Math.abs(arCoefficient - HD_VIDEO_AR_COEFFICIENT) <= AR_CALCULATION_PRECISION) {
+        return HD_VIDEO_AR;
+    }
+
+    if (Math.abs(arCoefficient - UNIVISIUM_AR_COEFFICIENT) <= AR_CALCULATION_PRECISION) {
+        return UNIVISIUM_AR;
+    }
+
+    if (Math.abs(arCoefficient - WIDESCREEN_AR_COEFFICIENT) <= AR_CALCULATION_PRECISION) {
+        return WIDESCREEN_AR;
+    }
+
+    const gcd = findGcd(width, height);
+
+    return `${width / gcd}:${height / gcd}`;
+}
+
 function areAllGopsIdentical(gops) {
     return gops.every(gop => _.isEqual(gops[0].frames.length, gop.frames.length));
 }
@@ -193,6 +310,22 @@ function filterVideoFrames(frames) {
     return frames.filter(frame => frame.media_type === 'video');
 }
 
+function hasAudioFrames(frames) {
+    return frames.some(frame => frame.media_type === 'audio');
+}
+
 function toKbs(val) {
     return val * 8 / 1024;
+}
+
+function findGcd(a, b) {
+    if (a === 0 && b === 0) {
+        return 0;
+    }
+
+    if (b === 0) {
+        return a;
+    }
+
+    return findGcd(b, a % b);
 }

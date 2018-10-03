@@ -11,11 +11,9 @@ function getSpawnArguments(url, timeoutInSec, errorLevel) {
         '-hide_banner',
         '-v',
         errorLevel,
-        '-select_streams',
-        'v:0',
         '-show_frames',
         '-show_entries',
-        'frame=pkt_size,pkt_pts_time,media_type,pict_type,key_frame',
+        'frame=pkt_size,pkt_pts_time,media_type,pict_type,key_frame,width,height',
         '-i',
         `${url} timeout=${timeoutInSec}`
     ];
