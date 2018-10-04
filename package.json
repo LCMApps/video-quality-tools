@@ -33,7 +33,7 @@
     "istanbul": "v1.1.0-alpha.1",
     "mocha": "^5.2.0",
     "proxyquire": "^2.1.0",
-    "sinon": "^2.4.1"
+    "sinon": "^6.3.5"
   },
   "dependencies": {
     "app-module-path": "^2.2.0",
