@@ -4,6 +4,8 @@ const _ = require('lodash');
 
 const Errors = require('./Errors');
 
+const MSECS_IN_SEC = 1000;
+
 const AR_CALCULATION_PRECISION = 0.01;
 
 const SQUARE_AR_COEFFICIENT = 1;
@@ -23,7 +25,7 @@ const WIDESCREEN_AR = '21:9';
 
 function encoderStats(frames) {
     if (!Array.isArray(frames)) {
-        throw new TypeError('process method is supposed to accept an array of frames.');
+        throw new TypeError('Method accepts only an array of frames');
     }
 
     const videoFrames            = filterVideoFrames(frames);
@@ -41,11 +43,11 @@ function encoderStats(frames) {
     const gopDurations = [];
 
     gops.forEach(gop => {
-        areAllGopsIdentical      = areAllGopsIdentical && baseGopSize === gop.frames.length;
-        const accumulatedPktSize = accumulatePktSize(gop);
-        const gopDuration        = gopDurationInSec(gop);
+        areAllGopsIdentical     = areAllGopsIdentical && baseGopSize === gop.frames.length;
+        const calculatedPktSize = calculatePktSize(gop.frames);
+        const gopDuration       = gopDurationInSec(gop);
 
-        const gopBitrate = toKbs(accumulatedPktSize / gopDuration);
+        const gopBitrate = toKbs(calculatedPktSize / gopDuration);
         bitrates.push(gopBitrate);
 
         const gopFps = gop.frames.length / gopDuration;
@@ -88,6 +90,28 @@ function encoderStats(frames) {
             hasAudioStream
         },
         remainedFrames: remainedFrames
+    };
+}
+
+function networkStats(frames, durationInMsec) {
+    if (!Array.isArray(frames)) {
+        throw new TypeError('Method accepts only an array of frames');
+    }
+
+    if (!_.isInteger(durationInMsec) || durationInMsec <= 0) {
+        throw new TypeError('Method accepts only a positive integer as duration');
+    }
+
+    const videoFrames = filterVideoFrames(frames);
+    const audioFrames = filterAudioFrames(frames);
+
+    const durationInSec = durationInMsec / MSECS_IN_SEC;
+
+    return {
+        videoFrameRate:  videoFrames.length / durationInSec,
+        audioFrameRate:  audioFrames.length / durationInSec,
+        videoBitrate: toKbs(calculatePktSize(videoFrames) / durationInSec),
+        audioBitrate: toKbs(calculatePktSize(audioFrames) / durationInSec),
     };
 }
 
@@ -145,10 +169,10 @@ function calculateBitrate(gops) {
     let bitrates = [];
 
     gops.forEach(gop => {
-        const accumulatedPktSize = accumulatePktSize(gop);
-        const durationInSec   = gopDurationInSec(gop);
+        const calculatedPktSize = calculatePktSize(gop.frames);
+        const durationInSec     = gopDurationInSec(gop);
 
-        const gopBitrate = toKbs(accumulatedPktSize / durationInSec);
+        const gopBitrate = toKbs(calculatedPktSize / durationInSec);
 
         bitrates.push(gopBitrate);
     });
@@ -160,8 +184,8 @@ function calculateBitrate(gops) {
     };
 }
 
-function accumulatePktSize(gop) {
-    const accumulatedPktSize = gop.frames.reduce((accumulator, frame) => {
+function calculatePktSize(frames) {
+    const accumulatedPktSize = frames.reduce((accumulator, frame) => {
         if (!_.isNumber(frame.pkt_size)) {
             throw new Errors.FrameInvalidData(
                 `frame's pkt_size field has invalid type ${Object.prototype.toString.call(frame.pkt_size)}`,
@@ -295,6 +319,10 @@ function filterVideoFrames(frames) {
     return frames.filter(frame => frame.media_type === 'video');
 }
 
+function filterAudioFrames(frames) {
+    return frames.filter(frame => frame.media_type === 'audio');
+}
+
 function hasAudioFrames(frames) {
     return frames.some(frame => frame.media_type === 'audio');
 }
@@ -317,6 +345,7 @@ function findGcd(a, b) {
 
 module.exports = {
     encoderStats,
+    networkStats,
     identifyGops,
     calculateBitrate,
     calculateFps,
@@ -325,7 +354,7 @@ module.exports = {
     hasAudioFrames,
     gopDurationInSec,
     toKbs,
-    accumulatePktSize,
+    calculatePktSize,
     areAllGopsIdentical,
     findGcd,
     calculateDisplayAspectRatio

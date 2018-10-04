@@ -326,10 +326,68 @@ framesMonitor.on('error', err => {
 # Video Quality Info
 
 `video-quality-tools` ships with functions that help determining live stream info based on the set of frames
-collected from `FramesMonitor`. It relies on
-[GOP structure](https://en.wikipedia.org/wiki/Group_of_pictures) of the stream.
+collected from `FramesMonitor`:
+- `processFrames.networkStats`
+- `processFrames.encoderStats`
 
-The following example shows how to gather frames and pass them to the function that analyzes encoder statistic
+
+## `processFrames.networkStats(frames, durationInMsec)`
+
+Receives an array of `frames` collected for a given time interval `durationInMsec`.
+
+This method doesn't analyze GOP structure and isn't dependant on fullness of GOP between runs. Method shows only
+frame rate of audio and video streams received, bitrate of audio and video. Instead of `processFrames.networkStats`
+this method allows to control quality of network link between sender and receiver (like RTMP server).
+
+> Remember that this module must be located not far away from receiver server (that is under analysis). If link
+between receiver and module affects delivery of RTMP packages this module indicates incorrect values. It's better
+to run this module near the receiver.
+
+```javascript
+const {processFrames} = require('video-quality-tools');
+
+const INTERVAL_TO_ANALYZE_FRAMES = 5000; // in milliseconds
+
+let frames = [];
+
+framesMonitor.on('frame', frame => {
+    frames.push(frame);
+});
+
+setInterval(() => {
+    try {
+        const info = processFrames.networkStats(frames, INTERVAL_TO_ANALYZE_FRAMES);
+    
+        console.log(info);
+
+        frames = [];
+    } catch(err) {
+        // only if arguments are invalid
+        console.log(err);
+        process.exit(1);
+    }
+}, INTERVAL_TO_ANALYZE_FRAMES);
+```
+
+There is an output for the example above:
+
+```
+{
+  videoFrameRate: 29,
+  audioFrameRate: 50,
+  videoBitrate: 1403.5421875,
+  audioBitrate: 39.846875
+}
+```
+
+Check [examples/networkStats.js](examples/networkStats.js) to see an example code.
+
+
+## `processFrames.encoderStats(frames)`
+
+It relies on [GOP structure](https://en.wikipedia.org/wiki/Group_of_pictures) of the stream.
+
+The following example shows how to gather frames and pass them to the function that analyzes encoder statistic.
 
 ```javascript
 const {processFrames} = require('video-quality-tools');
