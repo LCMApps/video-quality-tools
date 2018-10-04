@@ -32,7 +32,7 @@ describe('FramesMonitor::_onStdoutChunk', () => {
     });
 
     afterEach(() => {
-        spyOnCompleteFrame.reset();
+        spyOnCompleteFrame.resetHistory();
         stubRunShowFramesProcess.restore();
         stubHandleProcessingError.restore();
         spyFrameToJson.restore();
