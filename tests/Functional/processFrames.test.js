@@ -86,7 +86,7 @@ describe('processFrames functional tests', () => {
                     {key_frame: 0, pict_type: 'P'}
                 ];
 
-                const {payload, remainedFrames} = processFrames(frames);
+                const {payload, remainedFrames} = processFrames.encoderStats(frames);
 
                 assert.deepEqual(payload, {
                     areAllGopsIdentical: true,
@@ -161,7 +161,7 @@ describe('processFrames functional tests', () => {
                     {key_frame: 0, pict_type: 'P'}
                 ];
 
-                const {payload, remainedFrames} = processFrames(frames);
+                const {payload, remainedFrames} = processFrames.encoderStats(frames);
 
                 assert.deepEqual(payload, {
                     areAllGopsIdentical: false,
