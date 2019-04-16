@@ -11,7 +11,7 @@ function typeOf(item) {
     return Object.prototype.toString.call(item);
 }
 
-describe('processFrames', () => {
+describe('processFrames.encoderStats', () => {
 
     const invalidFramesTypes = [
         undefined,
@@ -30,8 +30,8 @@ describe('processFrames', () => {
         () => {
             it('must throw an exception for invalid input {type} type', ctx => {
                 assert.throws(() => {
-                    processFrames(ctx.item);
-                }, TypeError, 'process method is supposed to accept an array of frames.');
+                    processFrames.encoderStats(ctx.item);
+                }, TypeError, 'Method accepts only an array of frames');
             });
         }
     );
@@ -46,7 +46,7 @@ describe('processFrames', () => {
         ];
 
         try {
-            processFrames(frames);
+            processFrames.encoderStats(frames);
             assert.isFalse(true, 'should not be here');
         } catch (error) {
             assert.instanceOf(error, Errors.GopNotFoundError);
@@ -127,7 +127,7 @@ describe('processFrames', () => {
         const expectAudio1 = false;
         const expectAudio2 = true;
 
-        let res1 = processFrames(frames1);
+        let res1 = processFrames.encoderStats(frames1);
 
         assert.deepEqual(res1.payload, {
             areAllGopsIdentical: true,
@@ -142,7 +142,7 @@ describe('processFrames', () => {
 
         assert.deepEqual(res1.remainedFrames, expectedRemainedFrames1);
 
-        let res2 = processFrames(frames2);
+        let res2 = processFrames.encoderStats(frames2);
 
         assert.deepEqual(res2.payload, {
             areAllGopsIdentical: true,
@@ -192,7 +192,7 @@ describe('processFrames', () => {
         const expectAudio = false;
         const expectAreAllGopsIdentical = false;
 
-        let res = processFrames(frames);
+        let res = processFrames.encoderStats(frames);
 
         assert.deepEqual(res.payload, {
             areAllGopsIdentical: expectAreAllGopsIdentical,
