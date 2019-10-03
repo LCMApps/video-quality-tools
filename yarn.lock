@@ -647,9 +647,11 @@ get-func-name@^2.0.0:
   version "2.0.0"
   resolved "https://registry.yarnpkg.com/get-func-name/-/get-func-name-2.0.0.tgz#ead774abee72e20409433a066366023dd6887a41"
 
-get-port@^4.0.0:
-  version "4.0.0"
-  resolved "https://registry.yarnpkg.com/get-port/-/get-port-4.0.0.tgz#373c85960138ee20027c070e3cb08019fea29816"
+get-port@^5.0.0:
+  version "5.0.0"
+  resolved "https://registry.yarnpkg.com/get-port/-/get-port-5.0.0.tgz#aa22b6b86fd926dd7884de3e23332c9f70c031a6"
+  dependencies:
+    type-fest "^0.3.0"
 
 getpass@^0.1.1:
   version "0.1.7"
@@ -1535,6 +1537,10 @@ type-detect@4.0.8, type-detect@^4.0.5, type-detect@^4.0.8:
 type-detect@^4.0.0:
   version "4.0.3"
   resolved "https://registry.yarnpkg.com/type-detect/-/type-detect-4.0.3.tgz#0e3f2670b44099b0b46c284d136a7ef49c74c2ea"
+
+type-fest@^0.3.0:
+  version "0.3.1"
+  resolved "https://registry.yarnpkg.com/type-fest/-/type-fest-0.3.1.tgz#63d00d204e059474fe5e1b7c011112bbd1dc29e1"
 
 uglify-js@^3.1.4:
   version "3.6.0"
