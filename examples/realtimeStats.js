@@ -1,6 +1,6 @@
 const {FramesMonitor, processFrames} = require('../index');
 // or
-// const {processFrames} = require('video-quality-tools');
+// const {FramesMonitor, processFrames} = require('video-quality-tools');
 // if you use it outside this repo
 
 const INTERVAL_TO_ANALYZE_FRAMES = 5000; // in milliseconds
