@@ -10,34 +10,43 @@
     "test": "tests"
   },
   "scripts": {
-    "lint": "./node_modules/.bin/eslint ./",
-    "tests": "yarn run unit-tests",
-    "test:coverage": "NODE_ENV=test istanbul cover ./node_modules/.bin/_mocha  --print both -- --opts tests/mocha.opts -R spec ./tests/Unit",
-    "unit-tests": "NODE_ENV=test ./node_modules/.bin/mocha --opts tests/mocha.opts -R spec './tests/Unit/**/*.js'",
-    "func-tests": "NODE_ENV=test ./node_modules/.bin/mocha --opts tests/mocha.opts --timeout 30000 -R spec './tests/Functional/**/*.js'",
-    "coveralls": "NODE_ENV=test istanbul cover ./node_modules/mocha/bin/_mocha --report lcovonly -- --opts tests/mocha.opts -R spec ./tests/Unit && cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js && rm -rf ./coverage"
+    "lint": "eslint .",
+    "test": "yarn test:unit",
+    "test:unit": "mocha --opts tests/mocha.opts -R spec './tests/Unit/**/*.js'",
+    "test:func": "mocha --opts tests/mocha.opts -R spec './tests/Functional/**/*.js' --timeout 30000",
+    "test:coverage": "nyc --reporter=text --reporter=text-summary mocha --opts tests/mocha.opts -R spec './tests/Unit/**/*.js'",
+    "coveralls": "nyc --reporter=text-lcov mocha --opts tests/mocha.opts -R spec './tests/Unit/**/*.js' && nyc report --reporter=text-lcov | coveralls"
   },
   "repository": {
     "type": "git",
     "url": "https://github.com/LCMApps/video-quality-tools.git"
   },
-  "keywords": ["ffmpeg", "ffprobe", "monitor", "livestream", "live", "rtmp", "hls", "dash", "monitoring"],
+  "keywords": [
+    "ffmpeg",
+    "ffprobe",
+    "monitor",
+    "livestream",
+    "live",
+    "rtmp",
+    "hls",
+    "dash",
+    "monitoring"
+  ],
   "license": "MIT",
   "devDependencies": {
-    "chai": "^4.1.0",
-    "chai-as-promised": "^7.1.1",
-    "coveralls": "^3.0.0",
-    "data-driven": "^1.3.0",
-    "eslint": "^6.5.1",
+    "chai": "^4.2.0",
+    "coveralls": "^3.0.7",
+    "data-driven": "^1.4.0",
+    "eslint": "^6.6.0",
     "get-port": "^5.0.0",
-    "istanbul": "v1.1.0-alpha.1",
-    "mocha": "^6.2.1",
-    "proxyquire": "^2.1.0",
+    "mocha": "^6.2.2",
+    "nyc": "^14.1.1",
+    "proxyquire": "^2.1.3",
     "sinon": "^7.5.0"
   },
   "dependencies": {
     "app-module-path": "^2.2.0",
-    "lodash": "^4.17.4"
+    "lodash": "^4.17.15"
   },
   "bugs": {
     "url": "https://github.com/LCMApps/video-quality-tools/issues"

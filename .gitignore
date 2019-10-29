@@ -4,6 +4,7 @@
 /node_modules
 /config/local-*.json
 /coverage
+.nyc_output
 package-lock.json
 .idea
 *.iml
