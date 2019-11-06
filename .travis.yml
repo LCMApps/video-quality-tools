@@ -4,7 +4,7 @@ node_js:
   - "8"
 
 script:
-  - "yarn run lint"
-  - "yarn run tests"
+  - "yarn lint"
+  - "yarn test"
 
-after_success: "yarn run coveralls"
+after_success: "yarn coveralls"
