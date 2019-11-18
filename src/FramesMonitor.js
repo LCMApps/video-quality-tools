@@ -42,7 +42,7 @@ class FramesMonitor extends EventEmitter {
 
         const {
             ffprobePath,
-            timeoutInSec,
+            analyzeDurationMs,
             bufferMaxLengthInBytes,
             errorLevel,
             exitProcessGuardTimeoutInMs
@@ -52,8 +52,8 @@ class FramesMonitor extends EventEmitter {
             throw new Errors.ConfigError('You should provide a correct path to ffprobe, bastard.');
         }
 
-        if (!_.isSafeInteger(timeoutInSec) || timeoutInSec <= 0) {
-            throw new Errors.ConfigError('You should provide a correct timeout, bastard.');
+        if (analyzeDurationMs !== undefined && (!_.isSafeInteger(analyzeDurationMs) || analyzeDurationMs <= 0)) {
+            throw new Errors.ConfigError('You should provide a correct analyze duration, bastard.');
         }
 
         if (!_.isSafeInteger(bufferMaxLengthInBytes) || bufferMaxLengthInBytes <= 0) {
@@ -260,26 +260,27 @@ class FramesMonitor extends EventEmitter {
     }
 
     _runShowFramesProcess() {
-        const {ffprobePath, timeoutInSec, errorLevel} = this._config;
+        const {ffprobePath, analyzeDurationMs, errorLevel} = this._config;
+
+        const args = [
+            '-hide_banner',
+            '-v',
+            errorLevel,
+            '-fflags',
+            'nobuffer',
+            '-show_frames',
+            '-show_entries',
+            'frame=pkt_size,pkt_pts_time,media_type,pict_type,key_frame,width,height',
+        ];
+
+        if (analyzeDurationMs) {
+            args.push('-analyzeduration', analyzeDurationMs);
+        }
+
+        args.push('-i', this._url);
 
         try {
-            const exec = spawn(
-                ffprobePath,
-                [
-                    '-hide_banner',
-                    '-v',
-                    errorLevel,
-                    '-fflags',
-                    'nobuffer',
-                    '-show_frames',
-                    '-show_entries',
-                    'frame=pkt_size,pkt_pts_time,media_type,pict_type,key_frame,width,height',
-                    '-i',
-                    `${this._url} timeout=${timeoutInSec}`
-                ]
-            );
-
-            return exec;
+            return spawn(ffprobePath, args);
         } catch (err) {
             if (err instanceof TypeError) {
                 // spawn method throws TypeError if some argument is invalid

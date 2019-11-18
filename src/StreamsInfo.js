@@ -21,14 +21,14 @@ class StreamsInfo {
             throw new TypeError('You should provide a correct url, bastard.');
         }
 
-        const {ffprobePath, timeoutInSec} = config;
+        const {ffprobePath, analyzeDurationMs} = config;
 
         if (!_.isString(ffprobePath) || _.isEmpty(ffprobePath)) {
             throw new Errors.ConfigError('You should provide a correct path to ffprobe, bastard.');
         }
 
-        if (!_.isInteger(timeoutInSec) || timeoutInSec <= 0) {
-            throw new Errors.ConfigError('You should provide a correct timeout, bastard.');
+        if (analyzeDurationMs !== undefined && (!_.isInteger(analyzeDurationMs) || analyzeDurationMs <= 0)) {
+            throw new Errors.ConfigError('You should provide a correct analyze duration, bastard.');
         }
 
         this._assertExecutable(ffprobePath);
@@ -79,15 +79,16 @@ class StreamsInfo {
     }
 
     _runShowStreamsProcess() {
-        const {ffprobePath, timeoutInSec} = this._config;
+        const {ffprobePath, analyzeDurationMs} = this._config;
 
         const command = `
             ${ffprobePath}\
             -hide_banner\
             -v error\
+            ${analyzeDurationMs ? `-analyzeduration ${analyzeDurationMs}` : ''}\
             -show_streams\
             -print_format json\
-            '${this._url} timeout=${timeoutInSec}'
+            '${this._url}'
         `;
 
         return promisify(exec)(command);
