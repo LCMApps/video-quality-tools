@@ -1,5 +1,15 @@
 # Changelog
 
+### 2.1.0
+
+IMPROVEMENTS:
+
+- Added optional flag `-analyzeduration` to ffprobe command.
+
+BUG FIXES:
+- In ffprobe command timeot=${timeoutInSec} is not working
+[[GH-92](https://github.com/LCMApps/video-quality-tools/issues/92)]
+
 ### 2.0.0
 
 IMPROVEMENTS:
