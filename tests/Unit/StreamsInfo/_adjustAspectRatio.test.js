@@ -13,8 +13,7 @@ const {invalidParams, validParams} = require('./_adjustAspectRatio.data');
 describe('StreamsInfo::_adjustAspectRatio', () => {
 
     const streamsInfo = new StreamsInfo({
-        ffprobePath : correctPath,
-        timeoutInSec: 1
+        ffprobePath : correctPath
     }, correctUrl);
 
     dataDriven(invalidParams, function () {

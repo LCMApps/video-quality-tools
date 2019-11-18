@@ -14,8 +14,7 @@ function typeOf(obj) {
 describe('StreamsInfo::_parseStreamsInfo', () => {
 
     const streamsInfo = new StreamsInfo({
-        ffprobePath : correctPath,
-        timeoutInSec: 1
+        ffprobePath : correctPath
     }, correctUrl);
 
     it('method awaits for stringified json', () => {

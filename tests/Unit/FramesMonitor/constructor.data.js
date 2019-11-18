@@ -39,8 +39,7 @@ const incorrectFfprobePath = [
     new Error('bastard')
 ];
 
-const incorrectTimeoutInSec = [
-    undefined,
+const incorrectAnalyzeDurationMs = [
     null,
     false,
     '1',
@@ -93,14 +92,14 @@ const incorrectExitProcessGuardTimeoutInMs = [
 
 const incorrectConfigObject = [
     {
-        description: 'config.timeoutInSec param must be a positive integer, float is passed',
-        config     : {timeoutInSec: 1.1},
-        errorMsg   : 'You should provide a correct timeout, bastard.'
+        description: 'config.analyzeDurationMs param must be a positive integer, float is passed',
+        config     : {analyzeDurationMs: 1.1},
+        errorMsg   : 'You should provide a correct analyze duration, bastard.'
     },
     {
-        description: 'config.timeoutInSec param must be a positive integer, negative is passed',
-        config     : {timeoutInSec: -1},
-        errorMsg   : 'You should provide a correct timeout, bastard.'
+        description: 'config.analyzeDurationMs param must be a positive integer, negative is passed',
+        config     : {analyzeDurationMs: -1},
+        errorMsg   : 'You should provide a correct analyze duration, bastard.'
     },
     {
         description: 'config.bufferMaxLengthInBytes param must be a positive integer, float is passed',
@@ -133,7 +132,7 @@ module.exports = {
     incorrectConfig,
     incorrectUrl,
     incorrectFfprobePath,
-    incorrectTimeoutInSec,
+    incorrectAnalyzeDurationMs,
     incorrectBufferMaxLengthInBytes,
     incorrectErrorLevel,
     incorrectExitProcessGuardTimeoutInMs,

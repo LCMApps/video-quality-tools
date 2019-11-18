@@ -71,16 +71,16 @@ describe('FramesMonitor::constructor', () => {
     );
 
     dataDriven(
-        testData.incorrectTimeoutInSec.map(item => ({type: typeOf(item), timeoutInSec: item})),
+        testData.incorrectAnalyzeDurationMs.map(item => ({type: typeOf(item), analyzeDurationMs: item})),
         () => {
-            it('config.timeoutInSec param has invalid ({type}) type', ctx => {
+            it('config.analyzeDurationMs param has invalid ({type}) type', ctx => {
                 const incorrectConfig = Object.assign({}, config, {
-                    timeoutInSec: ctx.timeoutInSec
+                    analyzeDurationMs: ctx.analyzeDurationMs
                 });
 
                 assert.throws(() => {
                     new FramesMonitor(incorrectConfig, url);
-                }, Error.ConfigError, 'You should provide a correct timeout, bastard.');
+                }, Error.ConfigError, 'You should provide a correct analyze duration, bastard.');
 
                 assert.isTrue(spyAssertExecutable.notCalled);
             });
@@ -179,6 +179,27 @@ describe('FramesMonitor::constructor', () => {
         assert.isTrue(spyAssertExecutable.calledWithExactly(config.ffprobePath));
 
         assert.deepEqual(framesMonitor._config, config);
+        assert.strictEqual(framesMonitor._url, url);
+
+        assert.strictEqual(framesMonitor._cp, expectedChildProcessDefaultValue);
+        assert.strictEqual(framesMonitor._chunkRemainder, expectedChunkRemainderDefaultValue);
+        assert.deepEqual(framesMonitor._stderrOutputs, expectedStderrOutputs);
+    });
+
+    it('all params are good and analyzeDurationMs === undefined', () => {
+        const expectedChildProcessDefaultValue   = null;
+        const expectedChunkRemainderDefaultValue = '';
+        const expectedStderrOutputs              = [];
+
+        const configClone = JSON.parse(JSON.stringify(config));
+        configClone.analyzeDurationMs = undefined;
+
+        const framesMonitor = new FramesMonitor(configClone, url);
+
+        assert.isTrue(spyAssertExecutable.calledOnce);
+        assert.isTrue(spyAssertExecutable.calledWithExactly(config.ffprobePath));
+
+        assert.deepEqual(framesMonitor._config, configClone);
         assert.strictEqual(framesMonitor._url, url);
 
         assert.strictEqual(framesMonitor._cp, expectedChildProcessDefaultValue);
