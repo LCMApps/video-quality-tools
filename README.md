@@ -23,6 +23,22 @@ Using yarn:
 $ yarn add video-quality-tools
 ```
 
+
+# <a name="migration">Migration
+
+## Migration from v2.0.0 to v2.1.0
+
+In this version was removed option "timeoutInSec" because it works only for ffmpeg build with librtmp module.
+See the librtmp manual page (man 3 librtmp) for more information.
+
+Was added optional flag `-analyzeduration integer` to ffprobe command (in config key "analyzeDurationMs")
+See [Format-Options](https://www.ffmpeg.org/ffmpeg-all.html#Format-Options).
+
+Migration steps:
+1. Delete key "timeoutInSec" from `FramesMonitor` and `StreamsInfo` constructor options.
+2. (Optional) Add "analyzeDurationMs" to `FramesMonitor` and `StreamsInfo` constructor options. 
+For ffprobe it is defaults 5,000 milliseconds.
+
 # <a name="basic-concepts">Basic Concepts
 
 ## Error Handling
@@ -81,7 +97,7 @@ const {StreamsInfo} = require('video-quality-tools');
 
 const streamsInfoOptions = {
     ffprobePath: '/usr/local/bin/ffprobe',
-    timeoutInSec: 5
+    analyzeDurationMs: 5000
 };
 const streamsInfo = new StreamsInfo(streamsInfoOptions, 'rtmp://host:port/appInstance/name');
 ```
@@ -179,7 +195,7 @@ const {FramesMonitor} = require('video-quality-tools');
 
 const framesMonitorOptions = {
     ffprobePath: '/usr/local/bin/ffprobe',
-    timeoutInSec: 5,
+    analyzeDurationMs: 5000,
     bufferMaxLengthInBytes: 100000,
     errorLevel: 'error',
     exitProcessGuardTimeoutInMs: 1000
@@ -197,7 +213,7 @@ Constructor throws:
 The first argument of `FramesMonitor` must be an `options` object. All `options` object's fields are mandatory:
 
 * `ffprobePath` - string, path to ffprobe executable;
-* `timeoutInSec` - integer, greater than 0, specifies the waiting time of a live stream’s first frame;
+* `analyzeDurationMs` - integer, greater than 0, specifies the time to probe the input frames (default 5000 ms);
 * `bufferMaxLengthInBytes` - integer, greater than 0, specifies the buffer length for ffprobe frames. This setting
 prevents from hanging and receiving incorrect data from the stream, usually 1-2 KB is enough;
 * `errorLevel` - specifies log level for debugging purposes, must be equal to ffprobe's
