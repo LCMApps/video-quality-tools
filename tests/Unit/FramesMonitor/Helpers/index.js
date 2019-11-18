@@ -6,7 +6,7 @@ const proxyquire = require('proxyquire');
 
 const ffprobePath                 = '/correct/path';
 const bufferMaxLengthInBytes      = 2 ** 20;
-const timeoutInSec                = 1;
+const analyzeDurationMs           = 5000;
 const url                         = 'rtmp://localhost:1935/myapp/mystream';
 const errorLevel                  = 'fatal'; // https://ffmpeg.org/ffprobe.html
 const exitProcessGuardTimeoutInMs = 2000;
@@ -38,7 +38,7 @@ function makeChildProcess() {
 module.exports = {
     config: {
         ffprobePath,
-        timeoutInSec,
+        analyzeDurationMs,
         bufferMaxLengthInBytes,
         errorLevel,
         exitProcessGuardTimeoutInMs

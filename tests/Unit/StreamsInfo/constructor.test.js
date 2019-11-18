@@ -39,7 +39,7 @@ describe('StreamsInfo::constructor', () => {
         assert.throws(() => {
             new StreamsInfo({
                 ffprobePath : `/incorrect/path/${correctUrl}`,
-                timeoutInSec: 1
+                analyzeDurationMs: 1000
             }, correctUrl);
         }, Errors.ExecutablePathError);
     });
@@ -48,7 +48,16 @@ describe('StreamsInfo::constructor', () => {
         assert.doesNotThrow(() => {
             new StreamsInfo({
                 ffprobePath : correctPath,
-                timeoutInSec: 1
+                analyzeDurationMs: 1000
+            }, correctUrl);
+        });
+    });
+
+    it('all params are good and analyzeDurationMs === undefined', () => {
+        assert.doesNotThrow(() => {
+            new StreamsInfo({
+                ffprobePath : correctPath,
+                analyzeDurationMs: undefined
             }, correctUrl);
         });
     });
