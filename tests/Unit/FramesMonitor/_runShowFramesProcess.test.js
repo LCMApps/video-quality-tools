@@ -87,7 +87,7 @@ describe('FramesMonitor::_handleProcessingError', () => {
             }
         });
 
-        const framesMonitor = new FramesMonitor(config, url);
+        const framesMonitor = new FramesMonitor(Object.assign({}, config, {analyzeDurationMs}), url);
 
         const spyOnProcessStartError = sinon.spy(framesMonitor, '_onProcessStartError');
 
