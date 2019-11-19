@@ -81,17 +81,15 @@ class StreamsInfo {
     _runShowStreamsProcess() {
         const {ffprobePath, analyzeDurationMs} = this._config;
 
-        const command = `
-            ${ffprobePath}\
-            -hide_banner\
-            -v error\
-            ${analyzeDurationMs ? `-analyzeduration ${analyzeDurationMs}` : ''}\
-            -show_streams\
-            -print_format json\
-            '${this._url}'
-        `;
+        const commandArgs = [ffprobePath, '-hide_banner', '-v error'];
 
-        return promisify(exec)(command);
+        if (analyzeDurationMs) {
+            commandArgs.push('-analyzeduration', analyzeDurationMs);
+        }
+
+        commandArgs.push('-show_streams', '-print_format json', '-i', this._url);
+
+        return promisify(exec)(commandArgs.join(' '));
     }
 
     _parseStreamsInfo(rawResult) {

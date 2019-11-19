@@ -66,6 +66,43 @@ describe('FramesMonitor::_handleProcessingError', () => {
         assert.isTrue(spyOnProcessStartError.notCalled);
     });
 
+    it('must returns child process object just fine and ffprobe without analyzeDurationMs', () => {
+        const analyzeDurationMs = undefined;
+        const expectedFfprobeArguments = getSpawnArguments(url, analyzeDurationMs, config.errorLevel);
+        const expectedOutput = {cp: true};
+
+        const spawn    = () => expectedOutput;
+        const spySpawn = sinon.spy(spawn);
+
+        const FramesMonitor = proxyquire('src/FramesMonitor', {
+            fs           : {
+                accessSync(filePath) {
+                    if (filePath !== config.ffprobePath) {
+                        throw new Error('no such file or directory');
+                    }
+                }
+            },
+            child_process: {
+                spawn: spySpawn
+            }
+        });
+
+        const framesMonitor = new FramesMonitor(config, url);
+
+        const spyOnProcessStartError = sinon.spy(framesMonitor, '_onProcessStartError');
+
+        const result = framesMonitor._runShowFramesProcess();
+
+        assert.strictEqual(result, expectedOutput);
+
+        assert.isTrue(spySpawn.calledOnce);
+        assert.isTrue(
+            spySpawn.calledWithExactly(expectedFfprobePath, expectedFfprobeArguments)
+        );
+
+        assert.isTrue(spyOnProcessStartError.notCalled);
+    });
+
     it('must re-thrown TypeError error from the spawn call', () => {
         const expectedError = new TypeError('some error');
 
