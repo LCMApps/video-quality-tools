@@ -15,7 +15,7 @@ function getExecCommand(ffprobePath, analyzeDurationMs, url) {
 
     commandArgs.push('-show_streams', '-print_format json', '-i', url);
 
-    return commandArgs.join(' ')
+    return commandArgs.join(' ');
 }
 
 describe('StreamsInfo::_runShowStreamsProcess', () => {
