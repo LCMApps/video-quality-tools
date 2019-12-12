@@ -271,11 +271,13 @@ class FramesMonitor extends EventEmitter {
                     errorLevel,
                     '-fflags',
                     'nobuffer',
+                    '-rw_timeout',
+                    timeoutInSec,
                     '-show_frames',
                     '-show_entries',
                     'frame=pkt_size,pkt_pts_time,media_type,pict_type,key_frame,width,height',
                     '-i',
-                    `${this._url} timeout=${timeoutInSec}`
+                    this._url
                 ]
             );
 

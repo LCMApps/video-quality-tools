@@ -81,13 +81,14 @@ class StreamsInfo {
     _runShowStreamsProcess() {
         const {ffprobePath, timeoutInSec} = this._config;
 
-        const command = `
+        const command = `\
             ${ffprobePath}\
             -hide_banner\
             -v error\
             -show_streams\
             -print_format json\
-            '${this._url} timeout=${timeoutInSec}'
+            -rw_timeout ${timeoutInSec}\
+            ${this._url}\
         `;
 
         return promisify(exec)(command);

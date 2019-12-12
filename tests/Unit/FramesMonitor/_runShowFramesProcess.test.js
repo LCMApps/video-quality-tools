@@ -13,11 +13,13 @@ function getSpawnArguments(url, timeoutInSec, errorLevel) {
         errorLevel,
         '-fflags',
         'nobuffer',
+        '-rw_timeout',
+        timeoutInSec,
         '-show_frames',
         '-show_entries',
         'frame=pkt_size,pkt_pts_time,media_type,pict_type,key_frame,width,height',
         '-i',
-        `${url} timeout=${timeoutInSec}`
+        url
     ];
 }
 
