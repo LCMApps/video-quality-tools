@@ -16,7 +16,7 @@ describe('StreamsInfo::fetch', () => {
 
     let streamsInfo = new StreamsInfo({
         ffprobePath : correctPath,
-        timeoutInSec: 1
+        timeoutInMs: 1
     }, correctUrl);
 
     let stubRunShowStreamsProcess;

@@ -24,7 +24,7 @@ describe('StreamsInfo::fetch, fetch streams info from inactive stream', () => {
 
         streamsInfo = new StreamsInfo({
             ffprobePath : process.env.FFPROBE,
-            timeoutInSec: 1,
+            timeoutInMs: 1,
         }, streamUrl);
     });
 
@@ -55,7 +55,7 @@ describe('StreamsInfo::fetch, fetch streams info from active stream', () => {
 
         streamsInfo = new StreamsInfo({
             ffprobePath : process.env.FFPROBE,
-            timeoutInSec: 1,
+            timeoutInMs: 1,
         }, streamUrl);
 
         stream = await startStream(testFile, streamUrl);

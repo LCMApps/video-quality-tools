@@ -15,7 +15,7 @@ describe('StreamsInfo::_parseStreamsInfo', () => {
 
     const streamsInfo = new StreamsInfo({
         ffprobePath : correctPath,
-        timeoutInSec: 1
+        timeoutInMs: 1
     }, correctUrl);
 
     it('method awaits for stringified json', () => {

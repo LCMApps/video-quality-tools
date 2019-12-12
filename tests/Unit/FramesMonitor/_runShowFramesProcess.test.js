@@ -6,7 +6,7 @@ const {assert}   = require('chai');
 
 const {config, url} = require('./Helpers');
 
-function getSpawnArguments(url, timeoutInSec, errorLevel) {
+function getSpawnArguments(url, timeoutInMs, errorLevel) {
     return [
         '-hide_banner',
         '-v',
@@ -14,7 +14,7 @@ function getSpawnArguments(url, timeoutInSec, errorLevel) {
         '-fflags',
         'nobuffer',
         '-rw_timeout',
-        timeoutInSec,
+        timeoutInMs * 1000,
         '-show_frames',
         '-show_entries',
         'frame=pkt_size,pkt_pts_time,media_type,pict_type,key_frame,width,height',
@@ -25,7 +25,7 @@ function getSpawnArguments(url, timeoutInSec, errorLevel) {
 
 describe('FramesMonitor::_handleProcessingError', () => {
     const expectedFfprobePath      = config.ffprobePath;
-    const expectedFfprobeArguments = getSpawnArguments(url, config.timeoutInSec, config.errorLevel);
+    const expectedFfprobeArguments = getSpawnArguments(url, config.timeoutInMs, config.errorLevel);
 
     it('must returns child process object just fine', () => {
         const expectedOutput = {cp: true};

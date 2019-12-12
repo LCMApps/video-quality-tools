@@ -14,7 +14,7 @@ describe('StreamsInfo::_adjustAspectRatio', () => {
 
     const streamsInfo = new StreamsInfo({
         ffprobePath : correctPath,
-        timeoutInSec: 1
+        timeoutInMs: 1
     }, correctUrl);
 
     dataDriven(invalidParams, function () {
