@@ -21,20 +21,24 @@ class StreamsInfo {
             throw new TypeError('You should provide a correct url, bastard.');
         }
 
-        const {ffprobePath, timeoutInSec} = config;
+        const {ffprobePath, timeoutInMs} = config;
 
         if (!_.isString(ffprobePath) || _.isEmpty(ffprobePath)) {
             throw new Errors.ConfigError('You should provide a correct path to ffprobe, bastard.');
         }
 
-        if (!_.isInteger(timeoutInSec) || timeoutInSec <= 0) {
+        if (!_.isInteger(timeoutInMs) || timeoutInMs <= 0) {
             throw new Errors.ConfigError('You should provide a correct timeout, bastard.');
         }
 
         this._assertExecutable(ffprobePath);
 
-        this._config = config;
-        this._url    = url;
+        this._config = {
+            ffprobePath,
+            timeout: timeoutInMs * 1000
+        };
+
+        this._url = url;
     }
 
     async fetch() {
@@ -79,7 +83,7 @@ class StreamsInfo {
     }
 
     _runShowStreamsProcess() {
-        const {ffprobePath, timeoutInSec} = this._config;
+        const {ffprobePath, timeout} = this._config;
 
         const command = `\
             ${ffprobePath}\
@@ -87,7 +91,7 @@ class StreamsInfo {
             -v error\
             -show_streams\
             -print_format json\
-            -rw_timeout ${timeoutInSec}\
+            -rw_timeout ${timeout}\
             ${this._url}\
         `;
 
