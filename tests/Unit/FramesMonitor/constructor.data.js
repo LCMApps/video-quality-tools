@@ -127,6 +127,21 @@ const incorrectConfigObject = [
         config     : {exitProcessGuardTimeoutInMs: -1},
         errorMsg   : 'exitProcessGuardTimeoutInMs param should be a positive integer.'
     },
+    {
+        description: 'config.analyzeDurationInMs param must be a positive integer, float is passed',
+        config     : {analyzeDurationInMs: 1.1},
+        errorMsg   : 'You should provide a correct analyze duration, bastard.'
+    },
+    {
+        description: 'config.analyzeDurationInMs param must be a positive integer, negative is passed',
+        config     : {analyzeDurationInMs: -1},
+        errorMsg   : 'You should provide a correct analyze duration, bastard.'
+    },
+    {
+        description: 'config.analyzeDurationInMs param must be a positive integer, string is passed',
+        config     : {analyzeDurationInMs: '10'},
+        errorMsg   : 'You should provide a correct analyze duration, bastard.'
+    },
 ];
 
 module.exports = {

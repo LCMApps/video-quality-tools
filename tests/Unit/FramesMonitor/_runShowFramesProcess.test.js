@@ -6,8 +6,8 @@ const {assert}   = require('chai');
 
 const {config, url} = require('./Helpers');
 
-function getSpawnArguments(url, timeoutInMs, errorLevel) {
-    return [
+function getSpawnArguments(url, timeoutInMs, analyzeDurationInMs, errorLevel) {
+    const args = [
         '-hide_banner',
         '-v',
         errorLevel,
@@ -18,14 +18,22 @@ function getSpawnArguments(url, timeoutInMs, errorLevel) {
         '-show_frames',
         '-show_entries',
         'frame=pkt_size,pkt_pts_time,media_type,pict_type,key_frame,width,height',
-        '-i',
-        url
     ];
+
+    if (analyzeDurationInMs) {
+        args.push('-analyzeduration', analyzeDurationInMs * 1000);
+    }
+
+    args.push('-i', url);
+
+    return args;
 }
 
 describe('FramesMonitor::_handleProcessingError', () => {
     const expectedFfprobePath      = config.ffprobePath;
-    const expectedFfprobeArguments = getSpawnArguments(url, config.timeoutInMs, config.errorLevel);
+    const expectedFfprobeArguments = getSpawnArguments(
+        url, config.timeoutInMs, config.analyzeDurationInMs, config.errorLevel
+    );
 
     it('must returns child process object just fine', () => {
         const expectedOutput = {cp: true};
@@ -47,6 +55,48 @@ describe('FramesMonitor::_handleProcessingError', () => {
         });
 
         const framesMonitor = new FramesMonitor(config, url);
+
+        const spyOnProcessStartError = sinon.spy(framesMonitor, '_onProcessStartError');
+
+        const result = framesMonitor._runShowFramesProcess();
+
+        assert.strictEqual(result, expectedOutput);
+
+        assert.isTrue(spySpawn.calledOnce);
+        assert.isTrue(
+            spySpawn.calledWithExactly(expectedFfprobePath, expectedFfprobeArguments)
+        );
+
+        assert.isTrue(spyOnProcessStartError.notCalled);
+    });
+
+    it('must returns child process object just fine with default analyze duration', () => {
+        const analyzeDurationInMs = undefined;
+
+        const expectedOutput = {cp: true};
+        const expectedFfprobeArguments = getSpawnArguments(
+            url, config.timeoutInMs, analyzeDurationInMs, config.errorLevel
+        );
+
+        const spawn    = () => expectedOutput;
+        const spySpawn = sinon.spy(spawn);
+
+        const FramesMonitor = proxyquire('src/FramesMonitor', {
+            fs           : {
+                accessSync(filePath) {
+                    if (filePath !== config.ffprobePath) {
+                        throw new Error('no such file or directory');
+                    }
+                }
+            },
+            child_process: {
+                spawn: spySpawn
+            }
+        });
+
+        const options = Object.assign({}, config, {analyzeDurationInMs});
+
+        const framesMonitor = new FramesMonitor(options, url);
 
         const spyOnProcessStartError = sinon.spy(framesMonitor, '_onProcessStartError');
 
