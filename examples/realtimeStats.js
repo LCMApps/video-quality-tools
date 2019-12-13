@@ -8,7 +8,7 @@ const STREAM_URI = 'rtmp://host:port/path';
 
 const framesMonitorOptions = {
     ffprobePath: '/usr/local/bin/ffprobe',
-    timeoutInSec: 5,
+    timeoutInMs: 2000,
     bufferMaxLengthInBytes: 100000,
     errorLevel: 'error',
     exitProcessGuardTimeoutInMs: 1000

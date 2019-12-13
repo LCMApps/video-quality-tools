@@ -173,11 +173,11 @@ describe('FramesMonitor::constructor', () => {
         const expectedChunkRemainderDefaultValue = '';
         const expectedStderrOutputs              = [];
         const expectedConfig                     = {
-            ffprobePath: config.ffprobePath,
-            bufferMaxLengthInBytes: config.bufferMaxLengthInBytes,
-            errorLevel: config.errorLevel,
+            ffprobePath                : config.ffprobePath,
+            bufferMaxLengthInBytes     : config.bufferMaxLengthInBytes,
+            errorLevel                 : config.errorLevel,
             exitProcessGuardTimeoutInMs: config.exitProcessGuardTimeoutInMs,
-            timeout: config.timeoutInMs * 1000
+            timeout                    : config.timeoutInMs * 1000
         };
 
         const framesMonitor = new FramesMonitor(config, url);
