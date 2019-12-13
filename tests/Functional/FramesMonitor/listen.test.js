@@ -101,7 +101,7 @@ describe('FramesMonitor::listen, fetch frames from active stream', () => {
         spyOnAudioFrame.resetHistory();
     });
 
-    it.only('must receive all stream frames', done => {
+    it('must receive all stream frames', done => {
         const expectedReturnCode = 0;
 
         const onFrame = {I: spyOnIFrame, P: spyOnPFrame};

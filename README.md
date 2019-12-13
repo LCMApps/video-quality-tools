@@ -81,7 +81,7 @@ const {StreamsInfo} = require('video-quality-tools');
 
 const streamsInfoOptions = {
     ffprobePath: '/usr/local/bin/ffprobe',
-    timeoutInSec: 5
+    timeoutInMs: 2000
 };
 const streamsInfo = new StreamsInfo(streamsInfoOptions, 'rtmp://host:port/appInstance/name');
 ```
@@ -179,7 +179,7 @@ const {FramesMonitor} = require('video-quality-tools');
 
 const framesMonitorOptions = {
     ffprobePath: '/usr/local/bin/ffprobe',
-    timeoutInSec: 5,
+    timeoutInMa: 2000,
     bufferMaxLengthInBytes: 100000,
     errorLevel: 'error',
     exitProcessGuardTimeoutInMs: 1000
@@ -197,7 +197,8 @@ Constructor throws:
 The first argument of `FramesMonitor` must be an `options` object. All `options` object's fields are mandatory:
 
 * `ffprobePath` - string, path to ffprobe executable;
-* `timeoutInSec` - integer, greater than 0, specifies the waiting time of a live stream’s first frame;
+* `timeoutInMs` - integer, greater than 0, specifies the maximum time to wait for (network) read/write operations 
+to complete;
 * `bufferMaxLengthInBytes` - integer, greater than 0, specifies the buffer length for ffprobe frames. This setting
 prevents from hanging and receiving incorrect data from the stream, usually 1-2 KB is enough;
 * `errorLevel` - specifies log level for debugging purposes, must be equal to ffprobe's
