@@ -31,7 +31,7 @@ describe('FramesMonitor::listen, fetch frames from inactive stream', () => {
 
         framesMonitor = new FramesMonitor({
             ffprobePath                : process.env.FFPROBE,
-            timeoutInMs                : 1,
+            timeoutInMs                : 1000,
             bufferMaxLengthInBytes     : bufferMaxLengthInBytes,
             errorLevel                 : errorLevel,
             exitProcessGuardTimeoutInMs: exitProcessGuardTimeoutInMs
@@ -82,7 +82,7 @@ describe('FramesMonitor::listen, fetch frames from active stream', () => {
 
         framesMonitor = new FramesMonitor({
             ffprobePath                : process.env.FFPROBE,
-            timeoutInMs                : 1,
+            timeoutInMs                : 1000,
             bufferMaxLengthInBytes     : bufferMaxLengthInBytes,
             errorLevel                 : errorLevel,
             exitProcessGuardTimeoutInMs: exitProcessGuardTimeoutInMs
@@ -146,7 +146,7 @@ describe('FramesMonitor::listen, stop ffprobe process', () => {
 
         framesMonitor = new FramesMonitor({
             ffprobePath                : process.env.FFPROBE,
-            timeoutInMs                : 1,
+            timeoutInMs                : 1000,
             bufferMaxLengthInBytes     : bufferMaxLengthInBytes,
             errorLevel                 : errorLevel,
             exitProcessGuardTimeoutInMs: exitProcessGuardTimeoutInMs
@@ -188,7 +188,7 @@ describe('FramesMonitor::listen, exit with correct code after stream has been fi
 
         framesMonitor = new FramesMonitor({
             ffprobePath                : process.env.FFPROBE,
-            timeoutInMs                : 1,
+            timeoutInMs                : 1000,
             bufferMaxLengthInBytes     : bufferMaxLengthInBytes,
             errorLevel                 : errorLevel,
             exitProcessGuardTimeoutInMs: exitProcessGuardTimeoutInMs
