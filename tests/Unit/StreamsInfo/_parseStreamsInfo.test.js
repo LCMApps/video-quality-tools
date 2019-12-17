@@ -14,7 +14,7 @@ function typeOf(obj) {
 describe('StreamsInfo::_parseStreamsInfo', () => {
 
     const streamsInfo = new StreamsInfo({
-        ffprobePath : correctPath,
+        ffprobePath: correctPath,
         timeoutInMs: 1
     }, correctUrl);
 

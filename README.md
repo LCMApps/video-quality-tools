@@ -179,7 +179,7 @@ const {FramesMonitor} = require('video-quality-tools');
 
 const framesMonitorOptions = {
     ffprobePath: '/usr/local/bin/ffprobe',
-    timeoutInMa: 2000,
+    timeoutInMs: 2000,
     bufferMaxLengthInBytes: 100000,
     errorLevel: 'error',
     exitProcessGuardTimeoutInMs: 1000
