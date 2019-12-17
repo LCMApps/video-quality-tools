@@ -15,8 +15,8 @@ function typeOf(obj) {
 describe('StreamsInfo::fetch', () => {
 
     let streamsInfo = new StreamsInfo({
-        ffprobePath : correctPath,
-        timeoutInSec: 1
+        ffprobePath: correctPath,
+        timeoutInMs: 1
     }, correctUrl);
 
     let stubRunShowStreamsProcess;

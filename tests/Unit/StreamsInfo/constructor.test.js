@@ -38,8 +38,8 @@ describe('StreamsInfo::constructor', () => {
     it('config.ffprobePath points to incorrect path', () => {
         assert.throws(() => {
             new StreamsInfo({
-                ffprobePath : `/incorrect/path/${correctUrl}`,
-                timeoutInSec: 1
+                ffprobePath: `/incorrect/path/${correctUrl}`,
+                timeoutInMs: 1
             }, correctUrl);
         }, Errors.ExecutablePathError);
     });
@@ -47,8 +47,8 @@ describe('StreamsInfo::constructor', () => {
     it('all params are good', () => {
         assert.doesNotThrow(() => {
             new StreamsInfo({
-                ffprobePath : correctPath,
-                timeoutInSec: 1
+                ffprobePath: correctPath,
+                timeoutInMs: 1
             }, correctUrl);
         });
     });

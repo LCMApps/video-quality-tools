@@ -23,8 +23,8 @@ describe('StreamsInfo::fetch, fetch streams info from inactive stream', () => {
         streamUrl = `http://localhost:${port}`;
 
         streamsInfo = new StreamsInfo({
-            ffprobePath : process.env.FFPROBE,
-            timeoutInSec: 1,
+            ffprobePath: process.env.FFPROBE,
+            timeoutInMs: 1000,
         }, streamUrl);
     });
 
@@ -54,8 +54,8 @@ describe('StreamsInfo::fetch, fetch streams info from active stream', () => {
         streamUrl = `http://localhost:${port}`;
 
         streamsInfo = new StreamsInfo({
-            ffprobePath : process.env.FFPROBE,
-            timeoutInSec: 1,
+            ffprobePath: process.env.FFPROBE,
+            timeoutInMs: 1000,
         }, streamUrl);
 
         stream = await startStream(testFile, streamUrl);

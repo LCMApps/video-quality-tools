@@ -71,11 +71,11 @@ describe('FramesMonitor::constructor', () => {
     );
 
     dataDriven(
-        testData.incorrectTimeoutInSec.map(item => ({type: typeOf(item), timeoutInSec: item})),
+        testData.incorrectTimeoutInMs.map(item => ({type: typeOf(item), timeoutInMs: item})),
         () => {
-            it('config.timeoutInSec param has invalid ({type}) type', ctx => {
+            it('config.timeoutInMs param has invalid ({type}) type', ctx => {
                 const incorrectConfig = Object.assign({}, config, {
-                    timeoutInSec: ctx.timeoutInSec
+                    timeoutInMs: ctx.timeoutInMs
                 });
 
                 assert.throws(() => {
@@ -172,13 +172,21 @@ describe('FramesMonitor::constructor', () => {
         const expectedChildProcessDefaultValue   = null;
         const expectedChunkRemainderDefaultValue = '';
         const expectedStderrOutputs              = [];
+        const expectedConfig                     = {
+            ffprobePath                : config.ffprobePath,
+            bufferMaxLengthInBytes     : config.bufferMaxLengthInBytes,
+            errorLevel                 : config.errorLevel,
+            exitProcessGuardTimeoutInMs: config.exitProcessGuardTimeoutInMs,
+            timeout                    : config.timeoutInMs * 1000
+        };
 
         const framesMonitor = new FramesMonitor(config, url);
 
         assert.isTrue(spyAssertExecutable.calledOnce);
         assert.isTrue(spyAssertExecutable.calledWithExactly(config.ffprobePath));
 
-        assert.deepEqual(framesMonitor._config, config);
+
+        assert.deepEqual(framesMonitor._config, expectedConfig);
         assert.strictEqual(framesMonitor._url, url);
 
         assert.strictEqual(framesMonitor._cp, expectedChildProcessDefaultValue);

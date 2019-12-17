@@ -42,7 +42,7 @@ class FramesMonitor extends EventEmitter {
 
         const {
             ffprobePath,
-            timeoutInSec,
+            timeoutInMs,
             bufferMaxLengthInBytes,
             errorLevel,
             exitProcessGuardTimeoutInMs
@@ -52,7 +52,7 @@ class FramesMonitor extends EventEmitter {
             throw new Errors.ConfigError('You should provide a correct path to ffprobe, bastard.');
         }
 
-        if (!_.isSafeInteger(timeoutInSec) || timeoutInSec <= 0) {
+        if (!_.isSafeInteger(timeoutInMs) || timeoutInMs <= 0) {
             throw new Errors.ConfigError('You should provide a correct timeout, bastard.');
         }
 
@@ -72,8 +72,15 @@ class FramesMonitor extends EventEmitter {
 
         FramesMonitor._assertExecutable(ffprobePath);
 
-        this._config = _.cloneDeep(config);
-        this._url    = url;
+        this._config = {
+            ffprobePath,
+            bufferMaxLengthInBytes,
+            errorLevel,
+            exitProcessGuardTimeoutInMs,
+            timeout: timeoutInMs * 1000
+        };
+
+        this._url = url;
 
         this._cp             = null;
         this._chunkRemainder = '';
@@ -260,10 +267,10 @@ class FramesMonitor extends EventEmitter {
     }
 
     _runShowFramesProcess() {
-        const {ffprobePath, timeoutInSec, errorLevel} = this._config;
+        const {ffprobePath, timeout, errorLevel} = this._config;
 
         try {
-            const exec = spawn(
+            return spawn(
                 ffprobePath,
                 [
                     '-hide_banner',
@@ -271,15 +278,15 @@ class FramesMonitor extends EventEmitter {
                     errorLevel,
                     '-fflags',
                     'nobuffer',
+                    '-rw_timeout',
+                    timeout,
                     '-show_frames',
                     '-show_entries',
                     'frame=pkt_size,pkt_pts_time,media_type,pict_type,key_frame,width,height',
                     '-i',
-                    `${this._url} timeout=${timeoutInSec}`
+                    this._url
                 ]
             );
-
-            return exec;
         } catch (err) {
             if (err instanceof TypeError) {
                 // spawn method throws TypeError if some argument is invalid
