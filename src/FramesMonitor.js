@@ -83,7 +83,7 @@ class FramesMonitor extends EventEmitter {
             errorLevel,
             exitProcessGuardTimeoutInMs,
             timeout: timeoutInMs * 1000,
-            analyzeDuration: analyzeDurationInMs && analyzeDurationInMs * 1000 || 0
+            analyzeDuration: analyzeDurationInMs && analyzeDurationInMs * 1000 || undefined
         };
 
         this._url = url;

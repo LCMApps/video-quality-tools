@@ -178,7 +178,7 @@ describe('FramesMonitor::constructor', () => {
             errorLevel                 : config.errorLevel,
             exitProcessGuardTimeoutInMs: config.exitProcessGuardTimeoutInMs,
             timeout                    : config.timeoutInMs * 1000,
-            analyzeDuration            : config.analyzeDurationInMs && config.analyzeDurationInMs * 1000 || 0
+            analyzeDuration            : config.analyzeDurationInMs * 1000
         };
 
         const framesMonitor = new FramesMonitor(config, url);
@@ -195,4 +195,33 @@ describe('FramesMonitor::constructor', () => {
         assert.deepEqual(framesMonitor._stderrOutputs, expectedStderrOutputs);
     });
 
+
+    it('analyzeDurationInMs not setted in config', () => {
+        const configLocal = Object.assign({}, config, {analyzeDurationInMs: undefined});
+
+        const expectedChildProcessDefaultValue   = null;
+        const expectedChunkRemainderDefaultValue = '';
+        const expectedStderrOutputs              = [];
+        const expectedConfig                     = {
+            ffprobePath                : configLocal.ffprobePath,
+            bufferMaxLengthInBytes     : configLocal.bufferMaxLengthInBytes,
+            errorLevel                 : configLocal.errorLevel,
+            exitProcessGuardTimeoutInMs: configLocal.exitProcessGuardTimeoutInMs,
+            timeout                    : configLocal.timeoutInMs * 1000,
+            analyzeDuration            : undefined
+        };
+
+        const framesMonitor = new FramesMonitor(configLocal, url);
+
+        assert.isTrue(spyAssertExecutable.calledOnce);
+        assert.isTrue(spyAssertExecutable.calledWithExactly(config.ffprobePath));
+
+
+        assert.deepEqual(framesMonitor._config, expectedConfig);
+        assert.strictEqual(framesMonitor._url, url);
+
+        assert.strictEqual(framesMonitor._cp, expectedChildProcessDefaultValue);
+        assert.strictEqual(framesMonitor._chunkRemainder, expectedChunkRemainderDefaultValue);
+        assert.deepEqual(framesMonitor._stderrOutputs, expectedStderrOutputs);
+    });
 });

@@ -65,7 +65,7 @@ describe('StreamsInfo::_runShowStreamsProcess', () => {
         );
     });
 
-    it('must returns child process object just fine and ffprobe with analyzeduration argument', () => {
+    it('must returns child process object just fine and ffprobe with "-analyzeduration" argument', () => {
         const analyzeDurationInMs    = 5000;
         const expectedFfprobeCommand = getExecCommand(
             correctPath, timeoutInMs * 1000, analyzeDurationInMs * 1000, correctUrl
