@@ -15,7 +15,7 @@ describe('StreamsInfo::constructor', () => {
         it('config param has invalid ({type}) type', function (ctx) {
             assert.throws(() => {
                 new StreamsInfo(ctx.config, undefined);
-            }, TypeError, 'Config param should be an object, bastard.');
+            }, TypeError, 'Config param should be an object.');
         });
     });
 
@@ -23,7 +23,7 @@ describe('StreamsInfo::constructor', () => {
         it('url param has invalid ({type}) type', function (ctx) {
             assert.throws(() => {
                 new StreamsInfo({}, ctx.url);
-            }, TypeError, 'You should provide a correct url, bastard.');
+            }, TypeError, 'You should provide a correct url.');
         });
     });
 

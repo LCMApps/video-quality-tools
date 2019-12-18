@@ -14,25 +14,25 @@ const DAR_OR_SAR_01 = '0:1';
 class StreamsInfo {
     constructor(config, url) {
         if (!_.isObject(config) || _.isFunction(config)) {
-            throw new TypeError('Config param should be an object, bastard.');
+            throw new TypeError('Config param should be an object.');
         }
 
         if (!_.isString(url)) {
-            throw new TypeError('You should provide a correct url, bastard.');
+            throw new TypeError('You should provide a correct url.');
         }
 
         const {ffprobePath, timeoutInMs, analyzeDurationInMs} = config;
 
         if (!_.isString(ffprobePath) || _.isEmpty(ffprobePath)) {
-            throw new Errors.ConfigError('You should provide a correct path to ffprobe, bastard.');
+            throw new Errors.ConfigError('You should provide a correct path to ffprobe.');
         }
 
         if (!_.isInteger(timeoutInMs) || timeoutInMs <= 0) {
-            throw new Errors.ConfigError('You should provide a correct timeout, bastard.');
+            throw new Errors.ConfigError('You should provide a correct timeout.');
         }
 
         if (analyzeDurationInMs !== undefined && (!_.isInteger(analyzeDurationInMs) || analyzeDurationInMs <= 0)) {
-            throw new Errors.ConfigError('You should provide a correct analyze duration, bastard.');
+            throw new Errors.ConfigError('You should provide a correct analyze duration.');
         }
 
         this._assertExecutable(ffprobePath);

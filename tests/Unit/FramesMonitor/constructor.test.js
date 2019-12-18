@@ -31,7 +31,7 @@ describe('FramesMonitor::constructor', () => {
             it('config param has invalid ({type}) type', ctx => {
                 assert.throws(() => {
                     new FramesMonitor(ctx.config, url);
-                }, TypeError, 'Config param should be a plain object, bastard.');
+                }, TypeError, 'Config param should be a plain object.');
 
                 assert.isTrue(spyAssertExecutable.notCalled);
             });
@@ -46,7 +46,7 @@ describe('FramesMonitor::constructor', () => {
 
                 assert.throws(() => {
                     new FramesMonitor(config, ctx.url);
-                }, TypeError, 'You should provide a correct url, bastard.');
+                }, TypeError, 'You should provide a correct url.');
 
                 assert.isTrue(spyAssertExecutable.notCalled);
             });
@@ -63,7 +63,7 @@ describe('FramesMonitor::constructor', () => {
 
                 assert.throws(() => {
                     new FramesMonitor(incorrectConfig, url);
-                }, Error.ConfigError, 'You should provide a correct path to ffprobe, bastard.');
+                }, Error.ConfigError, 'You should provide a correct path to ffprobe.');
 
                 assert.isTrue(spyAssertExecutable.notCalled);
             });
@@ -80,7 +80,7 @@ describe('FramesMonitor::constructor', () => {
 
                 assert.throws(() => {
                     new FramesMonitor(incorrectConfig, url);
-                }, Error.ConfigError, 'You should provide a correct timeout, bastard.');
+                }, Error.ConfigError, 'You should provide a correct timeout.');
 
                 assert.isTrue(spyAssertExecutable.notCalled);
             });
@@ -114,7 +114,7 @@ describe('FramesMonitor::constructor', () => {
 
                 assert.throws(() => {
                     new FramesMonitor(incorrectConfig, url);
-                }, Error.ConfigError, 'You should provide correct error level, bastard. Check ffprobe documentation.');
+                }, Error.ConfigError, 'You should provide correct error level. Check ffprobe documentation.');
 
                 assert.isTrue(spyAssertExecutable.notCalled);
             });

@@ -10,7 +10,7 @@ const incorrectConfig = [
     Symbol(),
     () => {},
     Buffer.alloc(1),
-    new Error('bastard')
+    new Error('error')
 ];
 
 const incorrectUrl = [
@@ -23,7 +23,7 @@ const incorrectUrl = [
     Symbol(),
     () => {},
     Buffer.alloc(1),
-    new Error('bastard')
+    new Error('error')
 ];
 
 const incorrectFfprobePath = [
@@ -36,7 +36,7 @@ const incorrectFfprobePath = [
     Symbol(),
     () => {},
     Buffer.alloc(1),
-    new Error('bastard')
+    new Error('error')
 ];
 
 const incorrectTimeoutInMs = [
@@ -49,7 +49,7 @@ const incorrectTimeoutInMs = [
     Symbol(),
     () => {},
     Buffer.alloc(1),
-    new Error('bastard')
+    new Error('error')
 ];
 
 const incorrectBufferMaxLengthInBytes = [
@@ -62,7 +62,7 @@ const incorrectBufferMaxLengthInBytes = [
     Symbol(),
     () => {},
     Buffer.alloc(1),
-    new Error('bastard')
+    new Error('error')
 ];
 
 const incorrectErrorLevel = [
@@ -75,7 +75,7 @@ const incorrectErrorLevel = [
     Symbol(),
     () => {},
     Buffer.alloc(1),
-    new Error('bastard')
+    new Error('error')
 ];
 
 const incorrectExitProcessGuardTimeoutInMs = [
@@ -88,19 +88,19 @@ const incorrectExitProcessGuardTimeoutInMs = [
     Symbol(),
     () => {},
     Buffer.alloc(1),
-    new Error('bastard')
+    new Error('error')
 ];
 
 const incorrectConfigObject = [
     {
         description: 'config.timeoutInMs param must be a positive integer, float is passed',
         config     : {timeoutInMs: 1.1},
-        errorMsg   : 'You should provide a correct timeout, bastard.'
+        errorMsg   : 'You should provide a correct timeout.'
     },
     {
         description: 'config.timeoutInMs param must be a positive integer, negative is passed',
         config     : {timeoutInMs: -1},
-        errorMsg   : 'You should provide a correct timeout, bastard.'
+        errorMsg   : 'You should provide a correct timeout.'
     },
     {
         description: 'config.bufferMaxLengthInBytes param must be a positive integer, float is passed',
@@ -115,7 +115,7 @@ const incorrectConfigObject = [
     {
         description: 'config.errorLevel param must be a correct string',
         config     : {errorLevel: 'error' + 'incorrect-part'},
-        errorMsg   : 'You should provide correct error level, bastard. Check ffprobe documentation.'
+        errorMsg   : 'You should provide correct error level. Check ffprobe documentation.'
     },
     {
         description: 'config.exitProcessGuardTimeoutInMs param must be a positive integer, float is passed',
@@ -130,17 +130,17 @@ const incorrectConfigObject = [
     {
         description: 'config.analyzeDurationInMs param must be a positive integer, float is passed',
         config     : {analyzeDurationInMs: 1.1},
-        errorMsg   : 'You should provide a correct analyze duration, bastard.'
+        errorMsg   : 'You should provide a correct analyze duration.'
     },
     {
         description: 'config.analyzeDurationInMs param must be a positive integer, negative is passed',
         config     : {analyzeDurationInMs: -1},
-        errorMsg   : 'You should provide a correct analyze duration, bastard.'
+        errorMsg   : 'You should provide a correct analyze duration.'
     },
     {
         description: 'config.analyzeDurationInMs param must be a positive integer, string is passed',
         config     : {analyzeDurationInMs: '10'},
-        errorMsg   : 'You should provide a correct analyze duration, bastard.'
+        errorMsg   : 'You should provide a correct analyze duration.'
     },
 ];
 

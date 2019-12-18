@@ -33,11 +33,11 @@ class FramesMonitor extends EventEmitter {
         super();
 
         if (!_.isPlainObject(config)) {
-            throw new TypeError('Config param should be a plain object, bastard.');
+            throw new TypeError('Config param should be a plain object.');
         }
 
         if (!_.isString(url)) {
-            throw new TypeError('You should provide a correct url, bastard.');
+            throw new TypeError('You should provide a correct url.');
         }
 
         const {
@@ -50,11 +50,11 @@ class FramesMonitor extends EventEmitter {
         } = config;
 
         if (!_.isString(ffprobePath) || _.isEmpty(ffprobePath)) {
-            throw new Errors.ConfigError('You should provide a correct path to ffprobe, bastard.');
+            throw new Errors.ConfigError('You should provide a correct path to ffprobe.');
         }
 
         if (!_.isSafeInteger(timeoutInMs) || timeoutInMs <= 0) {
-            throw new Errors.ConfigError('You should provide a correct timeout, bastard.');
+            throw new Errors.ConfigError('You should provide a correct timeout.');
         }
 
         if (!_.isSafeInteger(bufferMaxLengthInBytes) || bufferMaxLengthInBytes <= 0) {
@@ -63,7 +63,7 @@ class FramesMonitor extends EventEmitter {
 
         if (!_.isString(errorLevel) || !FramesMonitor._isValidErrorLevel(errorLevel)) {
             throw new Errors.ConfigError(
-                'You should provide correct error level, bastard. Check ffprobe documentation.'
+                'You should provide correct error level. Check ffprobe documentation.'
             );
         }
 
@@ -72,7 +72,7 @@ class FramesMonitor extends EventEmitter {
         }
 
         if (analyzeDurationInMs !== undefined && (!_.isSafeInteger(analyzeDurationInMs) || analyzeDurationInMs <= 0)) {
-            throw new Errors.ConfigError('You should provide a correct analyze duration, bastard.');
+            throw new Errors.ConfigError('You should provide a correct analyze duration.');
         }
 
         FramesMonitor._assertExecutable(ffprobePath);
