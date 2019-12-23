@@ -183,7 +183,8 @@ const framesMonitorOptions = {
     timeoutInMs: 2000,
     bufferMaxLengthInBytes: 100000,
     errorLevel: 'error',
-    exitProcessGuardTimeoutInMs: 1000
+    exitProcessGuardTimeoutInMs: 1000,
+    analyzeDurationInMs: 9000
 };
 
 const framesMonitor = new FramesMonitor(framesMonitorOptions, 'rtmp://host:port/appInstance/name');
@@ -211,6 +212,7 @@ process will be hard killed if the attempt of soft stop fails. When you try to s
 method the `FramesMonitor` sends `SIGTERM` signal to ffprobe process. ffprobe may ignore this signal (some versions
 do it pretty often). If ffprobe doesn't exit after `exitProcessGuardTimeoutInMs` milliseconds, `FramesMonitor` sends
 `SIGKILL` signal and forces underlying ffprobe process to exit.
+* analyzeDurationInMs - integer, greater than 0, specifies the maximum analyzing time of the input.
 
 ## Listening of Frames
 

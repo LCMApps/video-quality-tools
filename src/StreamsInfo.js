@@ -14,28 +14,33 @@ const DAR_OR_SAR_01 = '0:1';
 class StreamsInfo {
     constructor(config, url) {
         if (!_.isObject(config) || _.isFunction(config)) {
-            throw new TypeError('Config param should be an object, bastard.');
+            throw new TypeError('Config param should be an object.');
         }
 
         if (!_.isString(url)) {
-            throw new TypeError('You should provide a correct url, bastard.');
+            throw new TypeError('You should provide a correct url.');
         }
 
-        const {ffprobePath, timeoutInMs} = config;
+        const {ffprobePath, timeoutInMs, analyzeDurationInMs} = config;
 
         if (!_.isString(ffprobePath) || _.isEmpty(ffprobePath)) {
-            throw new Errors.ConfigError('You should provide a correct path to ffprobe, bastard.');
+            throw new Errors.ConfigError('You should provide a correct path to ffprobe.');
         }
 
         if (!_.isInteger(timeoutInMs) || timeoutInMs <= 0) {
-            throw new Errors.ConfigError('You should provide a correct timeout, bastard.');
+            throw new Errors.ConfigError('You should provide a correct timeout.');
+        }
+
+        if (analyzeDurationInMs !== undefined && (!_.isInteger(analyzeDurationInMs) || analyzeDurationInMs <= 0)) {
+            throw new Errors.ConfigError('You should provide a correct analyze duration.');
         }
 
         this._assertExecutable(ffprobePath);
 
         this._config = {
-            ffprobePath,
-            timeout: timeoutInMs * 1000
+            ffprobePath: config.ffprobePath,
+            timeout: config.timeoutInMs * 1000,
+            analyzeDuration: config.analyzeDurationInMs && config.analyzeDurationInMs * 1000 || 0
         };
 
         this._url = url;
@@ -83,19 +88,17 @@ class StreamsInfo {
     }
 
     _runShowStreamsProcess() {
-        const {ffprobePath, timeout} = this._config;
+        const {ffprobePath, timeout, analyzeDuration} = this._config;
 
-        const command = `\
-            ${ffprobePath}\
-            -hide_banner\
-            -v error\
-            -show_streams\
-            -print_format json\
-            -rw_timeout ${timeout}\
-            ${this._url}\
-        `;
+        const commandArgs = [ffprobePath, '-hide_banner', '-v error'];
 
-        return promisify(exec)(command);
+        if (analyzeDuration) {
+            commandArgs.push('-analyzeduration', analyzeDuration);
+        }
+
+        commandArgs.push('-rw_timeout', timeout, '-show_streams', '-print_format json', '-i', this._url);
+
+        return promisify(exec)(commandArgs.join(' '));
     }
 
     _parseStreamsInfo(rawResult) {

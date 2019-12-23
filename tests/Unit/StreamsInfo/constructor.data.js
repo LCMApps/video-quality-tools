@@ -68,27 +68,42 @@ const incorrectConfig = [
     {
         'description': 'config object must not be empty',
         'config'     : {},
-        'errorMsg'   : 'You should provide a correct path to ffprobe, bastard.'
+        'errorMsg'   : 'You should provide a correct path to ffprobe.'
     },
     {
         'description': 'config.timeoutInMs must be passed',
         'config'     : {ffprobePath: correctPath},
-        'errorMsg'   : 'You should provide a correct timeout, bastard.'
+        'errorMsg'   : 'You should provide a correct timeout.'
     },
     {
         'description': 'config.timeoutInMs param must be a positive integer, float is passed',
         'config'     : {ffprobePath: correctPath, timeoutInMs: 1.1},
-        'errorMsg'   : 'You should provide a correct timeout, bastard.'
+        'errorMsg'   : 'You should provide a correct timeout.'
     },
     {
         'description': 'config.timeoutInMs param must be a positive integer, negative is passed',
         'config'     : {ffprobePath: correctPath, timeoutInMs: -1},
-        'errorMsg'   : 'You should provide a correct timeout, bastard.'
+        'errorMsg'   : 'You should provide a correct timeout.'
     },
     {
         'description': 'config.timeoutInMs param must be a positive integer, string is passed',
         'config'     : {ffprobePath: correctPath, timeoutInMs: '10'},
-        'errorMsg'   : 'You should provide a correct timeout, bastard.'
+        'errorMsg'   : 'You should provide a correct timeout.'
+    },
+    {
+        'description': 'config.analyzeDurationInMs param must be a positive integer, float is passed',
+        'config'     : {ffprobePath: correctPath, timeoutInMs: 1, analyzeDurationInMs: 1.1},
+        'errorMsg'   : 'You should provide a correct analyze duration.'
+    },
+    {
+        'description': 'config.analyzeDurationInMs param must be a positive integer, negative is passed',
+        'config'     : {ffprobePath: correctPath, timeoutInMs: 1, analyzeDurationInMs: -1},
+        'errorMsg'   : 'You should provide a correct analyze duration.'
+    },
+    {
+        'description': 'config.analyzeDurationInMs param must be a positive integer, string is passed',
+        'config'     : {ffprobePath: correctPath, timeoutInMs: 1, analyzeDurationInMs: '10'},
+        'errorMsg'   : 'You should provide a correct analyze duration.'
     },
 ];
 
