@@ -8,6 +8,7 @@ structure changes and more.
 `video-quality-tools` requires `ffmpeg` and `ffprobe`. 
 
 [![NPM version](https://img.shields.io/npm/v/video-quality-tools.svg)](https://www.npmjs.com/package/video-quality-tools)
+[![Release Status](https://github.com/LCMApps/video-quality-tools/workflows/NPM%20Release/badge.svg)](https://github.com/LCMApps/video-quality-tools/releases)
 [![Build Status](https://travis-ci.org/LCMApps/video-quality-tools.svg?branch=master)](https://travis-ci.org/LCMApps/video-quality-tools)
 [![Coverage Status](https://coveralls.io/repos/github/LCMApps/video-quality-tools/badge.svg?branch=master)](https://coveralls.io/github/LCMApps/video-quality-tools?branch=master)
 
