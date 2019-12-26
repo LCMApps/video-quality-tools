@@ -1,4 +1,17 @@
 # Changelog
+### 3.0.0
+
+- `timeoutInSec` option was changed to `timeoutInMs` in the `FrameMonitor` and in the `StreamInfo` class.
+
+IMPROVEMENTS:
+
+- Added new option `analyzeDurationInMs` that specifies the maximum analyzing time of the input 
+[[GH-97](https://github.com/LCMApps/video-quality-tools/issues/97)]
+
+BUG FIXES:
+
+- Fixed lack of support of the `timeout` for a `non-librtmp` builds of `ffmpeg` 
+[[GH-92](https://github.com/LCMApps/video-quality-tools/issues/92)]
 
 ### 2.0.0
 
