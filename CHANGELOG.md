@@ -1,6 +1,6 @@
 # Changelog
 
-### 3.0.1
+### 3.0.2
 
 - Fix problem with [librtmp](https://linux.die.net/man/3/librtmp) style URL parameters.
 
