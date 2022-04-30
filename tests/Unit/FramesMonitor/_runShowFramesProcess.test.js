@@ -24,7 +24,7 @@ function getSpawnArguments(url, timeoutInMs, analyzeDurationInMs, errorLevel) {
         args.push('-analyzeduration', analyzeDurationInMs * 1000);
     }
 
-    args.push('-i', url);
+    args.push('-i', `"${url}"`);
 
     return args;
 }
