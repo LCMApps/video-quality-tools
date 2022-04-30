@@ -1,4 +1,9 @@
 # Changelog
+
+### 3.0.1
+
+- Fix problem with [librtmp](https://linux.die.net/man/3/librtmp) style URL parameters.
+
 ### 3.0.0
 
 - `timeoutInSec` option was changed to `timeoutInMs` in the `FrameMonitor` and in the `StreamInfo` class.

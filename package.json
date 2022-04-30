@@ -37,7 +37,7 @@
     "chai": "^4.2.0",
     "coveralls": "^3.0.7",
     "data-driven": "^1.4.0",
-    "eslint": "^6.6.0",
+    "eslint": "^6.8.0",
     "get-port": "^5.0.0",
     "mocha": "^6.2.2",
     "nyc": "^14.1.1",
@@ -46,7 +46,7 @@
   },
   "dependencies": {
     "app-module-path": "^2.2.0",
-    "lodash": "^4.17.15"
+    "lodash": "^4.17.21"
   },
   "bugs": {
     "url": "https://github.com/LCMApps/video-quality-tools/issues"

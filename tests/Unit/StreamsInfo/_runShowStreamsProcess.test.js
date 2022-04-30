@@ -13,7 +13,7 @@ function getExecCommand(ffprobePath, timeout, analyzeDuration, url) {
         commandArgs.push('-analyzeduration', analyzeDuration);
     }
 
-    commandArgs.push('-rw_timeout', timeout, '-show_streams', '-print_format json', '-i', url);
+    commandArgs.push('-rw_timeout', timeout, '-show_streams', '-print_format json', '-i', `"${url}"`);
 
     return commandArgs.join(' ');
 }
