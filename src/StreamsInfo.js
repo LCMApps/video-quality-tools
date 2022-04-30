@@ -96,7 +96,7 @@ class StreamsInfo {
             commandArgs.push('-analyzeduration', analyzeDuration);
         }
 
-        commandArgs.push('-rw_timeout', timeout, '-show_streams', '-print_format json', '-i', this._url);
+        commandArgs.push('-rw_timeout', timeout, '-show_streams', '-print_format json', '-i', `"${this._url}"`);
 
         return promisify(exec)(commandArgs.join(' '));
     }
