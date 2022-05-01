@@ -1,5 +1,6 @@
 MIT License
 
+Copyright (c) 2017-2022 Oleh Poberezhets <legenage@gmail.com>
 Copyright (c) 2017-2018 Dmitry Menshikov <d.menshikov@gmail.com>
 Copyright (c) 2017-2018 Alexandr Lisovenko <fox.cpp@gmail.com>
 Copyright (c) 2017-2018 Eduard Bondarenko <eduardbcom@gmail.com>

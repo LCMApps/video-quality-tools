@@ -292,7 +292,7 @@ class FramesMonitor extends EventEmitter {
             args.push('-analyzeduration', analyzeDuration);
         }
 
-        args.push('-i', `"${this._url}"`);
+        args.push('-i', this._url);
 
         try {
             return spawn(ffprobePath, args);
