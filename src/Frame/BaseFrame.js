@@ -1,5 +1,6 @@
 'use strict';
 
+const _ = require('lodash');
 const {
     MEDIA_TYPE,
     STREAM_INDEX,
@@ -48,7 +49,7 @@ class BaseFrame {
             throw new Error('BaseFrame is an abstract class and cannot be instantiated directly.');
         }
 
-        if (typeof frameData !== 'object' || frameData === null) {
+        if (!_.isPlainObject(frameData)) {
             throw new TypeError('Expected an object as constructor argument.');
         }
 
