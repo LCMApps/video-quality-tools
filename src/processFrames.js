@@ -2,6 +2,7 @@
 
 const _ = require('lodash');
 
+const BaseFrame = require('./Frame/BaseFrame');
 const Errors = require('./Errors');
 
 const MSECS_IN_SEC = 1000;
@@ -22,6 +23,11 @@ const UNIVISIUM_AR = '18:9';
 
 const WIDESCREEN_AR_COEFFICIENT = 2.33;
 const WIDESCREEN_AR = '21:9';
+
+/**
+ * @typedef {import('./Frame/VideoFrameSchema1').VideoFrameSchema1} VideoFrameSchema1
+ * @typedef {import('./Frame/VideoFrameSchema2').VideoFrameSchema2} VideoFrameSchema2
+ */
 
 function encoderStats(frames) {
     if (!Array.isArray(frames)) {
@@ -74,8 +80,17 @@ function encoderStats(frames) {
         max: Math.max(...gopDurations)
     };
 
-    const width = gops[0].frames[0].width;
-    const height = gops[0].frames[0].height;
+    let width;
+    let height;
+    const firstFrameInGop = gops[0].frames[0];
+    if (isValueObjectFrame(firstFrameInGop)) {
+        width = firstFrameInGop.getWidth();
+        height = firstFrameInGop.getHeight();
+    } else {
+        width = firstFrameInGop.width;
+        height = firstFrameInGop.height;
+    }
+
     const displayAspectRatio = calculateDisplayAspectRatio(width, height);
 
     return {
@@ -125,32 +140,37 @@ function identifyGops(frames) {
 
     for (let i = 0; i < frames.length; i++) {
         const currentFrame = frames[i];
+        const isVOFrame = isValueObjectFrame(currentFrame);
 
-        if (!_.isNumber(currentFrame.key_frame)) {
-            throw new Errors.FrameInvalidData(
-                `frame's key_frame field has invalid type: ${Object.prototype.toString.call(currentFrame.key_frame)}`,
-                {frame: currentFrame}
-            );
-        }
+        const keyFrame = getKeyFrameOrThrowOnNull(currentFrame, isVOFrame);
+        const ptsTime = getPtsTimeOrThrowOnNull(currentFrame, isVOFrame);
 
-        if (currentFrame.key_frame === 1) {
+        if (keyFrame === 1) {
             if ('startTime' in newGop) {
-                newGop.endTime = currentFrame.pkt_pts_time;
+                newGop.endTime = ptsTime;
                 setOfGops.push(newGop);
                 newGop = _.cloneDeep(GOP_TEMPLATE);
                 i -= 1;
             } else {
-                newGop.frames.push(_.cloneDeep(currentFrame));
+                if (isVOFrame) {
+                    newGop.frames.push(currentFrame);
+                } else {
+                    newGop.frames.push(_.cloneDeep(currentFrame));
+                }
 
-                newGop.startTime = currentFrame.pkt_pts_time;
+                newGop.startTime = ptsTime;
             }
-        } else if (currentFrame.key_frame === 0) {
+        } else if (keyFrame === 0) {
             if (newGop.frames.length > 0) {
-                newGop.frames.push(_.cloneDeep(frames[i]));
+                if (isVOFrame) {
+                    newGop.frames.push(frames[i]);
+                } else {
+                    newGop.frames.push(_.cloneDeep(frames[i]));
+                }
             }
         } else {
             throw new Errors.FrameInvalidData(
-                `frame's key_frame field has invalid value: ${currentFrame.key_frame}. Must be 1 or 0.`,
+                `frame's key_frame field has invalid value: ${keyFrame}. Must be 1 or 0.`,
                 {frame: currentFrame}
             );
         }
@@ -186,14 +206,7 @@ function calculateBitrate(gops) {
 
 function calculatePktSize(frames) {
     const accumulatedPktSize = frames.reduce((accumulator, frame) => {
-        if (!_.isNumber(frame.pkt_size)) {
-            throw new Errors.FrameInvalidData(
-                `frame's pkt_size field has invalid type ${Object.prototype.toString.call(frame.pkt_size)}`,
-                {frame}
-            );
-        }
-
-        return accumulator + frame.pkt_size;
+        return accumulator + getPktSizeOrThrowOnNull(frame, isValueObjectFrame(frame));
     }, 0);
 
     return accumulatedPktSize;
@@ -316,15 +329,21 @@ function areAllGopsIdentical(gops) {
 }
 
 function filterVideoFrames(frames) {
-    return frames.filter(frame => frame.media_type === 'video');
+    return frames.filter(frame => {
+        return isValueObjectFrame(frame) ? frame.getMediaType() === 'video' : frame.media_type === 'video';
+    });
 }
 
 function filterAudioFrames(frames) {
-    return frames.filter(frame => frame.media_type === 'audio');
+    return frames.filter(frame => {
+        return isValueObjectFrame(frame) ? frame.getMediaType() === 'audio' : frame.media_type === 'audio';
+    });
 }
 
 function hasAudioFrames(frames) {
-    return frames.some(frame => frame.media_type === 'audio');
+    return frames.some(frame => {
+        return isValueObjectFrame(frame) ? frame.getMediaType() === 'audio' : frame.media_type === 'audio';
+    });
 }
 
 function toKbs(val) {
@@ -343,6 +362,95 @@ function findGcd(a, b) {
     return findGcd(b, a % b);
 }
 
+function isValueObjectFrame(frame) {
+    return (frame instanceof BaseFrame);
+}
+
+function getKeyFrameOrThrowOnNull(currentFrame, isVOFrame) {
+    if (isVOFrame) {
+        const keyFrame = currentFrame.getKeyFrame();
+        if (keyFrame === null) {
+            throw new Errors.FrameInvalidData(
+                'frame.getKeyFrame() is null, probably the value was absent during construction',
+                {frame: currentFrame}
+            );
+        }
+
+        return keyFrame;
+    } else {
+        const keyFrame = currentFrame.key_frame;
+        if (!_.isNumber(keyFrame)) {
+            throw new Errors.FrameInvalidData(
+                "frame's key_frame field has invalid type: "
+                + `${Object.prototype.toString.call(currentFrame.key_frame)}`,
+                {frame: currentFrame}
+            );
+        }
+
+        return keyFrame;
+    }
+}
+
+function getPtsTimeOrThrowOnNull(currentFrame, isVOFrame) {
+    if (isVOFrame) {
+        let ptsTime;
+
+        const schemaVersion = currentFrame.getSchemaVersion();
+        if (schemaVersion === 1) {
+            ptsTime = (/** @type {VideoFrameSchema1} */ (currentFrame)).getPktPtsTime();
+        } else if (schemaVersion > 1) {
+            // all schemas after VideoFrameSchema2 support getPtsTime()
+            ptsTime = (/** @type {VideoFrameSchema2} */ (currentFrame)).getPtsTime();
+        } else {
+            throw new Errors.FrameInvalidData('Unknown schema for frame', {frame: currentFrame});
+        }
+
+        if (ptsTime === null) {
+            throw new Errors.FrameInvalidData(
+                'frame.getPtsTime() or frame.getPktPtsTime() is null, probably the value was absent during '
+                + 'construction',
+                {frame: currentFrame}
+            );
+        }
+
+        return ptsTime;
+    } else {
+        const ptsTime = currentFrame.pkt_pts_time;
+        if (!_.isNumber(ptsTime)) {
+            throw new Errors.FrameInvalidData(
+                "frame's pkt_pts_time field has invalid type: "
+                + `${Object.prototype.toString.call(currentFrame.pkt_pts_time)}`,
+                {frame: currentFrame}
+            );
+        }
+
+        return ptsTime;
+    }
+}
+
+function getPktSizeOrThrowOnNull(currentFrame, isVOFrame) {
+    if (isVOFrame) {
+        const pktSize = currentFrame.getPktSize();
+        if (pktSize === null) {
+            throw new Errors.FrameInvalidData(
+                'frame.getPktSize() is null, probably the value was absent during construction',
+                {frame: currentFrame}
+            );
+        }
+
+        return pktSize;
+    } else {
+        if (!_.isNumber(currentFrame.pkt_size)) {
+            throw new Errors.FrameInvalidData(
+                `frame's pkt_size field has invalid type ${Object.prototype.toString.call(currentFrame.pkt_size)}`,
+                {frame: currentFrame}
+            );
+        }
+
+        return currentFrame.pkt_size;
+    }
+}
+
 module.exports = {
     encoderStats,
     networkStats,
@@ -350,6 +458,7 @@ module.exports = {
     calculateBitrate,
     calculateFps,
     calculateGopDuration,
+    filterAudioFrames,
     filterVideoFrames,
     hasAudioFrames,
     gopDurationInSec,
