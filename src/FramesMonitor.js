@@ -46,7 +46,8 @@ class FramesMonitor extends EventEmitter {
             bufferMaxLengthInBytes,
             errorLevel,
             exitProcessGuardTimeoutInMs,
-            analyzeDurationInMs
+            analyzeDurationInMs,
+            fullFrameInfo
         } = config;
 
         if (!_.isString(ffprobePath) || _.isEmpty(ffprobePath)) {
@@ -73,6 +74,15 @@ class FramesMonitor extends EventEmitter {
 
         if (analyzeDurationInMs !== undefined && (!_.isSafeInteger(analyzeDurationInMs) || analyzeDurationInMs <= 0)) {
             throw new Errors.ConfigError('You should provide a correct analyze duration.');
+        }
+
+        this._fullFrameInfo = false;
+        if (fullFrameInfo !== undefined) {
+            if (!_.isBoolean(fullFrameInfo)) {
+                throw new Errors.ConfigError('If fullFrameInfo is defined it must be a boolean');
+            }
+
+            this._fullFrameInfo = fullFrameInfo;
         }
 
         FramesMonitor._assertExecutable(ffprobePath);
@@ -284,9 +294,14 @@ class FramesMonitor extends EventEmitter {
             '-rw_timeout',
             timeout,
             '-show_frames',
-            '-show_entries',
-            'frame=pkt_size,pkt_pts_time,media_type,pict_type,key_frame,width,height',
         ];
+
+        if (!this._fullFrameInfo) {
+            args.push(
+                '-show_entries',
+                'frame=pkt_size,pkt_pts_time,media_type,pict_type,key_frame,width,height',
+            );
+        }
 
         if (analyzeDuration) {
             args.push('-analyzeduration', analyzeDuration);

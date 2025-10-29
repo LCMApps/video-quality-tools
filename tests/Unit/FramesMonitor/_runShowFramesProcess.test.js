@@ -6,7 +6,7 @@ const {assert}   = require('chai');
 
 const {config, url} = require('./Helpers');
 
-function getSpawnArguments(url, timeoutInMs, analyzeDurationInMs, errorLevel) {
+function getSpawnArguments(url, timeoutInMs, analyzeDurationInMs, errorLevel, fullFrameInfo) {
     const args = [
         '-hide_banner',
         '-v',
@@ -16,9 +16,14 @@ function getSpawnArguments(url, timeoutInMs, analyzeDurationInMs, errorLevel) {
         '-rw_timeout',
         timeoutInMs * 1000,
         '-show_frames',
-        '-show_entries',
-        'frame=pkt_size,pkt_pts_time,media_type,pict_type,key_frame,width,height',
     ];
+
+    if (fullFrameInfo !== true) {
+        args.push(
+            '-show_entries',
+            'frame=pkt_size,pkt_pts_time,media_type,pict_type,key_frame,width,height',
+        );
+    }
 
     if (analyzeDurationInMs) {
         args.push('-analyzeduration', analyzeDurationInMs * 1000);
@@ -32,7 +37,7 @@ function getSpawnArguments(url, timeoutInMs, analyzeDurationInMs, errorLevel) {
 describe('FramesMonitor::_handleProcessingError', () => {
     const expectedFfprobePath      = config.ffprobePath;
     const expectedFfprobeArguments = getSpawnArguments(
-        url, config.timeoutInMs, config.analyzeDurationInMs, config.errorLevel
+        url, config.timeoutInMs, config.analyzeDurationInMs, config.errorLevel, config.fullFrameInfo
     );
 
     it('must returns child process object just fine', () => {
@@ -75,7 +80,7 @@ describe('FramesMonitor::_handleProcessingError', () => {
 
         const expectedOutput = {cp: true};
         const expectedFfprobeArguments = getSpawnArguments(
-            url, config.timeoutInMs, analyzeDurationInMs, config.errorLevel
+            url, config.timeoutInMs, analyzeDurationInMs, config.errorLevel, config.fullFrameInfo
         );
 
         const spawn    = () => expectedOutput;
@@ -95,6 +100,46 @@ describe('FramesMonitor::_handleProcessingError', () => {
         });
 
         const options = Object.assign({}, config, {analyzeDurationInMs});
+
+        const framesMonitor = new FramesMonitor(options, url);
+
+        const spyOnProcessStartError = sinon.spy(framesMonitor, '_onProcessStartError');
+
+        const result = framesMonitor._runShowFramesProcess();
+
+        assert.strictEqual(result, expectedOutput);
+
+        assert.isTrue(spySpawn.calledOnce);
+        assert.isTrue(
+            spySpawn.calledWithExactly(expectedFfprobePath, expectedFfprobeArguments)
+        );
+
+        assert.isTrue(spyOnProcessStartError.notCalled);
+    });
+
+    it('must returns child process object just fine with fullFrameInfo == true', () => {
+        const expectedOutput = {cp: true};
+        const expectedFfprobeArguments = getSpawnArguments(
+            url, config.timeoutInMs, config.analyzeDurationInMs, config.errorLevel, true
+        );
+
+        const spawn    = () => expectedOutput;
+        const spySpawn = sinon.spy(spawn);
+
+        const FramesMonitor = proxyquire('src/FramesMonitor', {
+            fs           : {
+                accessSync(filePath) {
+                    if (filePath !== config.ffprobePath) {
+                        throw new Error('no such file or directory');
+                    }
+                }
+            },
+            child_process: {
+                spawn: spySpawn
+            }
+        });
+
+        const options = Object.assign({}, config, {fullFrameInfo: true});
 
         const framesMonitor = new FramesMonitor(options, url);
 
