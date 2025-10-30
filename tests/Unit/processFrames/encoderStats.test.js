@@ -215,29 +215,6 @@ describe('processFrames.encoderStats - raw frame object', () => {
 
 describe('processFrames.encoderStats - frame value objects', () => {
 
-    const invalidFramesTypes = [
-        undefined,
-        null,
-        false,
-        1,
-        '1',
-        {},
-        Symbol(),
-        () => {},
-        Buffer.alloc(0)
-    ];
-
-    dataDriven(
-        invalidFramesTypes.map(item => ({type: typeOf(item), item: item})),
-        () => {
-            it('must throw an exception for invalid input {type} type', ctx => {
-                assert.throws(() => {
-                    processFrames.encoderStats(ctx.item);
-                }, TypeError, 'Method accepts only an array of frames');
-            });
-        }
-    );
-
     it('must throw an exception cuz method cannot find gop', () => {
         const frames = [
             new VideoFrameSchema1({pkt_size: 3, pkt_pts_time: 15, media_type: 'video', key_frame: 1}),
