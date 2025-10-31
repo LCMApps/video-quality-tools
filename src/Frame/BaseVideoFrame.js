@@ -165,22 +165,6 @@ class BaseVideoFrame extends BaseFrame {
     }
 
     /**
-     * Coded picture number or null.
-     * @returns {number|null}
-     */
-    getCodedPictureNumber() {
-        return this._codedPictureNumber;
-    }
-
-    /**
-     * Display picture number or null.
-     * @returns {number|null}
-     */
-    getDisplayPictureNumber() {
-        return this._displayPictureNumber;
-    }
-
-    /**
      * Interlaced frame flag (0/1) or null.
      * @returns {number|null}
      */
