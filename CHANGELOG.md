@@ -1,5 +1,28 @@
 # Changelog
 
+### 4.0.0
+
+BREAKING CHANGES:
+
+- Minimum Node.js version increased from 8.1 to 10
+[[GH-119](https://github.com/LCMApps/video-quality-tools/issues/119)]
+- `processFrames` functions now support both plain frame objects and value object frames (instances of `BaseFrame` subclasses)
+[[GH-119](https://github.com/LCMApps/video-quality-tools/issues/119)]
+
+IMPROVEMENTS:
+
+- Added `FftoolsLibVersions` class to represent FFmpeg/FFprobe library versions with semantic version comparison support
+[[GH-119](https://github.com/LCMApps/video-quality-tools/issues/119)]
+- Added `buildFftoolLibVersionsObject()` function to detect FFmpeg/FFprobe library versions from the tool's output
+[[GH-119](https://github.com/LCMApps/video-quality-tools/issues/119)]
+- Added `RawFrameTransformer` class to transform raw frame data into appropriate value objects based on FFmpeg library versions (libavutil 57-60)
+[[GH-119](https://github.com/LCMApps/video-quality-tools/issues/119)]
+- Added frame value object classes (`BaseFrame`, `BaseVideoFrame`, `BaseAudioFrame`) with schema variations (Schema1-4) to support different FFmpeg versions
+[[GH-119](https://github.com/LCMApps/video-quality-tools/issues/119)]
+- Added `fullFrameInfo` option to `FramesMonitor` constructor to retrieve all frame fields instead of the default subset
+[[GH-119](https://github.com/LCMApps/video-quality-tools/issues/119)]
+
+
 ### 3.0.3
 
 - Fix url in FFmpeg commands.

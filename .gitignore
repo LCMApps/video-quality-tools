@@ -12,3 +12,4 @@ package-lock.json
 # MUST be the last line of this file
 !.gitkeep
 
+.DS_Store

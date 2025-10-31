@@ -91,6 +91,18 @@ const incorrectExitProcessGuardTimeoutInMs = [
     new Error('error')
 ];
 
+const incorrectFullFrameInfo = [
+    null,
+    1,
+    '1',
+    [],
+    {},
+    Symbol(),
+    () => {},
+    Buffer.alloc(1),
+    new Error('error')
+];
+
 const incorrectConfigObject = [
     {
         description: 'config.timeoutInMs param must be a positive integer, float is passed',
@@ -152,5 +164,6 @@ module.exports = {
     incorrectBufferMaxLengthInBytes,
     incorrectErrorLevel,
     incorrectExitProcessGuardTimeoutInMs,
+    incorrectFullFrameInfo,
     incorrectConfigObject,
 };

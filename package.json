@@ -1,17 +1,17 @@
 {
   "name": "video-quality-tools",
-  "version": "3.0.3",
+  "version": "4.0.0",
   "description": "Set of tools to evaluate video stream quality.",
   "main": "index.js",
   "engines": {
-    "node": ">=8.1"
+    "node": ">=10"
   },
   "directories": {
     "test": "tests"
   },
   "scripts": {
     "lint": "eslint .",
-    "test": "yarn test:unit",
+    "test": "npm test:unit",
     "test:unit": "mocha --opts tests/mocha.opts -R spec './tests/Unit/**/*.js'",
     "test:func": "mocha --opts tests/mocha.opts -R spec './tests/Functional/**/*.js' --timeout 30000",
     "test:coverage": "nyc --reporter=text --reporter=text-summary mocha --opts tests/mocha.opts -R spec './tests/Unit/**/*.js'",
@@ -46,7 +46,8 @@
   },
   "dependencies": {
     "app-module-path": "^2.2.0",
-    "lodash": "^4.17.21"
+    "lodash": "^4.17.21",
+    "semver": "^7.7.3"
   },
   "bugs": {
     "url": "https://github.com/LCMApps/video-quality-tools/issues"
