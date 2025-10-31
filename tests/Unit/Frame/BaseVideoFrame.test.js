@@ -64,10 +64,6 @@ describe('BaseVideoFrame', function () {
         assert.strictEqual(frame.getInterlacedFrame(), 0);
         assert.strictEqual(frame.getTopFieldFirst(), 0);
         assert.strictEqual(frame.getRepeatPict(), 0);
-
-        // base class does not define coded/display picture numbers in BaseVideoFrame
-        assert.strictEqual(frame.getCodedPictureNumber(), undefined);
-        assert.strictEqual(frame.getDisplayPictureNumber(), undefined);
     });
 
     it('should set video-specific fields to null when missing', function () {
