@@ -21,6 +21,14 @@ IMPROVEMENTS:
 [[GH-119](https://github.com/LCMApps/video-quality-tools/issues/119)]
 - Added `fullFrameInfo` option to `FramesMonitor` constructor to retrieve all frame fields instead of the default subset
 [[GH-119](https://github.com/LCMApps/video-quality-tools/issues/119)]
+- Added `DriftStatsProcessor` class for real-time monitoring of PTS/DTS drift in video and audio streams
+[[GH-121](https://github.com/LCMApps/video-quality-tools/issues/121)]
+- Added `FrameEnvelope` class to wrap frames with reception timestamps for drift analysis
+[[GH-121](https://github.com/LCMApps/video-quality-tools/issues/121)]
+- Added `IncompleteFrameDataError` error class for handling frames with missing timestamp data
+[[GH-121](https://github.com/LCMApps/video-quality-tools/issues/121)]
+- Added example for `DriftStatsProcessor` at [examples/driftStats.js](examples/driftStats.js)
+[[GH-121](https://github.com/LCMApps/video-quality-tools/issues/121)]
 
 
 ### 3.0.3
