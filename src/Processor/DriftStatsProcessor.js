@@ -19,12 +19,28 @@ const {
  * The processor must be started before frames can be added, and emits 'stats' events
  * at regular intervals with drift metrics per media type and stream index.
  *
+ * Stats are emitted in the following format:
+ * {
+ *   video: {
+ *     1: { pts: {min, max, avg}, dts: {min, max, avg}, framesCount: n }
+ *   },
+ *   audio: {
+ *     2: { pts: {min, max, avg}, dts: {min, max, avg}, framesCount: n }
+ *   }
+ * }
+ *
  * @fires DriftStatsProcessor#stats
  * @fires DriftStatsProcessor#error
  *
  * @example
  * const processor = new DriftStatsProcessor(1000); // Calculate stats every 1 second
- * processor.on('stats', (stats) => console.log(stats));
+ * processor.on('stats', (stats) => {
+ *     if (stats.video) {
+ *         for (const [streamIndex, drift] of Object.entries(stats.video)) {
+ *             console.log(`Video stream ${streamIndex}: PTS drift avg=${drift.pts.avg}`);
+ *         }
+ *     }
+ * });
  * processor.on('error', (err) => console.error(err));
  * processor.start();
  * processor.addFrameEnvelope(frameEnvelope);
@@ -192,10 +208,10 @@ class DriftStatsProcessor extends EventEmitter {
         // Check if this is the first frame for this media type + stream index
         if (!this._hasFirstFrameData(mediaType, streamIndex)) {
             this._storeFirstFrameData(frameEnvelope, mediaType, streamIndex, ptsTime, dtsTime);
-        } else {
-            // Add to frames buffer
-            this._addToFramesBuffer(frameEnvelope, mediaType, streamIndex);
         }
+
+        // Add to frames buffer
+        this._addToFramesBuffer(frameEnvelope, mediaType, streamIndex);
     }
 
     /**
@@ -337,10 +353,15 @@ class DriftStatsProcessor extends EventEmitter {
      * @private
      */
     _processStats() {
-        const stats = [];
+        const stats = {};
 
         // Iterate through all media types and stream indices
         for (const [mediaType, streamMap] of this._firstFrameData.entries()) {
+            // Initialize media type object if not exists
+            if (!stats[mediaType]) {
+                stats[mediaType] = {};
+            }
+
             for (const [streamIndex, firstFrameData] of streamMap.entries()) {
                 const streamStats = this._calculateStreamStats(
                     mediaType,
@@ -349,14 +370,33 @@ class DriftStatsProcessor extends EventEmitter {
                 );
 
                 if (streamStats) {
-                    stats.push(streamStats);
+                    // Store stats under streamIndex key, excluding mediaType and streamIndex from the object
+                    stats[mediaType][streamIndex] = {
+                        pts: streamStats.pts,
+                        dts: streamStats.dts,
+                        framesCount: streamStats.framesCount
+                    };
+                } else {
+                    stats[mediaType][streamIndex] = {
+                        pts: {
+                            min: null,
+                            max: null,
+                            avg: null
+                        },
+                        dts: {
+                            min: null,
+                            max: null,
+                            avg: null
+                        },
+                        framesCount: 0
+                    };
                 }
             }
         }
 
-        if (stats.length > 0) {
-            this.emit('stats', stats);
-        }
+        this._framesBuffer.clear();
+
+        this.emit('stats', stats);
     }
 
     /**
@@ -391,11 +431,11 @@ class DriftStatsProcessor extends EventEmitter {
             const ptsTime = this._getPtsTime(frame);
             const dtsTime = this._getDtsTime(frame);
 
-            // Calculate drifts in milliseconds
-            const receivedDelta = receivedAt.getTime() - initialReceivedAt.getTime();
+            // Calculate drifts in seconds
+            const receivedDelta = (receivedAt.getTime() - initialReceivedAt.getTime()) / 1000;
 
-            const ptsDrift = receivedDelta - (ptsTime - initialPtsTime) * 1000;
-            const dtsDrift = receivedDelta - (dtsTime - initialDtsTime) * 1000;
+            const ptsDrift = receivedDelta - (ptsTime - initialPtsTime);
+            const dtsDrift = receivedDelta - (dtsTime - initialDtsTime);
 
             ptsDrifts.push(ptsDrift);
             dtsDrifts.push(dtsDrift);
