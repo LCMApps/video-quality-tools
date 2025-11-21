@@ -141,6 +141,23 @@ describe('FramesMonitor::constructor', () => {
         }
     );
 
+    dataDriven(
+        testData.incorrectFullFrameInfo.map(item => ({type: typeOf(item), fullFrameInfo: item})),
+        () => {
+            it('config.fullFrameInfo param has invalid ({type}) type', ctx => {
+                const incorrectConfig = Object.assign({}, config, {
+                    fullFrameInfo: ctx.fullFrameInfo
+                });
+
+                assert.throws(() => {
+                    new FramesMonitor(incorrectConfig, url);
+                }, Error.ConfigError, 'If fullFrameInfo is defined it must be a boolean');
+
+                assert.isTrue(spyAssertExecutable.notCalled);
+            });
+        }
+    );
+
     dataDriven(testData.incorrectConfigObject, () => {
         it('{description}', ctx => {
             const incorrectConfig = Object.assign({}, config, ctx.config);
@@ -183,12 +200,14 @@ describe('FramesMonitor::constructor', () => {
 
         const framesMonitor = new FramesMonitor(config, url);
 
+        assert.isDefined(config.fullFrameInfo);
         assert.isTrue(spyAssertExecutable.calledOnce);
         assert.isTrue(spyAssertExecutable.calledWithExactly(config.ffprobePath));
 
 
         assert.deepEqual(framesMonitor._config, expectedConfig);
         assert.strictEqual(framesMonitor._url, url);
+        assert.strictEqual(framesMonitor._fullFrameInfo, config.fullFrameInfo);
 
         assert.strictEqual(framesMonitor._cp, expectedChildProcessDefaultValue);
         assert.strictEqual(framesMonitor._chunkRemainder, expectedChunkRemainderDefaultValue);
@@ -219,6 +238,37 @@ describe('FramesMonitor::constructor', () => {
 
         assert.deepEqual(framesMonitor._config, expectedConfig);
         assert.strictEqual(framesMonitor._url, url);
+
+        assert.strictEqual(framesMonitor._cp, expectedChildProcessDefaultValue);
+        assert.strictEqual(framesMonitor._chunkRemainder, expectedChunkRemainderDefaultValue);
+        assert.deepEqual(framesMonitor._stderrOutputs, expectedStderrOutputs);
+    });
+
+    it('fullFrameInfo not set in config', () => {
+        const configLocal = Object.assign({}, config, {fullFrameInfo: undefined});
+
+        const expectedChildProcessDefaultValue   = null;
+        const expectedChunkRemainderDefaultValue = '';
+        const expectedStderrOutputs              = [];
+        const expectedConfig                     = {
+            ffprobePath                : configLocal.ffprobePath,
+            bufferMaxLengthInBytes     : configLocal.bufferMaxLengthInBytes,
+            errorLevel                 : configLocal.errorLevel,
+            exitProcessGuardTimeoutInMs: configLocal.exitProcessGuardTimeoutInMs,
+            timeout                    : configLocal.timeoutInMs * 1000,
+            analyzeDuration            : configLocal.analyzeDurationInMs * 1000,
+        };
+        const expectedFullFrameInfo              = false;
+
+        const framesMonitor = new FramesMonitor(configLocal, url);
+
+        assert.isTrue(spyAssertExecutable.calledOnce);
+        assert.isTrue(spyAssertExecutable.calledWithExactly(config.ffprobePath));
+
+
+        assert.deepEqual(framesMonitor._config, expectedConfig);
+        assert.strictEqual(framesMonitor._url, url);
+        assert.strictEqual(framesMonitor._fullFrameInfo, expectedFullFrameInfo);
 
         assert.strictEqual(framesMonitor._cp, expectedChildProcessDefaultValue);
         assert.strictEqual(framesMonitor._chunkRemainder, expectedChunkRemainderDefaultValue);

@@ -12,6 +12,9 @@ class GopInvalidData extends ExtendableError {}
 class GopNotFoundError extends ExtendableError {}
 class ProcessStartError extends ExtendableError {}
 class ProcessExitError extends ExtendableError {}
+class ProcessorNotStartedError extends ExtendableError {}
+class ProcessorAlreadyStartedError extends ExtendableError {}
+class IncompleteFrameDataError extends ExtendableError {}
 
 module.exports = {
     AlreadyListeningError,
@@ -25,5 +28,8 @@ module.exports = {
     GopInvalidData,
     GopNotFoundError,
     ProcessStartError,
-    ProcessExitError
+    ProcessExitError,
+    ProcessorNotStartedError,
+    ProcessorAlreadyStartedError,
+    IncompleteFrameDataError
 };

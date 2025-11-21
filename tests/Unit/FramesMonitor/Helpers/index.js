@@ -11,6 +11,7 @@ const url                         = 'rtmp://localhost:1935/myapp/mystream';
 const errorLevel                  = 'fatal'; // https://ffmpeg.org/ffprobe.html
 const exitProcessGuardTimeoutInMs = 2000;
 const analyzeDurationInMs         = 1000;
+const fullFrameInfo               = false;
 
 
 const FramesMonitor = proxyquire('src/FramesMonitor', {
@@ -43,7 +44,8 @@ module.exports = {
         bufferMaxLengthInBytes,
         errorLevel,
         exitProcessGuardTimeoutInMs,
-        analyzeDurationInMs
+        analyzeDurationInMs,
+        fullFrameInfo,
     },
     url,
     FramesMonitor,

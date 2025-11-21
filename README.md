@@ -171,6 +171,120 @@ structure as the `ffprobe -show_streams` output has. You may find a typical outp
        disposition: [Object] } ] }
 ```
 
+# <a name="ffmpeg-compatibility"></a>FFmpeg Version Compatibility
+
+## Raw Frames (Default Behavior)
+
+By default, `FramesMonitor` emits raw frame objects directly from ffprobe output. This approach works seamlessly with **FFmpeg <= 4.x** (`libavutil` <= 56).
+
+Starting from **FFmpeg 5.x** (`libavutil` 57+), ffprobe changed some field names in frame output. If you're using FFmpeg 5.x or newer, you should use the `RawFrameTransformer` approach described below to ensure compatibility.
+
+## Using `RawFrameTransformer` for FFmpeg 5.x+
+
+For FFmpeg 5.x and newer versions, use `RawFrameTransformer` to automatically handle field name differences across FFmpeg versions.
+
+### Basic Usage
+
+```javascript
+const {
+    FramesMonitor,
+    buildFftoolLibVersionsObject,
+    RawFrameTransformer
+} = require('video-quality-tools');
+
+// Detect FFprobe version
+const fftoolLibVersions = await buildFftoolLibVersionsObject('/usr/local/bin/ffprobe');
+
+// Create transformer with detected version
+const transformer = new RawFrameTransformer(fftoolLibVersions);
+
+const framesMonitor = new FramesMonitor(options, 'rtmp://host:port/appInstance/name', {
+    // other options, plus...
+    fullFrameInfo: true  // Required for RawFrameTransformer
+});
+
+framesMonitor.on('frame', rawFrame => {
+    // Transform raw frame to value object
+    const frame = transformer.transform(rawFrame);
+    
+    // Use consistent API regardless of FFmpeg version
+    console.log(frame.getMediaType());    // 'video' or 'audio'
+    console.log(frame.getKeyFrame());     // 1 or 0
+    console.log(frame.getPtsTime());      // presentation timestamp
+    console.log(frame.getPktSize());      // packet size
+    
+    if (frame.getMediaType() === 'video') {
+        console.log(frame.getWidth());    // frame width
+        console.log(frame.getHeight());   // frame height
+        console.log(frame.getPictType()); // 'I', 'P', or 'B'
+    }
+});
+
+framesMonitor.listen();
+```
+
+### Detecting FFmpeg Version
+
+The `buildFftoolLibVersionsObject` function automatically detects your FFmpeg/ffprobe version:
+
+```javascript
+const {buildFftoolLibVersionsObject, FftoolsLibVersions} = require('video-quality-tools');
+
+// Detect version
+const fftoolLibVersions = await buildFftoolLibVersionsObject('/usr/local/bin/ffprobe');
+
+// Check specific library versions
+const libavutilVersion = fftoolLibVersions.getVersion(FftoolsLibVersions.LIBAVUTIL);
+console.log(`libavutil version: ${libavutilVersion}`);
+
+// Compare versions
+if (fftoolLibVersions.gte(FftoolsLibVersions.LIBAVUTIL, '58.0.0')) {
+    console.log('FFmpeg 5.x or newer detected');
+}
+```
+
+### Supported Versions
+
+| FFmpeg Version | libavutil Version | Schema | Status |
+|----------------|-------------------|--------|---------|
+| FFmpeg 4.x | < 57 | Schema1 | ✅ Supported |
+| FFmpeg 5.x | 57.x | Schema2 | ✅ Supported |
+| FFmpeg 6.x | 58.x | Schema3 | ✅ Supported |
+| FFmpeg 7.x-8.x | 59.x-60.x | Schema4 | ✅ Supported |
+
+For detailed information about frame schema methods and API, see [Frame Schema API Reference](doc/FrameSchemaAPI.md).
+
+### Working with processFrames Functions
+
+The `processFrames` functions (like `encoderStats` and `networkStats`) support both raw frames and frame value objects.
+
+> But raw frames are supported for `libavutil` <= 56, so value objects and RawFrameTransformer is only one recommended
+option starting `video-quality-tools` version 4.0.0.
+
+```javascript
+const {processFrames, RawFrameTransformer, buildFftoolLibVersionsObject} = require('video-quality-tools');
+
+const fftoolLibVersions = await buildFftoolLibVersionsObject('/usr/local/bin/ffprobe');
+const transformer = new RawFrameTransformer(fftoolLibVersions);
+
+let frames = [];
+
+framesMonitor.on('frame', rawFrame => {
+    // Transform to value object
+    const frame = transformer.transform(rawFrame);
+    frames.push(frame);
+});
+
+setInterval(() => {
+    // processFrames works with both raw frames and value objects
+    const stats = processFrames.networkStats(frames, 5000);
+    console.log(stats);
+    frames = [];
+}, 5000);
+```
+
+For a complete working example, see [examples/rawFrameTransformer.js](examples/rawFrameTransformer.js).
+
 # <a name="one-time-info"></a>Live Frames Monitor
 
 To measure live stream info you need to create instance of `FramesMonitor` class
@@ -196,7 +310,7 @@ Constructor throws:
 
 ## Frames Monitor Config
 
-The first argument of `FramesMonitor` must be an `options` object. All `options` object's fields are mandatory:
+The first argument of `FramesMonitor` must be an `options` object. All `options` object's fields are mandatory except `fullFrameInfo`:
 
 * `ffprobePath` - string, path to ffprobe executable;
 * `timeoutInMs` - integer, greater than 0, specifies the maximum time to wait for (network) read/write operations 
@@ -212,7 +326,10 @@ process will be hard killed if the attempt of soft stop fails. When you try to s
 method the `FramesMonitor` sends `SIGTERM` signal to ffprobe process. ffprobe may ignore this signal (some versions
 do it pretty often). If ffprobe doesn't exit after `exitProcessGuardTimeoutInMs` milliseconds, `FramesMonitor` sends
 `SIGKILL` signal and forces underlying ffprobe process to exit.
-* analyzeDurationInMs - integer, greater than 0, specifies the maximum analyzing time of the input.
+* `analyzeDurationInMs` - integer, greater than 0, specifies the maximum analyzing time of the input.
+* `fullFrameInfo` - (added in 4.0.0, **optional**) boolean, default: `false`. When set to `true`, retrieves all available frame fields 
+from ffprobe. This is **required when using `RawFrameTransformer`** for FFmpeg 5.x+ compatibility. When `false`, only
+retrieves a subset of fields (`pkt_size`, `pkt_pts_time`, `media_type`, `pict_type`, `key_frame`, `width`, `height`).
 
 ## Listening of Frames
 
@@ -254,8 +371,10 @@ try {
 
 ## `frame` event
 
-This event is generated on each video and audio frame decoded by ffprobe. 
-The structure of the frame object is the following:
+This event is generated on each video and audio frame decoded by ffprobe.
+
+When the option `fullFrameInfo` is not specified or set to `false`, data with a `frame`event will have the following
+structure:
 
 ```
 { media_type: 'video',
@@ -273,6 +392,16 @@ or
   pkt_pts_time: 'N/A',
   pkt_size: 20 }
 ```
+
+With `fullFrameInfo` set to `true` all the fields provided by the `ffprobe` will be present.
+
+Prior version 4.0.0 there wasn't `fullFrameInfo` option, and subset of fields was enough to calculate stats, but
+starting from ffmpeg 5.0 (actually, from `libavutil 57`) `ffprobe` and `ffmpeg` started to rename fields, remove
+deprecated. `video-quality-tools` stats calculation relies on frame field names, and package stopped working.
+
+It's recommended to switch to version 4.0.0 and use `RawFrameTransfermer` with `fullFrameInfo` set to `true` to
+make sure package works as expected. You may read details below.
+
 
 ## `exit` event
 
@@ -333,6 +462,7 @@ framesMonitor.on('error', err => {
 collected from `FramesMonitor`:
 - `processFrames.networkStats`
 - `processFrames.encoderStats`
+- `DriftStatsProcessor` - for monitoring PTS/DTS drift in real-time
 
 
 ## `processFrames.networkStats(frames, durationInMsec)`
@@ -348,13 +478,18 @@ between receiver and module affects delivery of RTMP packages this module indica
 to run this module near the receiver.
 
 ```javascript
-const {processFrames} = require('video-quality-tools');
+const {processFrames, RawFrameTransformer, buildFftoolLibVersionsObject} = require('video-quality-tools');
 
 const INTERVAL_TO_ANALYZE_FRAMES = 5000; // in milliseconds
+
+const fftoolLibVersions = await buildFftoolLibVersionsObject('/usr/local/bin/ffprobe');
+const transformer = new RawFrameTransformer(fftoolLibVersions);
 
 let frames = [];
 
 framesMonitor.on('frame', frame => {
+    // Transform to value object
+    const frame = transformer.transform(rawFrame);
     frames.push(frame);
 });
 
@@ -470,3 +605,46 @@ neighbourhood, then
 `processFrames.encoderStats` may throw `Errors.GopNotFoundError`.
 
 Also, you may extend the metrics. Check `src/processFrames.js` to find common functions.
+
+## `DriftStatsProcessor` class
+
+`DriftStatsProcessor` is a real-time processor that monitors PTS (Presentation Time Stamp) and DTS (Decoding Time Stamp) 
+drift for video and audio streams. It helps detect timing issues in live streams by comparing the actual reception time 
+of frames against their expected timestamps.
+
+### How It Works
+
+The processor calculates drift by measuring the difference between expected frame timing (based on PTS/DTS timestamps) 
+and actual frame arrival times. This helps identify issues such as:
+
+- Network jitter and congestion
+- Encoder timing problems
+- Stream interruptions and packet loss
+- Clock synchronization issues between encoder and receiver
+
+### Basic Usage
+
+```javascript
+const {DriftStatsProcessor, FrameEnvelope} = require('video-quality-tools');
+
+// Create processor that emits stats every 1 second
+const processor = new DriftStatsProcessor(1000);
+
+processor.on('stats', stats => {
+    // Process drift statistics for video and audio streams
+    console.log(stats);
+});
+
+processor.start();
+
+// Add frames wrapped in FrameEnvelope
+framesMonitor.on('frame', rawFrame => {
+    const frame = transformer.transform(rawFrame);
+    const frameEnvelope = new FrameEnvelope(frame, new Date());
+    processor.addFrameEnvelope(frameEnvelope);
+});
+```
+
+For detailed API documentation, usage examples, and interpretation guide, see [DriftStatsProcessor API Reference](doc/DriftStatsProcessorAPI.md).
+
+Check [examples/driftStats.js](examples/driftStats.js) for a complete working example.

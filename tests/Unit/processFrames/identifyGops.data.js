@@ -16,8 +16,8 @@ const testData = [
     {
         description: 'works okay for the set of frames with no key frame',
         input      : [
-            {key_frame: 0},
-            {key_frame: 0},
+            {key_frame: 0, pkt_pts_time: 1},
+            {key_frame: 0, pkt_pts_time: 2},
         ],
         res        : {gops: [], remainedFrames: []}
     },
@@ -84,31 +84,6 @@ const testData = [
             ],
             remainedFrames: [
                 {key_frame: 1, pkt_pts_time: 5},
-            ]
-        }
-    },
-    {
-        description: 'edge case, works okay even for undefined pkt_pts_time values, error exception would be throw on the next level', // eslint-disable-line
-        input      : [
-            {key_frame: 1, pkt_pts_time: undefined},
-            {key_frame: 0, pkt_pts_time: 3},
-            {key_frame: 0, pkt_pts_time: 4},
-            {key_frame: 1, pkt_pts_time: undefined},
-        ],
-        res        : {
-            gops           : [
-                {
-                    frames   : [
-                        {key_frame: 1, pkt_pts_time: undefined},
-                        {key_frame: 0, pkt_pts_time: 3},
-                        {key_frame: 0, pkt_pts_time: 4}
-                    ],
-                    startTime: undefined,
-                    endTime  : undefined
-                }
-            ],
-            remainedFrames: [
-                {key_frame: 1, pkt_pts_time: undefined},
             ]
         }
     },

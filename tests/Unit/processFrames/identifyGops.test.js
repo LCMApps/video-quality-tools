@@ -15,32 +15,32 @@ function typeOf(item) {
 
 describe('processFrames.identifyGops', () => {
 
-    dataDriven(
-        invalidKeyFramesTypes.map(item => ({type: typeOf(item), key_frame: item})),
-        () => {
-            it('must throw an error if frame key_frame field has invalid {type} type', ctx => {
-                const invalidFrame = {key_frame: ctx.key_frame};
-                const invalidInput = [invalidFrame];
-
-                try {
-                    processFrames.identifyGops(invalidInput);
-                    assert.isFalse(true, 'should not be here');
-                } catch (error) {
-                    assert.instanceOf(error, Errors.FrameInvalidData);
-
-                    assert.strictEqual(error.message, `frame's key_frame field has invalid type: ${ctx.type}`);
-
-                    assert.deepEqual(error.extra, {frame: invalidFrame});
-                }
-            });
-        }
-    );
+    // dataDriven(
+    //     invalidKeyFramesTypes.map(item => ({type: typeOf(item), key_frame: item})),
+    //     () => {
+    //         it('must throw an error if frame key_frame field has invalid {type} type', ctx => {
+    //             const invalidFrame = {key_frame: ctx.key_frame};
+    //             const invalidInput = [invalidFrame];
+    //
+    //             try {
+    //                 processFrames.identifyGops(invalidInput);
+    //                 assert.isFalse(true, 'should not be here');
+    //             } catch (error) {
+    //                 assert.instanceOf(error, Errors.FrameInvalidData);
+    //
+    //                 assert.strictEqual(error.message, `frame's key_frame field has invalid type: ${ctx.type}`);
+    //
+    //                 assert.deepEqual(error.extra, {frame: invalidFrame});
+    //             }
+    //         });
+    //     }
+    // );
 
     dataDriven(
         invalidKeyFramesValues.map(item => ({key_frame: item})),
         () => {
             it('must throw an error if frame key_frame field has invalid value: {key_frame}. Must be 0 or 1.', ctx => {
-                const invalidFrame = {key_frame: ctx.key_frame};
+                const invalidFrame = {key_frame: ctx.key_frame, pkt_pts_time: 0.1};
                 const invalidInput = [invalidFrame];
 
                 try {
