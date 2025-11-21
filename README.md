@@ -462,6 +462,7 @@ framesMonitor.on('error', err => {
 collected from `FramesMonitor`:
 - `processFrames.networkStats`
 - `processFrames.encoderStats`
+- `DriftStatsProcessor` - for monitoring PTS/DTS drift in real-time
 
 
 ## `processFrames.networkStats(frames, durationInMsec)`
@@ -604,3 +605,46 @@ neighbourhood, then
 `processFrames.encoderStats` may throw `Errors.GopNotFoundError`.
 
 Also, you may extend the metrics. Check `src/processFrames.js` to find common functions.
+
+## `DriftStatsProcessor` class
+
+`DriftStatsProcessor` is a real-time processor that monitors PTS (Presentation Time Stamp) and DTS (Decoding Time Stamp) 
+drift for video and audio streams. It helps detect timing issues in live streams by comparing the actual reception time 
+of frames against their expected timestamps.
+
+### How It Works
+
+The processor calculates drift by measuring the difference between expected frame timing (based on PTS/DTS timestamps) 
+and actual frame arrival times. This helps identify issues such as:
+
+- Network jitter and congestion
+- Encoder timing problems
+- Stream interruptions and packet loss
+- Clock synchronization issues between encoder and receiver
+
+### Basic Usage
+
+```javascript
+const {DriftStatsProcessor, FrameEnvelope} = require('video-quality-tools');
+
+// Create processor that emits stats every 1 second
+const processor = new DriftStatsProcessor(1000);
+
+processor.on('stats', stats => {
+    // Process drift statistics for video and audio streams
+    console.log(stats);
+});
+
+processor.start();
+
+// Add frames wrapped in FrameEnvelope
+framesMonitor.on('frame', rawFrame => {
+    const frame = transformer.transform(rawFrame);
+    const frameEnvelope = new FrameEnvelope(frame, new Date());
+    processor.addFrameEnvelope(frameEnvelope);
+});
+```
+
+For detailed API documentation, usage examples, and interpretation guide, see [DriftStatsProcessor API Reference](doc/DriftStatsProcessorAPI.md).
+
+Check [examples/driftStats.js](examples/driftStats.js) for a complete working example.
